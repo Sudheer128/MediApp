@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "644602495453",
+    "project_id": "doctor-myrank",
+    "storage_bucket": "doctor-myrank.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:644602495453:android:a8b58a189553cb3af33634",
+        "android_client_info": {
+          "package_name": "com.example.medicalapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "644602495453-gug82vtqqt6sctp9kpie5hd83ne5ajiv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.medicalapp",
+            "certificate_hash": "0aa96e48f9305e3489d9cfde48749ae2b6eabb08"
+          }
+        },
+        {
+          "client_id": "644602495453-ng9sbtbtmjmepausnsj0ocgbgi4u9i4s.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0xNemBcbyJn1Dd8ioJbBBaaba_3poGck"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "644602495453-ng9sbtbtmjmepausnsj0ocgbgi4u9i4s.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "644602495453-msdogdoldbvb43h1les6nu4f906r32fk.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.medicalapp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,123 @@
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:http/http.dart' as http;
+import 'package:medicalapp/form_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class SignInScreen extends StatefulWidget {
+  const SignInScreen({super.key});
+
+  @override
+  State<SignInScreen> createState() => _SignInScreenState();
+}
+
+class _SignInScreenState extends State<SignInScreen> {
+  void _handleSignIn() async {
+    User? user = await signInWithGoogle();
+    if (user != null) {
+      final email = user.email ?? "";
+      final name = user.displayName ?? "";
+
+      final response = await http.post(
+        Uri.parse('http://192.168.0.103:8080/api/user/check-or-insert'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'name': name}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        // Save user_id to SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        final userId = data['userid']; // Adjust key as per your API response
+        print('Saved user_id: $userId');
+        if (userId != null) {
+          await prefs.setInt('userid', userId);
+          print('Saved user_id: $userId');
+        }
+
+        final role = data['role'];
+
+        Widget destinationPage;
+
+        switch (role) {
+          case 'admin':
+            destinationPage = ApplicationForm();
+            break;
+          case 'college':
+            destinationPage = ApplicationForm();
+            break;
+          case 'student':
+            destinationPage = ApplicationForm();
+            break;
+          case 'notassigned':
+          default:
+            destinationPage = ApplicationForm();
+        }
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => destinationPage),
+        );
+      } else {
+        print("API failed: ${response.body}");
+      }
+    } else {
+      print('Sign in failed or cancelled');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Google Sign-In')),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: _handleSignIn,
+          child: Text('Sign in with Google'),
+        ),
+      ),
+    );
+  }
+}
+
+final FirebaseAuth _auth = FirebaseAuth.instance;
+final GoogleSignIn _googleSignIn = GoogleSignIn();
+
+Future<User?> signInWithGoogle() async {
+  try {
+    final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
+    if (googleUser == null) {
+      // User cancelled the sign-in
+      return null;
+    }
+
+    final GoogleSignInAuthentication googleAuth =
+        await googleUser.authentication;
+
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    UserCredential userCredential = await _auth.signInWithCredential(
+      credential,
+    );
+    print(userCredential.user?.email);
+    print(userCredential.user?.displayName);
+    return userCredential.user;
+  } catch (e) {
+    print('Error with Google sign-in: $e');
+    return null;
+  }
+}
+
+Future<void> signOutGoogle() async {
+  await _auth.signOut();
+  await _googleSignIn.signOut();
+  print('User signed out');
+}
