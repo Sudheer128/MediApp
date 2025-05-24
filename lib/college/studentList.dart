@@ -68,10 +68,18 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
       borderRadius: BorderRadius.circular(16),
       onTap: () {
         final applicationId = student['application'];
+        final StudentName = student['name'] ?? '';
+
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => StudentDetailScreen(applicationId: applicationId),
+            builder:
+                (_) => StudentDetailScreen(
+                  applicationId: applicationId,
+                  StudentName: StudentName,
+                  courseName: widget.courseName,
+                  degree: widget.degree,
+                ),
           ),
         );
       },

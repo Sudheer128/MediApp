@@ -6,6 +6,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/admin/mainscreen.dart';
 import 'package:medicalapp/college/homepage.dart';
+import 'package:medicalapp/newUser.dart';
 
 import 'package:medicalapp/student/form_page.dart';
 import 'package:medicalapp/student/home.dart';
@@ -37,6 +38,8 @@ class _SignInScreenState extends State<SignInScreen> {
         // Save user_id to SharedPreferences
         final prefs = await SharedPreferences.getInstance();
         final userId = data['userid']; // Adjust key as per your API response
+        final userName = data['name'];
+        await prefs.setString('name', userName);
         print('Saved user_id: $userId');
         if (userId != null) {
           await prefs.setInt('userid', userId);
@@ -59,7 +62,7 @@ class _SignInScreenState extends State<SignInScreen> {
             break;
           case 'notassigned':
           default:
-            destinationPage = ApplicationForm();
+            destinationPage = ApprovalScreen();
         }
 
         Navigator.pushReplacement(

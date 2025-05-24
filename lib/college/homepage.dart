@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/college/studentList.dart';
+import 'package:medicalapp/googlesignin.dart';
 
 class CollegeDegreesScreen extends StatefulWidget {
   @override
@@ -53,6 +54,62 @@ class _DegreesScreenState extends State<CollegeDegreesScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Colors.blue),
+              child: Text(
+                'Menu',
+                style: TextStyle(color: Colors.white, fontSize: 24),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text('Home'),
+              onTap: () {
+                Navigator.pop(context); // close drawer
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CollegeDegreesScreen(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text('Interests Sent'),
+              onTap: () {
+                Navigator.pop(context); // close drawer
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CollegeDegreesScreen(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text('LogOut'),
+              onTap: () {
+                Navigator.pop(context); // close drawer
+                signOutGoogle();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => SignInScreen()),
+                );
+              },
+            ),
+
+            // You can add more menu items here...
+          ],
+        ),
+      ),
       backgroundColor: Color(0xFFF5F7FA),
       appBar: AppBar(
         backgroundColor: Colors.deepPurple.shade700,

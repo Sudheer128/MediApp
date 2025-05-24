@@ -524,21 +524,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
       ),
       appBar: AppBar(
         title: const Text('Medical Professional Application Form'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return DegreesScreen();
-                  },
-                ),
-              );
-            },
-          ),
-        ],
+        actions: [],
       ),
       body: Center(
         child:

@@ -2,12 +2,21 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class StudentDetailScreen extends StatefulWidget {
   final int applicationId;
+  final String? StudentName;
+  final String degree;
+  final String courseName;
 
-  const StudentDetailScreen({Key? key, required this.applicationId})
-    : super(key: key);
+  const StudentDetailScreen({
+    Key? key,
+    required this.applicationId,
+    required this.StudentName,
+    required this.degree,
+    required this.courseName,
+  }) : super(key: key);
 
   @override
   State<StudentDetailScreen> createState() => _StudentDetailScreenState();
@@ -33,21 +42,27 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
       );
 
       if (response.statusCode == 200) {
-        setState(() {
-          data = json.decode(response.body);
-          loading = false;
-        });
+        if (mounted) {
+          setState(() {
+            data = json.decode(response.body);
+            loading = false;
+          });
+        }
       } else {
+        if (mounted) {
+          setState(() {
+            error = 'Failed to load data';
+            loading = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         setState(() {
-          error = 'Failed to load data';
+          error = 'Error: $e';
           loading = false;
         });
       }
-    } catch (e) {
-      setState(() {
-        error = 'Error: $e';
-        loading = false;
-      });
     }
   }
 
@@ -209,7 +224,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        buildSectionTitle('FellowShips', Icons.workspace_premium),
+        buildSectionTitle('Fellowships', Icons.workspace_premium),
         buildCardsList(context, cards),
       ],
     );
@@ -318,6 +333,139 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
     );
   }
 
+  Future<void> showExpressInterestDialog() async {
+    final _formKey = GlobalKey<FormState>();
+    String? message;
+
+    await showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Express Interest'),
+            content: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    decoration: const InputDecoration(
+                      labelText: 'Message (Optional)',
+                      hintText:
+                          "Describe the position and why you're interested in this doctor...",
+                    ),
+                    maxLines: 3,
+                    onSaved: (value) => message = value?.trim(),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (_formKey.currentState!.validate()) {
+                    _formKey.currentState!.save();
+                    await _sendInterestRequest(message);
+                  }
+                },
+                child: const Text('Send Interest'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  Future<void> _sendInterestRequest(String? message) async {
+    // Close the form dialog first
+    Navigator.of(context).pop();
+
+    // Check if widget is still mounted
+    if (!mounted) return;
+
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (BuildContext context) => const AlertDialog(
+            content: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(width: 20),
+                Text('Sending...'),
+              ],
+            ),
+          ),
+    );
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('userid') ?? 0;
+      final userName = prefs.getString('name') ?? "";
+
+      final response = await http.post(
+        Uri.parse('http://192.168.0.103:8080/add-interest'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'college_id': userId,
+          'college_name': userName,
+          'student_id': widget.applicationId,
+          'student_name': widget.StudentName,
+          'message': message,
+          'degree': widget.degree,
+          'course_name': widget.courseName,
+        }),
+      );
+      print(widget.courseName);
+      print(widget.degree);
+      // Check if widget is still mounted before proceeding
+      if (!mounted) return;
+
+      // Dismiss loading dialog
+      Navigator.of(context).pop();
+
+      // Show result
+      if (response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Interest expressed successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Failed to send interest. Status: ${response.statusCode}',
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Check if widget is still mounted before proceeding
+      if (!mounted) return;
+
+      // Dismiss loading dialog if it's still showing
+      Navigator.of(context).pop();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (loading) {
@@ -391,6 +539,23 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
               buildWorkExperienceSection(data!['workExperiences'], context),
             if (data?['certificate'] != null)
               buildCertificatesSection(data!['certificate']),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: showExpressInterestDialog,
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'Express Interest',
+                  style: TextStyle(fontSize: 18),
+                ),
+              ),
+            ),
           ],
         ),
       ),

@@ -616,21 +616,7 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
       ),
       appBar: AppBar(
         title: const Text('Medical Professional Application Form'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return DegreesScreen();
-                  },
-                ),
-              );
-            },
-          ),
-        ],
+        actions: [],
       ),
       body: Form(
         key: _formKey,
