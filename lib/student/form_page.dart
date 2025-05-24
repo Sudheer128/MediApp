@@ -1,6 +1,7 @@
 // main.dart
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
@@ -115,17 +116,26 @@ class _ApplicationFormState extends State<ApplicationForm> {
     }
   }
 
+  Uint8List? _resumeBytes;
+
   Future<void> _pickResume() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf', 'doc', 'docx'],
+      withData: true, // <--- important to get bytes on web
     );
 
     if (result != null) {
-      setState(() {
+      if (kIsWeb) {
+        _resumeBytes = result.files.single.bytes;
+        _resumeFileName = result.files.single.name;
+        _resumeFile = null;
+      } else {
         _resumeFile = File(result.files.single.path!);
         _resumeFileName = result.files.single.name;
-      });
+        _resumeBytes = null;
+      }
+      setState(() {});
     }
   }
 
@@ -282,23 +292,19 @@ class _ApplicationFormState extends State<ApplicationForm> {
 
   Future<bool> _submitToBackend() async {
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt('userid') ?? "";
+    final userId = prefs.getInt('userid') ?? 0;
+
     final payload = {
-      // Personal
       'userid': userId,
       'name': _nameController.text,
       'phone': int.tryParse(_phoneController.text) ?? 0,
       'email': _emailController.text,
       'address': _addressController.text,
-
-      // Education
       'education': [
         ...educationDetails.map((e) => e.toJson()),
-        if (_hasPG) ...pgDetails.map((e) => e.toJson()) else ...[],
-        if (_hasSS) ...ssDetails.map((e) => e.toJson()) else ...[],
+        if (_hasPG) ...pgDetails.map((e) => e.toJson()),
+        if (_hasSS) ...ssDetails.map((e) => e.toJson()),
       ],
-
-      // Fellowships, Papers, Work Experience - pass empty lists if "No"
       'fellowships':
           _hasFellowships
               ? fellowships.map((f) => f.toJson()).toList()
@@ -309,8 +315,6 @@ class _ApplicationFormState extends State<ApplicationForm> {
           _hasWorkExperience
               ? workExperiences.map((w) => w.toJson()).toList()
               : <dynamic>[],
-
-      // Certificate
       'certificate': {
         'counselName': _counselNameController.text,
         'courseName': _courseNameController.text,
@@ -320,38 +324,38 @@ class _ApplicationFormState extends State<ApplicationForm> {
       },
     };
 
-    print(payload);
-
     final uri = Uri.parse('http://192.168.0.103:8080/counsel');
     late http.Response response;
 
     try {
-      if (_resumeFile != null) {
-        final req = http.MultipartRequest('POST', uri);
-
-        // Flatten payload into form fields
-        payload.forEach((key, value) {
-          if (value is String) {
-            req.fields[key] = value;
-          } else {
-            // For nested objects/arrays convert to JSON string
-            req.fields[key] = jsonEncode(value);
-          }
-        });
-
-        // Add resume file
-        req.files.add(
+      if (!kIsWeb && _resumeFile != null) {
+        // Mobile/native platforms: use fromPath
+        var request = http.MultipartRequest('POST', uri);
+        request.fields['data'] = jsonEncode(payload);
+        request.files.add(
           await http.MultipartFile.fromPath(
             'resume',
             _resumeFile!.path,
             filename: _resumeFileName,
           ),
         );
-
-        final streamed = await req.send();
-        response = await http.Response.fromStream(streamed);
+        final streamedResponse = await request.send();
+        response = await http.Response.fromStream(streamedResponse);
+      } else if (kIsWeb && _resumeBytes != null) {
+        // Web platforms: use fromBytes
+        var request = http.MultipartRequest('POST', uri);
+        request.fields['data'] = jsonEncode(payload);
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            'resume',
+            _resumeBytes!,
+            filename: _resumeFileName,
+          ),
+        );
+        final streamedResponse = await request.send();
+        response = await http.Response.fromStream(streamedResponse);
       } else {
-        // JSON request as before
+        // No resume, just send JSON
         response = await http.post(
           uri,
           headers: {'Content-Type': 'application/json'},

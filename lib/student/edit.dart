@@ -1,6 +1,7 @@
 // main.dart
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
@@ -220,17 +221,26 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
     }
   }
 
+  Uint8List? _resumeBytes;
+
   Future<void> _pickResume() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf', 'doc', 'docx'],
+      withData: true, // <--- important to get bytes on web
     );
 
     if (result != null) {
-      setState(() {
+      if (kIsWeb) {
+        _resumeBytes = result.files.single.bytes;
+        _resumeFileName = result.files.single.name;
+        _resumeFile = null;
+      } else {
         _resumeFile = File(result.files.single.path!);
         _resumeFileName = result.files.single.name;
-      });
+        _resumeBytes = null;
+      }
+      setState(() {});
     }
   }
 
@@ -379,25 +389,21 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
     }
   }
 
-  Future<void> _submitToBackend() async {
+  Future<bool> _submitToBackend() async {
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt('userid') ?? "";
+    final userId = prefs.getInt('userid') ?? 0;
+
     final payload = {
-      // Personal
       'userid': userId,
       'name': _nameController.text,
       'phone': int.tryParse(_phoneController.text) ?? 0,
       'email': _emailController.text,
       'address': _addressController.text,
-
-      // Education
       'education': [
         ...educationDetails.map((e) => e.toJson()),
-        if (_hasPG) ...pgDetails.map((e) => e.toJson()) else ...[],
-        if (_hasSS) ...ssDetails.map((e) => e.toJson()) else ...[],
+        if (_hasPG) ...pgDetails.map((e) => e.toJson()),
+        if (_hasSS) ...ssDetails.map((e) => e.toJson()),
       ],
-
-      // Fellowships, Papers, Work Experience - pass empty lists if "No"
       'fellowships':
           _hasFellowships
               ? fellowships.map((f) => f.toJson()).toList()
@@ -408,8 +414,6 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
           _hasWorkExperience
               ? workExperiences.map((w) => w.toJson()).toList()
               : <dynamic>[],
-
-      // Certificate
       'certificate': {
         'counselName': _counselNameController.text,
         'courseName': _courseNameController.text,
@@ -419,41 +423,61 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
       },
     };
 
-    print(payload);
-
-    final uri = Uri.parse('http://192.168.0.103:8080/application/update');
+    final uri = Uri.parse('http://192.168.0.103:8080/counsel');
     late http.Response response;
 
-    // If you have a resume file, send as multipart:
-    if (_resumeFile != null) {
-      final req =
-          http.MultipartRequest('PUT', uri)
-            ..fields['data'] = jsonEncode(payload)
-            ..files.add(
-              await http.MultipartFile.fromPath(
-                'resume',
-                _resumeFile!.path,
-                filename: _resumeFileName,
-              ),
-            );
-      final streamed = await req.send();
-      response = await http.Response.fromStream(streamed);
-    } else {
-      response = await http.put(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(payload),
-      );
-    }
+    try {
+      if (!kIsWeb && _resumeFile != null) {
+        // Mobile/native platforms: use fromPath
+        var request = http.MultipartRequest('POST', uri);
+        request.fields['data'] = jsonEncode(payload);
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'resume',
+            _resumeFile!.path,
+            filename: _resumeFileName,
+          ),
+        );
+        final streamedResponse = await request.send();
+        response = await http.Response.fromStream(streamedResponse);
+      } else if (kIsWeb && _resumeBytes != null) {
+        // Web platforms: use fromBytes
+        var request = http.MultipartRequest('POST', uri);
+        request.fields['data'] = jsonEncode(payload);
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            'resume',
+            _resumeBytes!,
+            filename: _resumeFileName,
+          ),
+        );
+        final streamedResponse = await request.send();
+        response = await http.Response.fromStream(streamedResponse);
+      } else {
+        // No resume, just send JSON
+        response = await http.post(
+          uri,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(payload),
+        );
+      }
 
-    if (response.statusCode == 200) {
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Submitted successfully!')),
+        );
+        return true;
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Submission failed: ${response.statusCode}')),
+        );
+        return false;
+      }
+    } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Submitted successfully!')));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Submission failed: ${response.statusCode}')),
-      );
+      ).showSnackBar(SnackBar(content: Text('Submission error: $e')));
+      return false;
     }
   }
 
