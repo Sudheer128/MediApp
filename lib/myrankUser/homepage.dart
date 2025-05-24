@@ -5,9 +5,12 @@ import 'package:medicalapp/admin/searchstudent.dart';
 import 'package:medicalapp/admin/userstable.dart';
 
 import 'package:medicalapp/googlesignin.dart';
+import 'package:medicalapp/myrankUser/userSearchStudent.dart';
+import 'package:medicalapp/myrankUser/useredit_form.dart';
+import 'package:medicalapp/myrankUser/userform_page.dart';
 
-class AdminHomePage extends StatelessWidget {
-  const AdminHomePage({super.key});
+class UserHomePage extends StatelessWidget {
+  const UserHomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -26,23 +29,14 @@ class AdminHomePage extends StatelessWidget {
               style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 30),
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => UserManagementPage()),
-                );
-              },
-              icon: const Icon(Icons.group),
-              label: const Text('Manage Users'),
-            ),
+
             const SizedBox(height: 15),
             ElevatedButton.icon(
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => AdminApplicationForm(),
+                    builder: (context) => UserApplicationForm(),
                   ),
                 );
               },
@@ -54,23 +48,14 @@ class AdminHomePage extends StatelessWidget {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => AdminEditForm()),
+                  MaterialPageRoute(builder: (context) => UserEditForm()),
                 );
               },
               icon: const Icon(Icons.settings),
               label: const Text('Search and find student details'),
             ),
             const SizedBox(height: 15),
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => InterestsPage()),
-                );
-              },
-              icon: const Icon(Icons.settings),
-              label: const Text('College Interests'),
-            ),
+
             const Spacer(),
             Center(
               child: ElevatedButton(

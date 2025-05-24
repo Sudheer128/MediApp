@@ -55,6 +55,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
     'college',
     'doctor',
     'not_assigned',
+    'myrank_user',
   ];
 
   late List<String> _roles;

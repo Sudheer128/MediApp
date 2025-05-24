@@ -6,6 +6,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/admin/mainscreen.dart';
 import 'package:medicalapp/college/homepage.dart';
+import 'package:medicalapp/myrankUser/homepage.dart';
 import 'package:medicalapp/newUser.dart';
 
 import 'package:medicalapp/student/form_page.dart';
@@ -59,6 +60,9 @@ class _SignInScreenState extends State<SignInScreen> {
             break;
           case 'doctor':
             destinationPage = DoctorDashboardApp();
+            break;
+          case 'myrank_user':
+            destinationPage = UserHomePage();
             break;
           case 'notassigned':
           default:
