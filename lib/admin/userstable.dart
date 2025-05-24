@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-// Your User model class
 class User {
   final int userId;
   final String name;
@@ -48,6 +47,16 @@ class _UserManagementPageState extends State<UserManagementPage> {
 
   String _searchQuery = '';
 
+  // Roles including known defaults
+  final List<String> _knownRoles = [
+    'admin',
+    'college',
+    'doctor',
+    'not_assigned',
+  ];
+
+  late List<String> _roles;
+
   @override
   void initState() {
     super.initState();
@@ -56,6 +65,12 @@ class _UserManagementPageState extends State<UserManagementPage> {
       setState(() {
         _allUsers = users;
         _filteredUsers = List.from(_allUsers);
+        // Combine known roles + any new roles found dynamically
+        final userRoles = users.map((u) => u.role).toSet();
+        _roles = List<String>.from(_knownRoles);
+        for (var r in userRoles) {
+          if (!_roles.contains(r)) _roles.add(r);
+        }
       });
     });
   }
@@ -185,10 +200,12 @@ class _UserManagementPageState extends State<UserManagementPage> {
                           ascending,
                         ),
                   ),
+                  DataColumn(label: Text('Actions')),
                 ],
                 source: UserDataTableSource(
                   context: context,
                   users: _filteredUsers,
+                  roles: _roles,
                   userService: userService,
                   onRoleUpdated: () {
                     setState(() {});
@@ -228,9 +245,12 @@ class _UserManagementPageState extends State<UserManagementPage> {
                 decoration: InputDecoration(labelText: 'Name'),
               ),
               DropdownButtonFormField<String>(
-                value: _selectedRole,
+                value:
+                    _roles.contains(_selectedRole)
+                        ? _selectedRole
+                        : 'not_assigned',
                 items:
-                    ['admin', 'college', 'student', 'not_assigned']
+                    _roles
                         .map(
                           (role) => DropdownMenuItem<String>(
                             value: role,
@@ -256,7 +276,13 @@ class _UserManagementPageState extends State<UserManagementPage> {
                     final users = await userService.fetchUsers();
                     setState(() {
                       _allUsers = users;
-                      _filteredUsers = users;
+                      _filteredUsers = List.from(users);
+
+                      // Update roles with any new roles added by backend
+                      final userRoles = users.map((u) => u.role).toSet();
+                      for (var r in userRoles) {
+                        if (!_roles.contains(r)) _roles.add(r);
+                      }
                     });
                     Navigator.of(context).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -269,7 +295,6 @@ class _UserManagementPageState extends State<UserManagementPage> {
                   }
                 }
               },
-
               child: Text('Add'),
             ),
             TextButton(
@@ -286,12 +311,14 @@ class _UserManagementPageState extends State<UserManagementPage> {
 class UserDataTableSource extends DataTableSource {
   final BuildContext context;
   final List<User> users;
+  final List<String> roles;
   final UserService userService;
   final VoidCallback onRoleUpdated;
 
   UserDataTableSource({
     required this.context,
     required this.users,
+    required this.roles,
     required this.userService,
     required this.onRoleUpdated,
   });
@@ -302,6 +329,10 @@ class UserDataTableSource extends DataTableSource {
     if (index >= users.length) return null!;
     final user = users[index];
 
+    // Safe dropdown value fallback
+    final dropdownValue =
+        roles.contains(user.role) ? user.role : 'not_assigned';
+
     return DataRow.byIndex(
       index: index,
       cells: [
@@ -310,9 +341,9 @@ class UserDataTableSource extends DataTableSource {
         DataCell(Text(user.email)),
         DataCell(
           DropdownButton<String>(
-            value: user.role,
+            value: dropdownValue,
             items:
-                ['admin', 'college', 'student', 'not_assigned']
+                roles
                     .map(
                       (role) => DropdownMenuItem<String>(
                         value: role,
@@ -339,6 +370,13 @@ class UserDataTableSource extends DataTableSource {
           ),
         ),
         DataCell(Text(user.createdAt)),
+        DataCell(
+          Row(
+            children: [
+              // Add buttons here if needed (e.g. edit/delete)
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -353,7 +391,6 @@ class UserDataTableSource extends DataTableSource {
   int get selectedRowCount => 0;
 }
 
-// Your existing UserService class
 class UserService {
   final String baseUrl;
 
@@ -382,7 +419,7 @@ class UserService {
 
   Future<void> addUser(String email, String name, String role) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/addusers'),
+      Uri.parse('$baseUrl/users'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'email': email, 'name': name, 'role': role}),
     );
