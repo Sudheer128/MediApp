@@ -2,35 +2,37 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:medicalapp/admin/Adminedit_form.dart';
 
-import 'package:medicalapp/student/edit.dart';
-
-class EditForm extends StatefulWidget {
-  final int applicationId;
-
-  const EditForm({Key? key, required this.applicationId}) : super(key: key);
+class AdminEditForm extends StatefulWidget {
+  const AdminEditForm({Key? key}) : super(key: key);
 
   @override
-  State<EditForm> createState() => _StudentDetailScreenState();
+  State<AdminEditForm> createState() => _StudentDetailScreenState();
 }
 
-class _StudentDetailScreenState extends State<EditForm> {
+class _StudentDetailScreenState extends State<AdminEditForm> {
   Map<String, dynamic>? data;
-  bool loading = true;
+  bool loading = false;
   String? error;
+  final TextEditingController _userIdController = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-    fetchStudentData();
+  void dispose() {
+    _userIdController.dispose();
+    super.dispose();
   }
 
-  Future<void> fetchStudentData() async {
-    print(widget.applicationId);
+  Future<void> fetchStudentData(String userId) async {
+    setState(() {
+      loading = true;
+      error = null;
+      data = null;
+    });
     try {
       final response = await http.get(
         Uri.parse(
-          'http://192.168.0.103:8080/studentscompletedetails?user_id=${widget.applicationId}',
+          'http://192.168.0.103:8080/studentscompletedetails?user_id=$userId',
         ),
       );
 
@@ -41,7 +43,7 @@ class _StudentDetailScreenState extends State<EditForm> {
         });
       } else {
         setState(() {
-          error = 'You still have not created profile yet, Created  a profile';
+          error = 'No Student Available for that User Id';
           loading = false;
         });
       }
@@ -116,6 +118,8 @@ class _StudentDetailScreenState extends State<EditForm> {
   }
 
   Widget buildEducationSection(List<dynamic> educationList) {
+    final userIdText = _userIdController.text.trim();
+    final userId = int.tryParse(userIdText) ?? 0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -124,7 +128,11 @@ class _StudentDetailScreenState extends State<EditForm> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => EditApplicationForm(existingData: data),
+                builder:
+                    (context) => AdminEditApplicationForm(
+                      existingData: data,
+                      userId: userId,
+                    ),
               ),
             );
           }
@@ -288,28 +296,6 @@ class _StudentDetailScreenState extends State<EditForm> {
 
   @override
   Widget build(BuildContext context) {
-    if (loading) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Student Details'),
-          backgroundColor: Colors.blue.shade700,
-        ),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (error != null) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Student Details'),
-          backgroundColor: Colors.blue.shade700,
-        ),
-        body: Center(child: Text(error!)),
-      );
-    }
-
-    final name = data?['name'] ?? '';
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Student Details'),
@@ -319,42 +305,88 @@ class _StudentDetailScreenState extends State<EditForm> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-              margin: const EdgeInsets.only(bottom: 24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.blue.shade400, Colors.blue.shade700],
-                ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.blue.shade200.withOpacity(0.6),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
+            // Search Input Row
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _userIdController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Search Student Details by User ID',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
-                ],
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  onPressed: () {
+                    final userId = _userIdController.text.trim();
+                    if (userId.isNotEmpty) {
+                      fetchStudentData(userId);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please enter a User ID')),
+                      );
+                    }
+                  },
+                  child: const Text('Search'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Loading Indicator
+            if (loading) const Center(child: CircularProgressIndicator()),
+
+            // Error message
+            if (error != null)
+              Center(
+                child: Text(error!, style: const TextStyle(color: Colors.red)),
               ),
-              child: Text(
-                name,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  letterSpacing: 1.2,
+
+            // Show student details only if data is loaded and no error
+            if (!loading && error == null && data != null) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 24,
+                ),
+                margin: const EdgeInsets.only(bottom: 24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade400, Colors.blue.shade700],
+                  ),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blue.shade200.withOpacity(0.6),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  data!['name'] ?? '',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 1.2,
+                  ),
                 ),
               ),
-            ),
-            if (data?['education'] != null)
-              buildEducationSection(data!['education']),
-            if (data?['fellowships'] != null)
-              buildFellowshipsSection(data!['fellowships']),
-            if (data?['papers'] != null) buildPapersSection(data!['papers']),
-            if (data?['workExperiences'] != null)
-              buildWorkExperienceSection(data!['workExperiences']),
-            if (data?['certificate'] != null)
-              buildCertificatesSection(data!['certificate']),
+              if (data?['education'] != null)
+                buildEducationSection(data!['education']),
+              if (data?['fellowships'] != null)
+                buildFellowshipsSection(data!['fellowships']),
+              if (data?['papers'] != null) buildPapersSection(data!['papers']),
+              if (data?['workExperiences'] != null)
+                buildWorkExperienceSection(data!['workExperiences']),
+              if (data?['certificate'] != null)
+                buildCertificatesSection(data!['certificate']),
+            ],
           ],
         ),
       ),

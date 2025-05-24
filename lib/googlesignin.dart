@@ -4,7 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
-import 'package:medicalapp/form_page.dart';
+import 'package:medicalapp/admin/mainscreen.dart';
+import 'package:medicalapp/college/homepage.dart';
+
+import 'package:medicalapp/student/form_page.dart';
+import 'package:medicalapp/student/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -45,13 +49,13 @@ class _SignInScreenState extends State<SignInScreen> {
 
         switch (role) {
           case 'admin':
-            destinationPage = ApplicationForm();
+            destinationPage = AdminHomePage();
             break;
           case 'college':
-            destinationPage = ApplicationForm();
+            destinationPage = CollegeDegreesScreen();
             break;
-          case 'student':
-            destinationPage = ApplicationForm();
+          case 'doctor':
+            destinationPage = DoctorDashboardApp();
             break;
           case 'notassigned':
           default:

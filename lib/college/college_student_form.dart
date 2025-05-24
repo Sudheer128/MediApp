@@ -28,7 +28,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
     try {
       final response = await http.get(
         Uri.parse(
-          'http://192.168.0.103:8080/studentscompletedetails?application_id=${widget.applicationId}',
+          'http://192.168.0.103:8080/studentscompletedetails?user_id=${widget.applicationId}',
         ),
       );
 

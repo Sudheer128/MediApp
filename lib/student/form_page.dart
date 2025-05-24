@@ -6,10 +6,12 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:medicalapp/college_student_form.dart';
+import 'package:medicalapp/admin/mainscreen.dart';
+
 import 'package:medicalapp/college_view.dart';
 import 'package:medicalapp/edit_formAfterSave.dart';
 import 'package:medicalapp/googlesignin.dart';
+import 'package:medicalapp/student/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApplicationForm extends StatefulWidget {
@@ -477,14 +479,28 @@ class _ApplicationFormState extends State<ApplicationForm> {
             ),
             ListTile(
               leading: const Icon(Icons.person),
-              title: const Text('Profile'),
+              title: const Text('Home'),
               onTap: () {
                 Navigator.pop(context); // close drawer
 
                 Navigator.push(
                   context,
+                  MaterialPageRoute(builder: (context) => DoctorDashboardApp()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text('Profile'),
+              onTap: () async {
+                final prefs = await SharedPreferences.getInstance();
+                final userId = prefs.getInt('userid') ?? 0;
+                Navigator.pop(context); // close drawer
+
+                Navigator.push(
+                  context,
                   MaterialPageRoute(
-                    builder: (context) => EditForm(applicationId: 49),
+                    builder: (context) => EditForm(applicationId: userId),
                   ),
                 );
               },

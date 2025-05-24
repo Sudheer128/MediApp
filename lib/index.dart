@@ -16,6 +16,7 @@ class MyApp extends StatelessWidget {
         primaryColor: medical,
         scaffoldBackgroundColor: Colors.white,
       ),
+      debugShowCheckedModeBanner: false,
       home: HomePage(),
     );
   }

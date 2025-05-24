@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/college/studentList.dart';
 
-class DegreesScreen extends StatefulWidget {
+class CollegeDegreesScreen extends StatefulWidget {
   @override
   _DegreesScreenState createState() => _DegreesScreenState();
 }
 
-class _DegreesScreenState extends State<DegreesScreen>
+class _DegreesScreenState extends State<CollegeDegreesScreen>
     with SingleTickerProviderStateMixin {
   late Future<List<dynamic>> degreesFuture;
   late AnimationController _animationController;
