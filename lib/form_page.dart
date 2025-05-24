@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:medicalapp/admin/mainscreen.dart';
 import 'package:medicalapp/college_student_form.dart';
 import 'package:medicalapp/college_view.dart';
 import 'package:medicalapp/edit_formAfterSave.dart';
@@ -474,6 +475,18 @@ class _ApplicationFormState extends State<ApplicationForm> {
                 'Menu',
                 style: TextStyle(color: Colors.white, fontSize: 24),
               ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text('Home'),
+              onTap: () {
+                Navigator.pop(context); // close drawer
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AdminHomePage()),
+                );
+              },
             ),
             ListTile(
               leading: const Icon(Icons.person),

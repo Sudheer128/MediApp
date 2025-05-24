@@ -6,9 +6,11 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:medicalapp/admin/mainscreen.dart';
 import 'package:medicalapp/college_student_form.dart';
 import 'package:medicalapp/college_view.dart';
 import 'package:medicalapp/edit_formAfterSave.dart';
+import 'package:medicalapp/googlesignin.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class EditApplicationForm extends StatefulWidget {
@@ -568,6 +570,18 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
             ),
             ListTile(
               leading: const Icon(Icons.person),
+              title: const Text('Home'),
+              onTap: () {
+                Navigator.pop(context); // close drawer
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AdminHomePage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.person),
               title: const Text('Profile'),
               onTap: () {
                 Navigator.pop(context); // close drawer
@@ -575,8 +589,20 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => EditForm(applicationId: 48),
+                    builder: (context) => EditForm(applicationId: 49),
                   ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text('LogOut'),
+              onTap: () {
+                Navigator.pop(context); // close drawer
+                signOutGoogle();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => SignInScreen()),
                 );
               },
             ),
