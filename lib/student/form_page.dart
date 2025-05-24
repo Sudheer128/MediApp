@@ -327,20 +327,31 @@ class _ApplicationFormState extends State<ApplicationForm> {
 
     try {
       if (_resumeFile != null) {
-        final req =
-            http.MultipartRequest('POST', uri)
-              ..fields['data'] = jsonEncode(payload)
-              ..files.add(
-                await http.MultipartFile.fromPath(
-                  'resume',
-                  _resumeFile!.path,
-                  filename: _resumeFileName,
-                ),
-              );
+        final req = http.MultipartRequest('POST', uri);
+
+        // Flatten payload into form fields
+        payload.forEach((key, value) {
+          if (value is String) {
+            req.fields[key] = value;
+          } else {
+            // For nested objects/arrays convert to JSON string
+            req.fields[key] = jsonEncode(value);
+          }
+        });
+
+        // Add resume file
+        req.files.add(
+          await http.MultipartFile.fromPath(
+            'resume',
+            _resumeFile!.path,
+            filename: _resumeFileName,
+          ),
+        );
 
         final streamed = await req.send();
         response = await http.Response.fromStream(streamed);
       } else {
+        // JSON request as before
         response = await http.post(
           uri,
           headers: {'Content-Type': 'application/json'},
