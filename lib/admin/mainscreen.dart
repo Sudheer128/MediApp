@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:medicalapp/admin/adminintreststatus.dart';
 import 'package:medicalapp/admin/form_page.dart';
 import 'package:medicalapp/admin/searchstudent.dart';
 import 'package:medicalapp/admin/userstable.dart';
@@ -58,6 +59,17 @@ class AdminHomePage extends StatelessWidget {
               },
               icon: const Icon(Icons.settings),
               label: const Text('Search and find student details'),
+            ),
+            const SizedBox(height: 15),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => InterestsPage()),
+                );
+              },
+              icon: const Icon(Icons.settings),
+              label: const Text('College Interests'),
             ),
             const Spacer(),
             Center(
