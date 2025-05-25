@@ -13,12 +13,148 @@ import 'package:medicalapp/myrankUser/userform_page.dart';
 class UserHomePage extends StatelessWidget {
   const UserHomePage({super.key});
 
+  static const Color primaryBlue = Color(0xFF00897B);
+
+  void _logout(BuildContext context) {
+    signOutGoogle();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => Index()),
+    );
+  }
+
+  Widget _buildCard(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Card(
+      elevation: 8,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        splashColor: primaryBlue.withOpacity(0.3),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          width: double.infinity,
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 28,
+                backgroundColor: primaryBlue.withOpacity(0.15),
+                child: Icon(icon, size: 32, color: primaryBlue),
+              ),
+              const SizedBox(width: 24),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      subtitle,
+                      style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: primaryBlue,
         title: const Text('Admin Dashboard'),
-        automaticallyImplyLeading: false, // Hides the back button
+        automaticallyImplyLeading: true,
+      ),
+      drawer: Drawer(
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              DrawerHeader(
+                decoration: const BoxDecoration(color: primaryBlue),
+                child: const Center(
+                  child: Text(
+                    'Admin Menu',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: Icon(Icons.home_filled, color: primaryBlue),
+                title: const Text('Home'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => UserHomePage()),
+                  );
+                },
+              ),
+
+              ListTile(
+                leading: Icon(
+                  Icons.format_align_left_sharp,
+                  color: primaryBlue,
+                ),
+                title: const Text('New Student Form'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UserApplicationForm(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.person, color: primaryBlue),
+                title: const Text('Search Student'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => UserEditForm()),
+                  );
+                },
+              ),
+
+              const Spacer(),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.logout, color: Colors.red),
+                title: const Text(
+                  'Logout',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _logout(context);
+                },
+              ),
+            ],
+          ),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -30,10 +166,12 @@ class UserHomePage extends StatelessWidget {
               style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 30),
-
-            const SizedBox(height: 15),
-            ElevatedButton.icon(
-              onPressed: () {
+            _buildCard(
+              context,
+              title: 'Create New Student Form',
+              icon: Icons.analytics,
+              subtitle: 'Add new student application',
+              onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -41,36 +179,21 @@ class UserHomePage extends StatelessWidget {
                   ),
                 );
               },
-              icon: const Icon(Icons.analytics),
-              label: const Text('Create New student form'),
             ),
-            const SizedBox(height: 15),
-            ElevatedButton.icon(
-              onPressed: () {
+            const SizedBox(height: 20),
+            _buildCard(
+              context,
+              title: 'Search and Find Student Details',
+              icon: Icons.search,
+              subtitle: 'Locate student information',
+              onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => UserEditForm()),
                 );
               },
-              icon: const Icon(Icons.settings),
-              label: const Text('Search and find student details'),
             ),
-            const SizedBox(height: 15),
-
-            const Spacer(),
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  signOutGoogle();
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => Index()),
-                  );
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                child: const Text('Log Out'),
-              ),
-            ),
+            const SizedBox(height: 20),
           ],
         ),
       ),

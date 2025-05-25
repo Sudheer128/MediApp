@@ -14,6 +14,8 @@ import 'package:medicalapp/edit_formAfterSave.dart';
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
 import 'package:medicalapp/myrankUser/homepage.dart';
+import 'package:medicalapp/myrankUser/userSearchStudent.dart';
+import 'package:medicalapp/myrankUser/userform_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserEditApplicationForm extends StatefulWidget {
@@ -86,6 +88,16 @@ class _EditApplicationFormState extends State<UserEditApplicationForm> {
   final _validityFromController = TextEditingController();
   final _validityToController = TextEditingController();
   final _registrationNumberController = TextEditingController();
+
+  static const Color primaryBlue = Color(0xFF00897B);
+
+  void _logout(BuildContext context) {
+    signOutGoogle();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => Index()),
+    );
+  }
 
   // Resume Upload
   File? _resumeFile;
@@ -600,57 +612,76 @@ class _EditApplicationFormState extends State<UserEditApplicationForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue),
-              child: Text(
-                'Menu',
-                style: TextStyle(color: Colors.white, fontSize: 24),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('Home'),
-              onTap: () {
-                Navigator.pop(context); // close drawer
-
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => UserHomePage()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('Profile'),
-              onTap: () {
-                Navigator.pop(context); // close drawer
-
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EditForm(applicationId: 49),
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              DrawerHeader(
+                decoration: const BoxDecoration(color: primaryBlue),
+                child: const Center(
+                  child: Text(
+                    'Admin Menu',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('LogOut'),
-              onTap: () {
-                Navigator.pop(context); // close drawer
-                signOutGoogle();
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => Index()),
-                );
-              },
-            ),
+                ),
+              ),
+              ListTile(
+                leading: Icon(Icons.home_filled, color: primaryBlue),
+                title: const Text('Home'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => UserHomePage()),
+                  );
+                },
+              ),
 
-            // You can add more menu items here...
-          ],
+              ListTile(
+                leading: Icon(
+                  Icons.format_align_left_sharp,
+                  color: primaryBlue,
+                ),
+                title: const Text('New Student Form'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UserApplicationForm(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.person, color: primaryBlue),
+                title: const Text('Search Student'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => UserEditForm()),
+                  );
+                },
+              ),
+
+              const Spacer(),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.logout, color: Colors.red),
+                title: const Text(
+                  'Logout',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _logout(context);
+                },
+              ),
+            ],
+          ),
         ),
       ),
       appBar: AppBar(
