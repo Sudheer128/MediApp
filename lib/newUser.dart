@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:medicalapp/googlesignin.dart';
+import 'package:medicalapp/index.dart';
 
 class ApprovalScreen extends StatelessWidget {
   const ApprovalScreen({super.key});
@@ -21,7 +22,7 @@ class ApprovalScreen extends StatelessWidget {
                 signOutGoogle();
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => SignInScreen()),
+                  MaterialPageRoute(builder: (context) => Index()),
                 );
               },
               child: const Text('Logout'),

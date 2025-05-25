@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:medicalapp/college/collegeintrests.dart';
 import 'package:medicalapp/college/studentList.dart';
 import 'package:medicalapp/googlesignin.dart';
+import 'package:medicalapp/index.dart';
 
 class CollegeDegreesScreen extends StatefulWidget {
   @override
@@ -102,7 +103,7 @@ class _DegreesScreenState extends State<CollegeDegreesScreen>
                 signOutGoogle();
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => SignInScreen()),
+                  MaterialPageRoute(builder: (context) => Index()),
                 );
               },
             ),

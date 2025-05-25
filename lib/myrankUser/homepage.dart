@@ -5,6 +5,7 @@ import 'package:medicalapp/admin/searchstudent.dart';
 import 'package:medicalapp/admin/userstable.dart';
 
 import 'package:medicalapp/googlesignin.dart';
+import 'package:medicalapp/index.dart';
 import 'package:medicalapp/myrankUser/userSearchStudent.dart';
 import 'package:medicalapp/myrankUser/useredit_form.dart';
 import 'package:medicalapp/myrankUser/userform_page.dart';
@@ -63,7 +64,7 @@ class UserHomePage extends StatelessWidget {
                   signOutGoogle();
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => SignInScreen()),
+                    MaterialPageRoute(builder: (context) => Index()),
                   );
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),

@@ -10,6 +10,7 @@ import 'package:medicalapp/admin/userstable.dart';
 import 'package:medicalapp/college/collegeintrests.dart';
 import 'package:medicalapp/college/studentList.dart';
 import 'package:medicalapp/googlesignin.dart';
+import 'package:medicalapp/index.dart';
 
 class AdminCollegeDegreesScreen extends StatefulWidget {
   @override
@@ -28,7 +29,7 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
     signOutGoogle();
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => SignInScreen()),
+      MaterialPageRoute(builder: (context) => Index()),
     );
   }
 

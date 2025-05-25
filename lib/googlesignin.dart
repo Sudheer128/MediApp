@@ -86,9 +86,14 @@ class _SignInScreenState extends State<SignInScreen> {
     return Scaffold(
       appBar: AppBar(title: Text('Google Sign-In')),
       body: Center(
-        child: ElevatedButton(
-          onPressed: _handleSignIn,
-          child: Text('Sign in with Google'),
+        child: Column(
+          children: [
+            Text('Wellcome to MyRank Doctor Portal'),
+            ElevatedButton(
+              onPressed: _handleSignIn,
+              child: Text('Sign in with Google'),
+            ),
+          ],
         ),
       ),
     );

@@ -12,6 +12,7 @@ import 'package:medicalapp/admin/mainscreen.dart';
 import 'package:medicalapp/college_view.dart';
 import 'package:medicalapp/edit_formAfterSave.dart';
 import 'package:medicalapp/googlesignin.dart';
+import 'package:medicalapp/index.dart';
 import 'package:medicalapp/myrankUser/homepage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -643,7 +644,7 @@ class _EditApplicationFormState extends State<UserEditApplicationForm> {
                 signOutGoogle();
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => SignInScreen()),
+                  MaterialPageRoute(builder: (context) => Index()),
                 );
               },
             ),
