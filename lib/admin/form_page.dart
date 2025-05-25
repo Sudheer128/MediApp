@@ -7,8 +7,10 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:medicalapp/admin/adminintreststatus.dart';
 import 'package:medicalapp/admin/mainscreen.dart';
 import 'package:medicalapp/admin/searchstudent.dart';
+import 'package:medicalapp/admin/userstable.dart';
 
 import 'package:medicalapp/college_view.dart';
 import 'package:medicalapp/edit_formAfterSave.dart';
@@ -504,64 +506,93 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
     return course.duration;
   }
 
+  void _logout(BuildContext context) {
+    signOutGoogle();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => SignInScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    const Color primaryBlue = Color(0xFF007FFF);
+
     return Scaffold(
       drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue),
-              child: Text(
-                'Menu',
-                style: TextStyle(color: Colors.white, fontSize: 24),
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              DrawerHeader(
+                decoration: const BoxDecoration(color: primaryBlue),
+                child: const Center(
+                  child: Text(
+                    'Admin Menu',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('Home'),
-              onTap: () {
-                Navigator.pop(context); // close drawer
-
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AdminHomePage()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('Profile'),
-              onTap: () {
-                Navigator.pop(context); // close drawer
-
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AdminEditForm()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('LogOut'),
-              onTap: () {
-                Navigator.pop(context); // close drawer
-                signOutGoogle();
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => SignInScreen()),
-                );
-              },
-            ),
-
-            // You can add more menu items here...
-          ],
+              ListTile(
+                leading: Icon(Icons.group, color: primaryBlue),
+                title: const Text('Home'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AdminHomePage()),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.group, color: primaryBlue),
+                title: const Text('Manage Users'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UserManagementPage(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.school, color: primaryBlue),
+                title: const Text('College Interests'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => InterestsPage()),
+                  );
+                },
+              ),
+              const Spacer(),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.logout, color: Colors.red),
+                title: const Text(
+                  'Logout',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _logout(context);
+                },
+              ),
+            ],
+          ),
         ),
       ),
       appBar: AppBar(
         title: const Text('Medical Professional Application Form'),
         actions: [],
+        backgroundColor: primaryBlue,
       ),
       body: Center(
         child:

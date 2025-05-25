@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/admin/adminintreststatus.dart';
+import 'package:medicalapp/admin/form_page.dart';
 import 'package:medicalapp/admin/mainscreen.dart';
+import 'package:medicalapp/admin/searchstudent.dart';
 import 'package:medicalapp/admin/userstable.dart';
 import 'package:medicalapp/college/collegeintrests.dart';
 import 'package:medicalapp/college/studentList.dart';
@@ -87,7 +89,7 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
                 ),
               ),
               ListTile(
-                leading: Icon(Icons.group, color: primaryBlue),
+                leading: Icon(Icons.home_filled, color: primaryBlue),
                 title: const Text('Home'),
                 onTap: () {
                   Navigator.pop(context);
@@ -118,6 +120,43 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => InterestsPage()),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.format_align_left_sharp,
+                  color: primaryBlue,
+                ),
+                title: const Text('New Student Form'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AdminApplicationForm(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.person, color: primaryBlue),
+                title: const Text('Search Student'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AdminEditForm()),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
+                title: const Text('Available Doctors'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AdminCollegeDegreesScreen(),
+                    ),
                   );
                 },
               ),
