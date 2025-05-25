@@ -12,6 +12,7 @@ import 'package:medicalapp/admin/mainscreen.dart';
 import 'package:medicalapp/college_view.dart';
 import 'package:medicalapp/edit_formAfterSave.dart';
 import 'package:medicalapp/googlesignin.dart';
+import 'package:medicalapp/index.dart';
 import 'package:medicalapp/student/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -593,65 +594,10 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue),
-              child: Text(
-                'Menu',
-                style: TextStyle(color: Colors.white, fontSize: 24),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('Home'),
-              onTap: () {
-                Navigator.pop(context); // close drawer
-
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => DoctorDashboardApp()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('Profile'),
-              onTap: () async {
-                final prefs = await SharedPreferences.getInstance();
-                final userId = prefs.getInt('userid') ?? 0;
-                Navigator.pop(context); // close drawer
-
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EditForm(applicationId: userId),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('LogOut'),
-              onTap: () {
-                Navigator.pop(context); // close drawer
-                signOutGoogle();
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => SignInScreen()),
-                );
-              },
-            ),
-
-            // You can add more menu items here...
-          ],
-        ),
-      ),
       appBar: AppBar(
         title: const Text('Medical Professional Application Form'),
         actions: [],
+        backgroundColor: Colors.lightBlue,
       ),
       body: Form(
         key: _formKey,

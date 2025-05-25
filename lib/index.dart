@@ -1,5 +1,15 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:medicalapp/googlesignin.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:http/http.dart' as http;
+import 'package:medicalapp/admin/mainscreen.dart';
+import 'package:medicalapp/college/homepage.dart';
+import 'package:medicalapp/myrankUser/homepage.dart';
+import 'package:medicalapp/newUser.dart';
+import 'package:medicalapp/student/home.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // === Colors ===
 const medical = Color(0xFF007FFF);
@@ -7,7 +17,9 @@ const medicalLight = Color(0xFFE0F7FF);
 const medicalDark = Color(0xFF005F9E);
 const medicalAccent = Color(0xFF00B4FF);
 
-class MyApp extends StatelessWidget {
+class Index extends StatelessWidget {
+  const Index({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -19,7 +31,7 @@ class MyApp extends StatelessWidget {
           secondary: medicalAccent,
         ),
         scaffoldBackgroundColor: Colors.white,
-        appBarTheme: AppBarTheme(
+        appBarTheme: const AppBarTheme(
           elevation: 0,
           centerTitle: false,
           titleTextStyle: TextStyle(
@@ -28,69 +40,140 @@ class MyApp extends StatelessWidget {
             color: Colors.white,
           ),
         ),
-        cardTheme: CardTheme(
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          margin: EdgeInsets.zero,
-        ),
       ),
       debugShowCheckedModeBanner: false,
-      home: Builder(
-        builder: (context) {
-          return HomePage(
-            handleSignIn: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => SignInScreen()),
-              );
-            },
-          );
-        },
-      ),
+      home: const HomePage(),
     );
   }
 }
 
-class HomePage extends StatelessWidget {
-  final VoidCallback handleSignIn;
+// === HomePage with Google Sign-In popup on button clicks ===
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
-  const HomePage({required this.handleSignIn});
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  bool _isLoading = false;
+
+  Future<void> _handleSignIn() async {
+    setState(() => _isLoading = true);
+
+    User? user = await signInWithGoogle();
+    if (user == null) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Google sign-in cancelled or failed')),
+      );
+      return;
+    }
+
+    final email = user.email ?? "";
+    final name = user.displayName ?? "";
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://192.168.0.103:8080/api/user/check-or-insert'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'name': name}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final prefs = await SharedPreferences.getInstance();
+        final userId = data['userid'];
+        final userName = data['name'];
+        await prefs.setString('name', userName);
+        if (userId != null) {
+          await prefs.setInt('userid', userId);
+        }
+
+        final role = data['role'];
+        Widget destinationPage;
+
+        switch (role) {
+          case 'admin':
+            destinationPage = AdminHomePage();
+            break;
+          case 'college':
+            destinationPage = CollegeDegreesScreen();
+            break;
+          case 'doctor':
+            destinationPage = DoctorDashboardApp();
+            break;
+          case 'myrank_user':
+            destinationPage = UserHomePage();
+            break;
+          case 'notassigned':
+          default:
+            destinationPage = ApprovalScreen();
+        }
+
+        setState(() => _isLoading = false);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => destinationPage),
+        );
+      } else {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('API failed: ${response.body}')));
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('MedConnect'),
+        title: const Text('MedConnect'),
         backgroundColor: medical,
         actions: [
           TextButton(
-            onPressed: handleSignIn,
-            child: Text('Sign In', style: TextStyle(color: Colors.white)),
+            onPressed: _isLoading ? null : _handleSignIn,
+            child: const Text('Sign In', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            HeroSection(handleSignIn: handleSignIn),
-            FeaturesSection(),
-            ForDoctorsSection(handleSignIn: handleSignIn),
-            ForCollegesSection(handleSignIn: handleSignIn),
-            CTASection(handleSignIn: handleSignIn),
-          ],
-        ),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                HeroSection(handleSignIn: _handleSignIn),
+                FeaturesSection(),
+                ForDoctorsSection(handleSignIn: _handleSignIn),
+                ForCollegesSection(handleSignIn: _handleSignIn),
+                CTASection(handleSignIn: _handleSignIn),
+              ],
+            ),
+          ),
+          if (_isLoading)
+            Container(
+              color: Colors.black45,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        ],
       ),
     );
   }
 }
 
-// === Hero Section ===
+// === Below are your sections: HeroSection, FeaturesSection, etc. ===
+// For brevity, I’m including only HeroSection here — just add your existing widgets.
+
 class HeroSection extends StatelessWidget {
   final VoidCallback handleSignIn;
 
-  const HeroSection({required this.handleSignIn});
+  const HeroSection({required this.handleSignIn, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -103,7 +186,7 @@ class HeroSection extends StatelessWidget {
           end: Alignment.bottomCenter,
         ),
       ),
-      padding: EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+      padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
       child: LayoutBuilder(
         builder: (ctx, constraints) {
           final isWide = constraints.maxWidth > 800;
@@ -113,7 +196,6 @@ class HeroSection extends StatelessWidget {
             crossAxisAlignment:
                 isWide ? CrossAxisAlignment.center : CrossAxisAlignment.center,
             children: [
-              // Text Column
               Expanded(
                 flex: isWide ? 1 : 0,
                 child: Padding(
@@ -138,7 +220,7 @@ class HeroSection extends StatelessWidget {
                           height: 1.2,
                         ),
                       ),
-                      SizedBox(height: 24),
+                      const SizedBox(height: 24),
                       Text(
                         'MedConnect helps medical professionals showcase their qualifications and connects hospitals and institutions with the talent they need.',
                         textAlign: isWide ? TextAlign.left : TextAlign.center,
@@ -148,7 +230,7 @@ class HeroSection extends StatelessWidget {
                           height: 1.6,
                         ),
                       ),
-                      SizedBox(height: 32),
+                      const SizedBox(height: 32),
                       Wrap(
                         spacing: 16,
                         runSpacing: 16,
@@ -159,11 +241,11 @@ class HeroSection extends StatelessWidget {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: medical,
                               foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                 vertical: 16,
                                 horizontal: 32,
                               ),
-                              textStyle: TextStyle(
+                              textStyle: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -172,17 +254,17 @@ class HeroSection extends StatelessWidget {
                               ),
                             ),
                             onPressed: handleSignIn,
-                            child: Text('Get Started'),
+                            child: const Text('Get Started'),
                           ),
                           OutlinedButton(
                             style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: medical, width: 2),
+                              side: const BorderSide(color: medical, width: 2),
                               foregroundColor: medical,
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                 vertical: 16,
                                 horizontal: 32,
                               ),
-                              textStyle: TextStyle(
+                              textStyle: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -191,7 +273,7 @@ class HeroSection extends StatelessWidget {
                               ),
                             ),
                             onPressed: handleSignIn,
-                            child: Text('Learn More'),
+                            child: const Text('Learn More'),
                           ),
                         ],
                       ),
@@ -199,8 +281,7 @@ class HeroSection extends StatelessWidget {
                   ),
                 ),
               ),
-              // Image
-              if (isWide) ...[
+              if (isWide)
                 Expanded(
                   flex: 1,
                   child: Container(
@@ -211,7 +292,7 @@ class HeroSection extends StatelessWidget {
                         BoxShadow(
                           color: Colors.black.withOpacity(0.1),
                           blurRadius: 20,
-                          offset: Offset(0, 10),
+                          offset: const Offset(0, 10),
                         ),
                       ],
                     ),
@@ -224,7 +305,6 @@ class HeroSection extends StatelessWidget {
                     ),
                   ),
                 ),
-              ],
             ],
           );
         },
@@ -233,7 +313,47 @@ class HeroSection extends StatelessWidget {
   }
 }
 
-// === Features Section ===
+// === Google Sign-In function ===
+final FirebaseAuth _auth = FirebaseAuth.instance;
+final GoogleSignIn _googleSignIn = GoogleSignIn();
+
+Future<User?> signInWithGoogle() async {
+  try {
+    // Ensure previous session is signed out
+    await _googleSignIn.signOut();
+
+    final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
+    if (googleUser == null) {
+      // User cancelled the sign-in
+      return null;
+    }
+
+    final GoogleSignInAuthentication googleAuth =
+        await googleUser.authentication;
+
+    // Check tokens before proceeding
+    if (googleAuth.accessToken == null && googleAuth.idToken == null) {
+      debugPrint("Missing both accessToken and idToken");
+      return null; // or throw error
+    }
+
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    UserCredential userCredential = await _auth.signInWithCredential(
+      credential,
+    );
+
+    return userCredential.user;
+  } catch (e) {
+    debugPrint('Error with Google sign-in: $e');
+    return null;
+  }
+}
+
 class FeaturesSection extends StatelessWidget {
   final features = const [
     {

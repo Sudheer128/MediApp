@@ -6,6 +6,7 @@ import 'package:medicalapp/admin/searchstudent.dart';
 import 'package:medicalapp/admin/userstable.dart';
 import 'package:medicalapp/college/homepage.dart';
 import 'package:medicalapp/googlesignin.dart';
+import 'package:medicalapp/index.dart';
 
 class AdminHomePage extends StatelessWidget {
   const AdminHomePage({super.key});
@@ -16,7 +17,7 @@ class AdminHomePage extends StatelessWidget {
     signOutGoogle();
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => SignInScreen()),
+      MaterialPageRoute(builder: (context) => Index()),
     );
   }
 

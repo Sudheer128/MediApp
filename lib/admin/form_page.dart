@@ -16,6 +16,7 @@ import 'package:medicalapp/admin/userstable.dart';
 import 'package:medicalapp/college_view.dart';
 import 'package:medicalapp/edit_formAfterSave.dart';
 import 'package:medicalapp/googlesignin.dart';
+import 'package:medicalapp/index.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AdminApplicationForm extends StatefulWidget {
@@ -511,7 +512,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
     signOutGoogle();
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => SignInScreen()),
+      MaterialPageRoute(builder: (context) => Index()),
     );
   }
 
