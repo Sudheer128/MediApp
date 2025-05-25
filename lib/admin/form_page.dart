@@ -512,7 +512,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
     signOutGoogle();
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => Index()),
+      MaterialPageRoute<void>(builder: (BuildContext context) => Index()),
     );
   }
 
@@ -616,12 +616,17 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
               ListTile(
                 leading: const Icon(Icons.logout, color: Colors.red),
                 title: const Text(
-                  'Logout',
+                  'Logoutss',
                   style: TextStyle(color: Colors.red),
                 ),
                 onTap: () {
-                  Navigator.pop(context);
-                  _logout(context);
+                  signOutGoogle();
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (BuildContext context) => Index(),
+                    ),
+                  );
                 },
               ),
             ],

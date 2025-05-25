@@ -644,7 +644,9 @@ class _EditApplicationFormState extends State<UserEditApplicationForm> {
                 signOutGoogle();
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => Index()),
+                  MaterialPageRoute<void>(
+                    builder: (BuildContext context) => Index(),
+                  ),
                 );
               },
             ),

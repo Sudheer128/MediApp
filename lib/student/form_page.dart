@@ -594,7 +594,9 @@ class _ApplicationFormState extends State<ApplicationForm> {
                 signOutGoogle();
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => Index()),
+                  MaterialPageRoute<void>(
+                    builder: (BuildContext context) => Index(),
+                  ),
                 );
               },
             ),

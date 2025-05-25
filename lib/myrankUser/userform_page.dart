@@ -550,10 +550,11 @@ class _ApplicationFormState extends State<UserApplicationForm> {
               title: const Text('LogOut'),
               onTap: () {
                 Navigator.pop(context); // close drawer
-                signOutGoogle();
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => Index()),
+                  MaterialPageRoute<void>(
+                    builder: (BuildContext context) => Index(),
+                  ),
                 );
               },
             ),
