@@ -33,12 +33,14 @@ class _ApplicationFormState extends State<ApplicationForm> {
   final GlobalKey _workKey = GlobalKey();
   final GlobalKey _certificateKey = GlobalKey();
   final GlobalKey _resumeKey = GlobalKey();
+  bool _resumeError = false;
 
   bool _hasPG = false;
   bool _hasSS = false;
   bool _hasFellowships = false;
   bool _hasPapers = false;
   bool _hasWorkExperience = false;
+  bool _isActive = false;
 
   List<Course> pgCourses = [];
   List<Course> ssCourses = [];
@@ -152,6 +154,19 @@ class _ApplicationFormState extends State<ApplicationForm> {
 
   Future<void> _saveForm() async {
     final isValid = _formKey.currentState!.validate();
+
+    // Check resume upload separately
+    if (_resumeFile == null && _resumeBytes == null) {
+      setState(() {
+        _resumeError = true;
+      });
+      _scrollToSection(_resumeKey);
+      return;
+    } else {
+      setState(() {
+        _resumeError = false;
+      });
+    }
 
     if (!isValid) {
       // Instead of checking all sections and scrolling multiple times,
@@ -478,6 +493,47 @@ class _ApplicationFormState extends State<ApplicationForm> {
     return course.duration;
   }
 
+  Future<void> _updateStatus(bool isActive) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('userid') ?? 0;
+
+    final statusValue = isActive ? 1 : 0;
+    final uri = Uri.parse('http://192.168.0.103:8080/userstatus');
+
+    print('Updating status to $statusValue for user $userId');
+
+    try {
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'status': statusValue, 'userid': userId}),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _isActive = isActive;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Status updated: ${isActive ? "Active" : "Inactive"}',
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update status: ${response.statusCode}'),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error updating status: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -520,6 +576,15 @@ class _ApplicationFormState extends State<ApplicationForm> {
                 );
               },
             ),
+            SwitchListTile(
+              title: const Text('Active'),
+              value: _isActive,
+              onChanged: (bool value) {
+                _updateStatus(value);
+              },
+              secondary: const Icon(Icons.toggle_on),
+            ),
+
             ListTile(
               leading: const Icon(Icons.person),
               title: const Text('LogOut'),
@@ -1775,37 +1840,51 @@ class _ApplicationFormState extends State<ApplicationForm> {
   }
 
   Widget _buildResumeUploadSection() {
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Column(
-            children: [
-              const Icon(Icons.upload_file, size: 48, color: Colors.blue),
-              const SizedBox(height: 16),
-              Text(
-                _resumeFileName ?? 'No file selected',
-                textAlign: TextAlign.center,
+    return Container(
+      key: _resumeKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: _resumeError ? Colors.red : Colors.grey.shade300,
               ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _pickResume,
-                child: const Text('Select Resume'),
-              ),
-            ],
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Column(
+              children: [
+                const Icon(Icons.upload_file, size: 48, color: Colors.blue),
+                const SizedBox(height: 16),
+                Text(
+                  _resumeFileName ?? 'No file selected',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _pickResume,
+                  child: const Text('Select Resume'),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'Supported formats: PDF, DOC, DOCX',
-          style: TextStyle(fontSize: 12, color: Colors.grey),
-        ),
-      ],
+          if (_resumeError)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0, left: 8.0),
+              child: Text(
+                'Please upload your resume',
+                style: TextStyle(color: Colors.red[700], fontSize: 12),
+              ),
+            ),
+          const SizedBox(height: 8),
+          const Text(
+            'Supported formats: PDF, DOC, DOCX',
+            style: TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        ],
+      ),
     );
   }
 }

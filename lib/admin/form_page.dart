@@ -1,6 +1,7 @@
 // main.dart
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
@@ -32,6 +33,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
   final GlobalKey _workKey = GlobalKey();
   final GlobalKey _certificateKey = GlobalKey();
   final GlobalKey _resumeKey = GlobalKey();
+  bool _resumeError = false;
 
   bool _hasPG = false;
   bool _hasSS = false;
@@ -118,17 +120,26 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
     }
   }
 
+  Uint8List? _resumeBytes;
+
   Future<void> _pickResume() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf', 'doc', 'docx'],
+      withData: true, // <--- important to get bytes on web
     );
 
     if (result != null) {
-      setState(() {
+      if (kIsWeb) {
+        _resumeBytes = result.files.single.bytes;
+        _resumeFileName = result.files.single.name;
+        _resumeFile = null;
+      } else {
         _resumeFile = File(result.files.single.path!);
         _resumeFileName = result.files.single.name;
-      });
+        _resumeBytes = null;
+      }
+      setState(() {});
     }
   }
 
@@ -145,6 +156,19 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
 
   Future<void> _saveForm() async {
     final isValid = _formKey.currentState!.validate();
+
+    // Check resume upload separately
+    if (_resumeFile == null && _resumeBytes == null) {
+      setState(() {
+        _resumeError = true;
+      });
+      _scrollToSection(_resumeKey);
+      return;
+    } else {
+      setState(() {
+        _resumeError = false;
+      });
+    }
 
     if (!isValid) {
       // Instead of checking all sections and scrolling multiple times,
@@ -330,21 +354,34 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
     late http.Response response;
 
     try {
-      if (_resumeFile != null) {
-        final req =
-            http.MultipartRequest('POST', uri)
-              ..fields['data'] = jsonEncode(payload)
-              ..files.add(
-                await http.MultipartFile.fromPath(
-                  'resume',
-                  _resumeFile!.path,
-                  filename: _resumeFileName,
-                ),
-              );
-
-        final streamed = await req.send();
-        response = await http.Response.fromStream(streamed);
+      if (!kIsWeb && _resumeFile != null) {
+        // Mobile/native platforms: use fromPath
+        var request = http.MultipartRequest('POST', uri);
+        request.fields['data'] = jsonEncode(payload);
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'resume',
+            _resumeFile!.path,
+            filename: _resumeFileName,
+          ),
+        );
+        final streamedResponse = await request.send();
+        response = await http.Response.fromStream(streamedResponse);
+      } else if (kIsWeb && _resumeBytes != null) {
+        // Web platforms: use fromBytes
+        var request = http.MultipartRequest('POST', uri);
+        request.fields['data'] = jsonEncode(payload);
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            'resume',
+            _resumeBytes!,
+            filename: _resumeFileName,
+          ),
+        );
+        final streamedResponse = await request.send();
+        response = await http.Response.fromStream(streamedResponse);
       } else {
+        // No resume, just send JSON
         response = await http.post(
           uri,
           headers: {'Content-Type': 'application/json'},
@@ -1778,37 +1815,51 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
   }
 
   Widget _buildResumeUploadSection() {
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Column(
-            children: [
-              const Icon(Icons.upload_file, size: 48, color: Colors.blue),
-              const SizedBox(height: 16),
-              Text(
-                _resumeFileName ?? 'No file selected',
-                textAlign: TextAlign.center,
+    return Container(
+      key: _resumeKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: _resumeError ? Colors.red : Colors.grey.shade300,
               ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _pickResume,
-                child: const Text('Select Resume'),
-              ),
-            ],
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Column(
+              children: [
+                const Icon(Icons.upload_file, size: 48, color: Colors.blue),
+                const SizedBox(height: 16),
+                Text(
+                  _resumeFileName ?? 'No file selected',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _pickResume,
+                  child: const Text('Select Resume'),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'Supported formats: PDF, DOC, DOCX',
-          style: TextStyle(fontSize: 12, color: Colors.grey),
-        ),
-      ],
+          if (_resumeError)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0, left: 8.0),
+              child: Text(
+                'Please upload your resume',
+                style: TextStyle(color: Colors.red[700], fontSize: 12),
+              ),
+            ),
+          const SizedBox(height: 8),
+          const Text(
+            'Supported formats: PDF, DOC, DOCX',
+            style: TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        ],
+      ),
     );
   }
 }

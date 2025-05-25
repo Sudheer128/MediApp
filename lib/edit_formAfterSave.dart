@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:medicalapp/student/edit.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class EditForm extends StatefulWidget {
   final int applicationId;
@@ -286,6 +287,54 @@ class _StudentDetailScreenState extends State<EditForm> {
     );
   }
 
+  Future<void> _launchURL(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not open document')));
+    }
+  }
+
+  Widget buildResumeSection(List<dynamic> documents) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        buildSectionHeader('Resume', Icons.description, () {
+          // You can add edit functionality if needed
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Edit Resume tapped')));
+        }),
+        ...documents.map((doc) {
+          return buildCard(
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(child: Text(doc['name'] ?? 'Unnamed Document')),
+                TextButton(
+                  onPressed: () {
+                    final url = doc['url'] ?? '';
+                    if (url.isNotEmpty) {
+                      _launchURL(url);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('No URL provided')),
+                      );
+                    }
+                  },
+                  child: const Text('View'),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (loading) {
@@ -355,6 +404,8 @@ class _StudentDetailScreenState extends State<EditForm> {
               buildWorkExperienceSection(data!['workExperiences']),
             if (data?['certificate'] != null)
               buildCertificatesSection(data!['certificate']),
+            if (data?['documents'] != null)
+              buildResumeSection(data!['documents']),
           ],
         ),
       ),

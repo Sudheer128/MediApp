@@ -34,6 +34,7 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
   final GlobalKey _workKey = GlobalKey();
   final GlobalKey _certificateKey = GlobalKey();
   final GlobalKey _resumeKey = GlobalKey();
+  bool _resumeError = false;
 
   bool _hasPG = false;
   bool _hasSS = false;
@@ -258,6 +259,18 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
   void _saveForm() {
     final isValid = _formKey.currentState!.validate();
 
+    if (_resumeFile == null && _resumeBytes == null) {
+      setState(() {
+        _resumeError = true;
+      });
+      _scrollToSection(_resumeKey);
+      return;
+    } else {
+      setState(() {
+        _resumeError = false;
+      });
+    }
+
     if (!isValid) {
       // Instead of checking all sections and scrolling multiple times,
       // check in order and scroll to the first invalid section and return immediately.
@@ -423,7 +436,7 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
       },
     };
 
-    final uri = Uri.parse('http://192.168.0.103:8080/counsel');
+    final uri = Uri.parse('http://192.168.0.103:8080/application/update');
     late http.Response response;
 
     try {
@@ -1862,37 +1875,51 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
   }
 
   Widget _buildResumeUploadSection() {
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Column(
-            children: [
-              const Icon(Icons.upload_file, size: 48, color: Colors.blue),
-              const SizedBox(height: 16),
-              Text(
-                _resumeFileName ?? 'No file selected',
-                textAlign: TextAlign.center,
+    return Container(
+      key: _resumeKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: _resumeError ? Colors.red : Colors.grey.shade300,
               ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _pickResume,
-                child: const Text('Select Resume'),
-              ),
-            ],
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Column(
+              children: [
+                const Icon(Icons.upload_file, size: 48, color: Colors.blue),
+                const SizedBox(height: 16),
+                Text(
+                  _resumeFileName ?? 'No file selected',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _pickResume,
+                  child: const Text('Select Resume'),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'Supported formats: PDF, DOC, DOCX',
-          style: TextStyle(fontSize: 12, color: Colors.grey),
-        ),
-      ],
+          if (_resumeError)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0, left: 8.0),
+              child: Text(
+                'Please upload your resume',
+                style: TextStyle(color: Colors.red[700], fontSize: 12),
+              ),
+            ),
+          const SizedBox(height: 8),
+          const Text(
+            'Supported formats: PDF, DOC, DOCX',
+            style: TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        ],
+      ),
     );
   }
 }

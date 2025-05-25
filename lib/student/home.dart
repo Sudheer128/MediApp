@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:medicalapp/edit_formAfterSave.dart';
 import 'package:medicalapp/googlesignin.dart';
 
@@ -18,8 +21,71 @@ class DoctorDashboardApp extends StatelessWidget {
   }
 }
 
-class DoctorDashboard extends StatelessWidget {
+class DoctorDashboard extends StatefulWidget {
   const DoctorDashboard({super.key});
+
+  @override
+  State<DoctorDashboard> createState() => _DoctorDashboardState();
+}
+
+class _DoctorDashboardState extends State<DoctorDashboard> {
+  bool _isActive = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStatus();
+  }
+
+  Future<void> _loadStatus() async {
+    // Optionally load initial status from backend or SharedPreferences
+    // For now, just dummy load as false or from SharedPreferences if saved
+    final prefs = await SharedPreferences.getInstance();
+    // Example: load saved status if any, else false
+    setState(() {
+      _isActive = prefs.getBool('isActive') ?? false;
+    });
+  }
+
+  Future<void> _updateStatus(bool isActive) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('userid') ?? 0;
+
+    final statusValue = isActive ? 1 : 0;
+    final uri = Uri.parse('http://192.168.0.103:8080/status');
+
+    try {
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'status': statusValue, 'userid': userId}),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _isActive = isActive;
+        });
+        await prefs.setBool('isActive', isActive); // save locally if needed
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Status updated: ${isActive ? "Active" : "Inactive"}',
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update status: ${response.statusCode}'),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error updating status: $e')));
+    }
+  }
 
   Widget _buildCard({
     required String title,
@@ -165,6 +231,14 @@ class DoctorDashboard extends StatelessWidget {
                   ),
                 );
               },
+            ),
+            SwitchListTile(
+              title: const Text('Active'),
+              value: _isActive,
+              onChanged: (bool value) {
+                _updateStatus(value);
+              },
+              secondary: const Icon(Icons.toggle_on),
             ),
             ListTile(
               leading: const Icon(Icons.person),
