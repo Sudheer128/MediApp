@@ -14,11 +14,19 @@
       },
       "oauth_client": [
         {
-          "client_id": "644602495453-gug82vtqqt6sctp9kpie5hd83ne5ajiv.apps.googleusercontent.com",
+          "client_id": "644602495453-audjarh2p5vtpikhofqgad3g24mt72ca.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.medicalapp",
-            "certificate_hash": "0aa96e48f9305e3489d9cfde48749ae2b6eabb08"
+            "certificate_hash": "28f605de734095bd8fc9b40d5cd32fbe4a2a6877"
+          }
+        },
+        {
+          "client_id": "644602495453-duslfshofjkl3opa7lipe1ctjucimuds.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.medicalapp",
+            "certificate_hash": "dd2fb6a12e5c890d550e5ae5acd1b5786cbf3579"
           }
         },
         {
