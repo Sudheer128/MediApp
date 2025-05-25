@@ -30,6 +30,14 @@
           }
         },
         {
+          "client_id": "644602495453-rs05renh0lclajhdj39athefragpv68g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.medicalapp",
+            "certificate_hash": "2785a57ab42e5c1ce2ab5bfe5e7c22c84259acbf"
+          }
+        },
+        {
           "client_id": "644602495453-ng9sbtbtmjmepausnsj0ocgbgi4u9i4s.apps.googleusercontent.com",
           "client_type": 3
         }
