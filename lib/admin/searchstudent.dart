@@ -61,7 +61,8 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
     return MediaQuery.of(context).size.width >= 800 || kIsWeb;
   }
 
-  Widget buildSectionHeader(String title, IconData icon, VoidCallback onEdit) {
+  // Removed onEdit param and edit icon button here
+  Widget buildSectionHeader(String title, IconData icon) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
@@ -81,12 +82,7 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
               color: Colors.blue.shade800,
             ),
           ),
-          const Spacer(),
-          IconButton(
-            icon: const Icon(Icons.edit, color: Colors.blueAccent),
-            onPressed: onEdit,
-            tooltip: 'Edit $title',
-          ),
+          // No edit button here anymore
         ],
       ),
     );
@@ -120,26 +116,10 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
   }
 
   Widget buildEducationSection(List<dynamic> educationList) {
-    final userIdText = _userIdController.text.trim();
-    final userId = int.tryParse(userIdText) ?? 0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        buildSectionHeader('Education', Icons.school, () {
-          if (data != null) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder:
-                    (context) => AdminEditApplicationForm(
-                      existingData: data,
-                      userId: userId,
-                    ),
-              ),
-            );
-          }
-        }),
-
+        buildSectionHeader('Education', Icons.school),
         ...educationList.map((edu) {
           return buildCard(
             Column(
@@ -164,12 +144,7 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        buildSectionHeader('Fellowships', Icons.workspace_premium, () {
-          // TODO: Implement edit action for Fellowships
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Edit Fellowships tapped')),
-          );
-        }),
+        buildSectionHeader('Fellowships', Icons.workspace_premium),
         ...fellowships.asMap().entries.map((entry) {
           int idx = entry.key + 1;
           var fellowship = entry.value;
@@ -200,12 +175,7 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        buildSectionHeader('Papers', Icons.menu_book, () {
-          // TODO: Implement edit action for Papers
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Edit Papers tapped')));
-        }),
+        buildSectionHeader('Papers', Icons.menu_book),
         ...papers.map((paper) {
           return buildCard(
             Column(
@@ -226,12 +196,7 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        buildSectionHeader('Work Experience', Icons.work, () {
-          // TODO: Implement edit action for Work Experience
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Edit Work Experience tapped')),
-          );
-        }),
+        buildSectionHeader('Work Experience', Icons.work),
         ...workExperiences.asMap().entries.map((entry) {
           int idx = entry.key + 1;
           var work = entry.value;
@@ -268,12 +233,6 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
         buildSectionHeader(
           'Currently Active Medical Council Certificate',
           Icons.verified,
-          () {
-            // TODO: Implement edit action for Certificate
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Edit Certificate tapped')),
-            );
-          },
         ),
         buildCard(
           Column(
@@ -303,7 +262,7 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
     } else {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Could not open document')));
+      ).showSnackBar(const SnackBar(content: Text('Could not open document')));
     }
   }
 
@@ -311,12 +270,7 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        buildSectionHeader('Resume', Icons.description, () {
-          // You can add edit functionality if needed
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Edit Resume tapped')));
-        }),
+        buildSectionHeader('Resume', Icons.description),
         ...documents.map((doc) {
           return buildCard(
             Row(
@@ -326,7 +280,6 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
                 TextButton(
                   onPressed: () {
                     final url = doc['url'] ?? '';
-                    print(url);
                     if (url.isNotEmpty) {
                       Navigator.push(
                         context,
@@ -344,7 +297,6 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
                       );
                     }
                   },
-
                   child: const Text('View'),
                 ),
               ],
@@ -413,7 +365,7 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
                   vertical: 16,
                   horizontal: 24,
                 ),
-                margin: const EdgeInsets.only(bottom: 24),
+                margin: const EdgeInsets.only(bottom: 8),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [Colors.blue.shade400, Colors.blue.shade700],
@@ -438,6 +390,46 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
                   ),
                 ),
               ),
+
+              // Single Edit button on top right above all sections
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor:
+                            Colors.white, // text and icon default color
+                      ),
+                      onPressed: () {
+                        final userIdText = _userIdController.text.trim();
+                        final userId = int.tryParse(userIdText) ?? 0;
+                        if (data != null) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => AdminEditApplicationForm(
+                                    existingData: data,
+                                    userId: userId,
+                                  ),
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.edit,
+                        color:
+                            Colors.white, // explicitly setting icon color white
+                      ),
+                      label: const Text('Edit'),
+                    ),
+                  ],
+                ),
+              ),
+
               if (data?['education'] != null)
                 buildEducationSection(data!['education']),
               if (data?['fellowships'] != null)

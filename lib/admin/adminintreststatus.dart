@@ -153,6 +153,12 @@ class _InterestsPageState extends State<InterestsPage> {
               ? Center(child: Text('Error: $_error'))
               : Column(
                 children: [
+                  IconButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    icon: Icon(Icons.arrow_back),
+                  ),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: TextField(

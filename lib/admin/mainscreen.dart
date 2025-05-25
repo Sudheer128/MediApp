@@ -99,7 +99,7 @@ class AdminHomePage extends StatelessWidget {
                 ),
               ),
               ListTile(
-                leading: Icon(Icons.group, color: primaryBlue),
+                leading: Icon(Icons.home_filled, color: primaryBlue),
                 title: const Text('Home'),
                 onTap: () {
                   Navigator.pop(context);
@@ -130,6 +130,43 @@ class AdminHomePage extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => InterestsPage()),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.format_align_left_sharp,
+                  color: primaryBlue,
+                ),
+                title: const Text('New Student Form'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AdminApplicationForm(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.person, color: primaryBlue),
+                title: const Text('Search Student'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AdminEditForm()),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
+                title: const Text('Available Doctors'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AdminCollegeDegreesScreen(),
+                    ),
                   );
                 },
               ),

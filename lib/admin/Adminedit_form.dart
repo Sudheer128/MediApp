@@ -732,6 +732,18 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Back Button Section
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: IconButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  icon: Icon(Icons.arrow_back, color: Colors.blue),
+                  tooltip: 'Go Back',
+                ),
+              ),
+
               // Personal Details Section
               Container(
                 key: _personalKey,

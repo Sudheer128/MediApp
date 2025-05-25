@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:medicalapp/admin/adminCollegedocList.dart';
 import 'package:medicalapp/admin/adminintreststatus.dart';
 import 'package:medicalapp/admin/mainscreen.dart';
 import 'package:medicalapp/admin/searchstudent.dart';
@@ -538,7 +539,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
                 ),
               ),
               ListTile(
-                leading: Icon(Icons.group, color: primaryBlue),
+                leading: Icon(Icons.home_filled, color: primaryBlue),
                 title: const Text('Home'),
                 onTap: () {
                   Navigator.pop(context);
@@ -572,6 +573,43 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
                   );
                 },
               ),
+              ListTile(
+                leading: Icon(
+                  Icons.format_align_left_sharp,
+                  color: primaryBlue,
+                ),
+                title: const Text('New Student Form'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AdminApplicationForm(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.person, color: primaryBlue),
+                title: const Text('Search Student'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AdminEditForm()),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
+                title: const Text('Available Doctors'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AdminCollegeDegreesScreen(),
+                    ),
+                  );
+                },
+              ),
               const Spacer(),
               const Divider(),
               ListTile(
@@ -598,7 +636,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
         child:
             _isFormSubmitted
                 ? const Text(
-                  'Profile successfully created!',
+                  'Form Submitted successfully!',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 )

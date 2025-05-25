@@ -6,6 +6,7 @@ import 'package:medicalapp/admin/adminintreststatus.dart';
 import 'package:medicalapp/admin/form_page.dart';
 import 'package:medicalapp/admin/mainscreen.dart';
 import 'package:medicalapp/admin/searchstudent.dart';
+import 'package:medicalapp/admin/studentsList.dart';
 import 'package:medicalapp/admin/userstable.dart';
 import 'package:medicalapp/college/collegeintrests.dart';
 import 'package:medicalapp/college/studentList.dart';
@@ -179,7 +180,7 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
       ),
       backgroundColor: Color(0xFFF5F7FA),
       appBar: AppBar(
-        backgroundColor: Colors.deepPurple.shade700,
+        backgroundColor: primaryBlue,
         elevation: 4,
         centerTitle: true,
         title: Text(
@@ -201,7 +202,7 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
                 height: 48,
                 child: CircularProgressIndicator(
                   strokeWidth: 4.2,
-                  color: Colors.deepPurple.shade600,
+                  color: primaryBlue,
                 ),
               ),
             );
@@ -242,7 +243,7 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
                         decoration: BoxDecoration(
                           border: Border(
                             bottom: BorderSide(
-                              color: Colors.deepPurple.shade300,
+                              color: primaryBlue.withOpacity(0.5),
                               width: 3,
                             ),
                           ),
@@ -252,7 +253,7 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
                           style: TextStyle(
                             fontSize: 26,
                             fontWeight: FontWeight.bold,
-                            color: Colors.deepPurple.shade800,
+                            color: Color(0xFF005BBB) ?? primaryBlue,
                           ),
                         ),
                       ),
@@ -288,10 +289,11 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
                                       context,
                                       MaterialPageRoute(
                                         builder:
-                                            (context) => CourseDetailsScreen(
-                                              degree: degree,
-                                              courseName: courseName,
-                                            ),
+                                            (context) =>
+                                                AdminCourseDetailsScreen(
+                                                  degree: degree,
+                                                  courseName: courseName,
+                                                ),
                                       ),
                                     );
                                   },
@@ -303,8 +305,8 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
                                         colors: [
-                                          Colors.deepPurple.shade400,
-                                          Colors.deepPurple.shade700,
+                                          primaryBlue.withOpacity(0.7),
+                                          primaryBlue,
                                         ],
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
@@ -312,8 +314,7 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
                                       borderRadius: BorderRadius.circular(14),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.deepPurple.shade200
-                                              .withOpacity(0.6),
+                                          color: primaryBlue.withOpacity(0.4),
                                           offset: Offset(0, 4),
                                           blurRadius: 8,
                                         ),
