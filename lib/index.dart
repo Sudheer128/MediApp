@@ -135,8 +135,35 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('MedConnect'),
-        backgroundColor: medical,
+        backgroundColor: medical, // Your primary color
+        elevation: 0,
+        title: Row(
+          children: [
+            // ✅ Logo inside a white, rounded container
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white, // White background
+                borderRadius: BorderRadius.circular(8), // Rounded edges
+              ),
+              padding: const EdgeInsets.all(4), // Padding around the image
+              child: Image.asset(
+                'assets/logo.png',
+                height: 100,
+                width: 100,
+                fit: BoxFit.contain,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'MedConnect',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: _isLoading ? null : _handleSignIn,
@@ -144,6 +171,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -154,6 +182,7 @@ class _HomePageState extends State<HomePage> {
                 ForDoctorsSection(handleSignIn: _handleSignIn),
                 ForCollegesSection(handleSignIn: _handleSignIn),
                 CTASection(handleSignIn: _handleSignIn),
+                const FooterSection(),
               ],
             ),
           ),
@@ -162,6 +191,74 @@ class _HomePageState extends State<HomePage> {
               color: Colors.black45,
               child: const Center(child: CircularProgressIndicator()),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class FooterSection extends StatelessWidget {
+  const FooterSection({super.key});
+
+  void _showDialog(BuildContext context, String title, String content) {
+    showDialog(
+      context: context,
+      builder:
+          (dialogContext) => AlertDialog(
+            title: Text(title),
+            content: SingleChildScrollView(child: Text(content)),
+            actions: [
+              TextButton(
+                onPressed:
+                    () =>
+                        Navigator.of(
+                          dialogContext,
+                        ).pop(), // ✅ Use dialogContext
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16),
+      child: Column(
+        children: [
+          const Divider(),
+          Wrap(
+            spacing: 24,
+            runSpacing: 8,
+            alignment: WrapAlignment.center,
+            children: [
+              TextButton(
+                onPressed:
+                    () => _showDialog(
+                      context,
+                      'Terms & Conditions',
+                      'These are the terms and conditions of using MedConnect.\n\n1. Use the platform ethically.\n2. Respect data privacy.\n3. Do not impersonate others.\n',
+                    ),
+                child: const Text('Terms & Conditions'),
+              ),
+              TextButton(
+                onPressed:
+                    () => _showDialog(
+                      context,
+                      'Privacy & Policy',
+                      'These are the Privacy & Policy of using MedConnect.\n\n1. Use the platform ethically.\n2. Respect data privacy.\n3. Do not impersonate others.\n',
+                    ),
+                child: const Text('Privacy & Policy'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '© ${DateTime.now().year} MedConnect. All rights reserved.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
         ],
       ),
     );
@@ -211,6 +308,15 @@ class HeroSection extends StatelessWidget {
                             : CrossAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // Company Logo
+                      Image.asset(
+                        'assets/logo.png',
+                        width: isWide ? 450 : 200, // Adjust size as needed
+                        fit: BoxFit.contain,
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Headline
                       Text(
                         'Connecting Medical Talent With Opportunities',
                         textAlign: isWide ? TextAlign.left : TextAlign.center,
@@ -222,6 +328,8 @@ class HeroSection extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 24),
+
+                      // Subheadline
                       Text(
                         'MedConnect helps medical professionals showcase their qualifications and connects hospitals and institutions with the talent they need.',
                         textAlign: isWide ? TextAlign.left : TextAlign.center,
@@ -232,6 +340,8 @@ class HeroSection extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 32),
+
+                      // Buttons
                       Wrap(
                         spacing: 16,
                         runSpacing: 16,
