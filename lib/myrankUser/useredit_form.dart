@@ -90,6 +90,7 @@ class _EditApplicationFormState extends State<UserEditApplicationForm> {
   final _registrationNumberController = TextEditingController();
 
   static const Color primaryBlue = Color(0xFF00897B);
+  String? userName;
 
   void _logout(BuildContext context) {
     signOutGoogle();
@@ -97,6 +98,14 @@ class _EditApplicationFormState extends State<UserEditApplicationForm> {
       context,
       MaterialPageRoute(builder: (context) => Index()),
     );
+  }
+
+  Future<void> _loadUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedName = prefs.getString('name') ?? 'Admin'; // key matches here
+    setState(() {
+      userName = savedName;
+    });
   }
 
   // Resume Upload
@@ -616,35 +625,59 @@ class _EditApplicationFormState extends State<UserEditApplicationForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              DrawerHeader(
-                decoration: const BoxDecoration(color: primaryBlue),
-                child: const Center(
-                  child: Text(
-                    'Admin Menu',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+              Container(
+                color: UserHomePage.primaryBlue,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 40,
+                  horizontal: 20,
+                ),
+                child: Row(
+                  children: [
+                    // Placeholder profile pic - replace with your image widget later
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: Colors.white,
+                      child: Icon(
+                        Icons.person,
+                        size: 40,
+                        color: UserHomePage.primaryBlue,
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(
+                        userName ?? 'Admin',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               ListTile(
-                leading: Icon(Icons.home_filled, color: primaryBlue),
+                leading: Icon(
+                  Icons.home_filled,
+                  color: UserHomePage.primaryBlue,
+                ),
                 title: const Text('Home'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => UserHomePage()),
+                    MaterialPageRoute(
+                      builder: (context) => const UserHomePage(),
+                    ),
                   );
                 },
               ),
-
               ListTile(
                 leading: Icon(
                   Icons.format_align_left_sharp,
-                  color: primaryBlue,
+                  color: UserHomePage.primaryBlue,
                 ),
                 title: const Text('New Student Form'),
                 onTap: () {
@@ -657,7 +690,7 @@ class _EditApplicationFormState extends State<UserEditApplicationForm> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.person, color: primaryBlue),
+                leading: Icon(Icons.person, color: UserHomePage.primaryBlue),
                 title: const Text('Search Student'),
                 onTap: () {
                   Navigator.push(
@@ -666,7 +699,6 @@ class _EditApplicationFormState extends State<UserEditApplicationForm> {
                   );
                 },
               ),
-
               const Spacer(),
               const Divider(),
               ListTile(
@@ -686,6 +718,7 @@ class _EditApplicationFormState extends State<UserEditApplicationForm> {
       ),
       appBar: AppBar(
         title: const Text('Medical Professional Application Form'),
+        backgroundColor: primaryBlue,
         actions: [],
       ),
       body: Form(

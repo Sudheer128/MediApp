@@ -18,6 +18,8 @@ class _StudentDetailScreenState extends State<UserEditForm> {
   String? error;
   final TextEditingController _userIdController = TextEditingController();
 
+  static const Color primaryTeal = Color(0xFF00897B);
+
   @override
   void dispose() {
     _userIdController.dispose();
@@ -60,31 +62,28 @@ class _StudentDetailScreenState extends State<UserEditForm> {
     return MediaQuery.of(context).size.width >= 800 || kIsWeb;
   }
 
-  Widget buildSectionHeader(String title, IconData icon, VoidCallback onEdit) {
+  // Section header WITHOUT edit button
+  Widget buildSectionHeader(String title, IconData icon) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       decoration: BoxDecoration(
-        color: Colors.blue.shade100,
+        color: Colors.teal.shade100,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Row(
         children: [
-          Icon(icon, color: Colors.blue.shade800),
+          Icon(icon, color: Colors.teal.shade800),
           const SizedBox(width: 8),
-          Text(
-            title,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-              color: Colors.blue.shade800,
+          Flexible(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.teal.shade800,
+              ),
             ),
-          ),
-          const Spacer(),
-          IconButton(
-            icon: const Icon(Icons.edit, color: Colors.blueAccent),
-            onPressed: onEdit,
-            tooltip: 'Edit $title',
           ),
         ],
       ),
@@ -118,27 +117,46 @@ class _StudentDetailScreenState extends State<UserEditForm> {
     );
   }
 
+  // Education section with standalone Edit button above the section header
   Widget buildEducationSection(List<dynamic> educationList) {
     final userIdText = _userIdController.text.trim();
     final userId = int.tryParse(userIdText) ?? 0;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        buildSectionHeader('Education', Icons.school, () {
-          if (data != null) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder:
-                    (context) => UserEditApplicationForm(
-                      existingData: data,
-                      userId: userId,
-                    ),
+        // Edit button at the top right
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF00796B), // teal color
               ),
-            );
-          }
-        }),
+              onPressed: () {
+                if (data != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => UserEditApplicationForm(
+                            existingData: data,
+                            userId: userId,
+                          ),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Edit', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
 
+        // Education section header without edit button
+        buildSectionHeader('Education', Icons.school),
+
+        // Education cards
         ...educationList.map((edu) {
           return buildCard(
             Column(
@@ -163,12 +181,7 @@ class _StudentDetailScreenState extends State<UserEditForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        buildSectionHeader('Fellowships', Icons.workspace_premium, () {
-          // TODO: Implement edit action for Fellowships
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Edit Fellowships tapped')),
-          );
-        }),
+        buildSectionHeader('Fellowships', Icons.workspace_premium),
         ...fellowships.asMap().entries.map((entry) {
           int idx = entry.key + 1;
           var fellowship = entry.value;
@@ -180,7 +193,7 @@ class _StudentDetailScreenState extends State<UserEditForm> {
                   'Fellowship $idx',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                const Divider(color: Colors.blueAccent),
+                const Divider(color: Color(0xFF00796B)),
                 buildInfoRow('Course Name', fellowship['courseName'] ?? ''),
                 buildInfoRow('College Name', fellowship['collegeName'] ?? ''),
                 buildInfoRow(
@@ -199,12 +212,7 @@ class _StudentDetailScreenState extends State<UserEditForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        buildSectionHeader('Papers', Icons.menu_book, () {
-          // TODO: Implement edit action for Papers
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Edit Papers tapped')));
-        }),
+        buildSectionHeader('Papers', Icons.menu_book),
         ...papers.map((paper) {
           return buildCard(
             Column(
@@ -225,12 +233,7 @@ class _StudentDetailScreenState extends State<UserEditForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        buildSectionHeader('Work Experience', Icons.work, () {
-          // TODO: Implement edit action for Work Experience
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Edit Work Experience tapped')),
-          );
-        }),
+        buildSectionHeader('Work Experience', Icons.work),
         ...workExperiences.asMap().entries.map((entry) {
           int idx = entry.key + 1;
           var work = entry.value;
@@ -242,7 +245,7 @@ class _StudentDetailScreenState extends State<UserEditForm> {
                   'Experience $idx',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                const Divider(color: Colors.blueAccent),
+                const Divider(color: Color(0xFF00796B)),
                 buildInfoRow('Role', work['role'] ?? ''),
                 buildInfoRow('Hospital Name', work['name'] ?? ''),
                 buildInfoRow(
@@ -267,12 +270,6 @@ class _StudentDetailScreenState extends State<UserEditForm> {
         buildSectionHeader(
           'Currently Active Medical Council Certificate',
           Icons.verified,
-          () {
-            // TODO: Implement edit action for Certificate
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Edit Certificate tapped')),
-            );
-          },
         ),
         buildCard(
           Column(
@@ -300,7 +297,7 @@ class _StudentDetailScreenState extends State<UserEditForm> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Student Details'),
-        backgroundColor: Colors.blue.shade700,
+        backgroundColor: primaryTeal,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -356,12 +353,12 @@ class _StudentDetailScreenState extends State<UserEditForm> {
                 margin: const EdgeInsets.only(bottom: 24),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Colors.blue.shade400, Colors.blue.shade700],
+                    colors: [Colors.teal.shade400, Colors.teal.shade700],
                   ),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.blue.shade200.withOpacity(0.6),
+                      color: Colors.teal.shade200.withOpacity(0.6),
                       blurRadius: 12,
                       offset: const Offset(0, 6),
                     ),

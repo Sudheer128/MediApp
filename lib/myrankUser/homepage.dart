@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // add this import
 import 'package:medicalapp/admin/adminintreststatus.dart';
 import 'package:medicalapp/admin/form_page.dart';
 import 'package:medicalapp/admin/searchstudent.dart';
@@ -10,10 +11,31 @@ import 'package:medicalapp/myrankUser/userSearchStudent.dart';
 import 'package:medicalapp/myrankUser/useredit_form.dart';
 import 'package:medicalapp/myrankUser/userform_page.dart';
 
-class UserHomePage extends StatelessWidget {
+class UserHomePage extends StatefulWidget {
   const UserHomePage({super.key});
 
   static const Color primaryBlue = Color(0xFF00897B);
+
+  @override
+  State<UserHomePage> createState() => _UserHomePageState();
+}
+
+class _UserHomePageState extends State<UserHomePage> {
+  String? userName;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedName = prefs.getString('name') ?? 'Admin'; // key matches here
+    setState(() {
+      userName = savedName;
+    });
+  }
 
   void _logout(BuildContext context) {
     signOutGoogle();
@@ -36,7 +58,7 @@ class UserHomePage extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: onTap,
-        splashColor: primaryBlue.withOpacity(0.3),
+        splashColor: UserHomePage.primaryBlue.withOpacity(0.3),
         child: Container(
           padding: const EdgeInsets.all(24),
           width: double.infinity,
@@ -44,8 +66,8 @@ class UserHomePage extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 28,
-                backgroundColor: primaryBlue.withOpacity(0.15),
-                child: Icon(icon, size: 32, color: primaryBlue),
+                backgroundColor: UserHomePage.primaryBlue.withOpacity(0.15),
+                child: Icon(icon, size: 32, color: UserHomePage.primaryBlue),
               ),
               const SizedBox(width: 24),
               Expanded(
@@ -79,7 +101,7 @@ class UserHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: primaryBlue,
+        backgroundColor: UserHomePage.primaryBlue,
         title: const Text('Admin Dashboard'),
         automaticallyImplyLeading: true,
       ),
@@ -88,35 +110,59 @@ class UserHomePage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              DrawerHeader(
-                decoration: const BoxDecoration(color: primaryBlue),
-                child: const Center(
-                  child: Text(
-                    'Admin Menu',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+              Container(
+                color: UserHomePage.primaryBlue,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 40,
+                  horizontal: 20,
+                ),
+                child: Row(
+                  children: [
+                    // Placeholder profile pic - replace with your image widget later
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: Colors.white,
+                      child: Icon(
+                        Icons.person,
+                        size: 40,
+                        color: UserHomePage.primaryBlue,
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(
+                        userName ?? 'Admin',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               ListTile(
-                leading: Icon(Icons.home_filled, color: primaryBlue),
+                leading: Icon(
+                  Icons.home_filled,
+                  color: UserHomePage.primaryBlue,
+                ),
                 title: const Text('Home'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => UserHomePage()),
+                    MaterialPageRoute(
+                      builder: (context) => const UserHomePage(),
+                    ),
                   );
                 },
               ),
-
               ListTile(
                 leading: Icon(
                   Icons.format_align_left_sharp,
-                  color: primaryBlue,
+                  color: UserHomePage.primaryBlue,
                 ),
                 title: const Text('New Student Form'),
                 onTap: () {
@@ -129,7 +175,7 @@ class UserHomePage extends StatelessWidget {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.person, color: primaryBlue),
+                leading: Icon(Icons.person, color: UserHomePage.primaryBlue),
                 title: const Text('Search Student'),
                 onTap: () {
                   Navigator.push(
@@ -138,7 +184,6 @@ class UserHomePage extends StatelessWidget {
                   );
                 },
               ),
-
               const Spacer(),
               const Divider(),
               ListTile(
@@ -161,11 +206,7 @@ class UserHomePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Welcome, Admin!',
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 20),
             _buildCard(
               context,
               title: 'Create New Student Form',

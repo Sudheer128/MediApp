@@ -44,7 +44,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
   @override
   void initState() {
     super.initState();
-    _loadStatus();
+    _loadStatus(); // Load status when the page loads
     _loadUsername();
   }
 
@@ -55,26 +55,55 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
     });
   }
 
+  // Fetch the current status from the API
   Future<void> _loadStatus() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _isActive = prefs.getBool('isActive') ?? false;
-    });
+    final userId = prefs.getInt('userid') ?? 0;
+
+    final uri = Uri.parse(
+      'http://192.168.0.103:8080/getuserstatus?userid=$userId',
+    );
+
+    try {
+      final response = await http.get(
+        uri,
+      ); // GET request to get the user status
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final status = data['status'] == "1";
+
+        setState(() {
+          _isActive = status;
+        });
+
+        // Store the status locally
+        await prefs.setBool('isActive', _isActive);
+      } else {
+        // Handle error if status fetch fails
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to fetch status')));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error fetching status: $e')));
+    }
   }
 
+  // Update status when toggle changes
   Future<void> _updateStatus(bool isActive) async {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('userid') ?? 0;
 
     final statusValue = isActive ? 1 : 0;
-    final uri = Uri.parse('http://192.168.0.103:8080/status');
+    final uri = Uri.parse(
+      'http://192.168.0.103:8080/status?user_id=$userId&status=$statusValue',
+    );
 
     try {
-      final response = await http.post(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'status': statusValue, 'userid': userId}),
-      );
+      final response = await http.get(uri); // changed to GET
 
       if (response.statusCode == 200) {
         setState(() {
