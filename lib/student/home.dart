@@ -99,9 +99,9 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
 
     final statusValue = isActive ? 1 : 0;
     final uri = Uri.parse(
-      'http://192.168.0.103:8080/status?user_id=$userId&status=$statusValue',
+      'http://192.168.0.103:8080/userstatus?userid=$userId&status=$statusValue',
     );
-
+    print('userId: $userId, status: $statusValue'); // Debugging line
     try {
       final response = await http.get(uri); // changed to GET
 
@@ -379,9 +379,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
                       signOutGoogle();
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute<void>(
-                          builder: (BuildContext context) => Index(),
-                        ),
+                        MaterialPageRoute(builder: (context) => Index()),
                       );
                     },
                   ),
@@ -439,6 +437,51 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
             ),
             SizedBox(height: 16),
             _buildCompleteProfileSection(context),
+            SizedBox(height: 16),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.notifications, color: Colors.blue),
+                        SizedBox(width: 8),
+                        Text(
+                          "Enable Profile Visibility",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 12),
+                    Text(
+                      "If you are looking for new opportunities or wish for your profile to be visible to potential employers or institutions, enabling this setting will allow your profile to be shown to colleges and organizations actively seeking candidates.",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    SwitchListTile(
+                      title: Text('Active Status'),
+                      value: _isActive,
+                      onChanged: (bool value) {
+                        _updateStatus(value);
+                      },
+                      secondary: Icon(
+                        Icons.toggle_on,
+                        color: _isActive ? Colors.green : Colors.grey,
+                      ),
+                      activeColor: Colors.green,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),

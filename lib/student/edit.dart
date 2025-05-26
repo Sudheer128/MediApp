@@ -86,6 +86,9 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
   File? _resumeFile;
   String? _resumeFileName;
 
+  // Add this with other state variables at the top of _EditApplicationFormState
+  bool _isSaving = false;
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -257,7 +260,7 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
     });
   }
 
-  void _saveForm() {
+  void _saveForm() async {
     final isValid = _formKey.currentState!.validate();
 
     if (_resumeFile == null && _resumeBytes == null) {
@@ -318,11 +321,27 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
       return;
     }
 
-    // If all valid
-    _formKey.currentState!.save();
-    setState(() => _isEditing = false);
+    // Set loading state to true
+    setState(() {
+      _isSaving = true;
+    });
 
-    _submitToBackend();
+    try {
+      // Save form data
+      _formKey.currentState!.save();
+      final success = await _submitToBackend();
+
+      if (success) {
+        setState(() {
+          _isEditing = false;
+        });
+      }
+    } finally {
+      // Always set loading state back to false
+      setState(() {
+        _isSaving = false;
+      });
+    }
   }
 
   bool _hasErrorInSection(GlobalKey key) {
@@ -707,17 +726,38 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
               Center(
                 child: ElevatedButton(
                   onPressed:
-                      _isEditing ? _saveForm : () => _toggleEditing('all'),
+                      _isEditing
+                          ? (_isSaving ? null : _saveForm)
+                          : () => _toggleEditing('all'),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 48,
                       vertical: 12,
                     ),
                   ),
-                  child: Text(
-                    _isEditing ? 'Save Form' : 'Edit Form',
-                    style: const TextStyle(fontSize: 16),
-                  ),
+                  child:
+                      _isSaving
+                          ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Theme.of(context).colorScheme.onPrimary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              const Text('Saving...'),
+                            ],
+                          )
+                          : Text(
+                            _isEditing ? 'Save Form' : 'Edit Form',
+                            style: const TextStyle(fontSize: 16),
+                          ),
                 ),
               ),
             ],
@@ -737,9 +777,11 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
       ),
       child: Row(
         children: [
-          Text(
-            title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
           ),
           const Spacer(),
           if (!_isEditing)

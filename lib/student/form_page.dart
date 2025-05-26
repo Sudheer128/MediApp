@@ -27,6 +27,7 @@ class _ApplicationFormState extends State<ApplicationForm> {
   final _formKey = GlobalKey<FormState>();
   bool _isEditing = true;
   bool _isFormSubmitted = false;
+  bool _isLoading = false; // Add this line
 
   final GlobalKey _educationKey = GlobalKey();
   final GlobalKey _fellowshipKey = GlobalKey();
@@ -154,12 +155,17 @@ class _ApplicationFormState extends State<ApplicationForm> {
   }
 
   Future<void> _saveForm() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     final isValid = _formKey.currentState!.validate();
 
     // Check resume upload separately
     if (_resumeFile == null && _resumeBytes == null) {
       setState(() {
         _resumeError = true;
+        _isLoading = false;
       });
       _scrollToSection(_resumeKey);
       return;
@@ -215,10 +221,18 @@ class _ApplicationFormState extends State<ApplicationForm> {
       return;
     }
 
+    setState(() {
+      _isLoading = true; // Start loading
+    });
+
     // If all valid
     _formKey.currentState!.save();
     // Submit to backend first, await completion
     final success = await _submitToBackend();
+
+    setState(() {
+      _isLoading = false; // Stop loading
+    });
 
     if (success) {
       setState(() {
@@ -609,143 +623,194 @@ class _ApplicationFormState extends State<ApplicationForm> {
         title: const Text('Medical Professional Application Form'),
         actions: [],
       ),
-      body: Center(
-        child:
-            _isFormSubmitted
-                ? const Text(
-                  'Profile successfully created!',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                )
-                : Form(
-                  key: _formKey,
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Personal Details Section
-                        Container(
-                          key: _personalKey,
-                          margin: const EdgeInsets.only(bottom: 16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                  horizontal: 12,
+      body:
+          _isLoading
+              ? const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('Saving form...', style: TextStyle(fontSize: 16)),
+                  ],
+                ),
+              )
+              : Center(
+                child:
+                    _isFormSubmitted
+                        ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Profile successfully created!',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 20),
+                            ElevatedButton(
+                              onPressed: () async {
+                                final prefs =
+                                    await SharedPreferences.getInstance();
+                                final userId = prefs.getInt('userid') ?? 0;
+                                Navigator.pop(context); // close drawer
+
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) =>
+                                            EditForm(applicationId: userId),
+                                  ),
+                                );
+                              },
+                              child: const Text('View Profile'),
+                            ),
+                          ],
+                        )
+                        : Form(
+                          key: _formKey,
+                          child: SingleChildScrollView(
+                            controller: _scrollController,
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Personal Details Section
+                                Container(
+                                  key: _personalKey,
+                                  margin: const EdgeInsets.only(bottom: 16),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 8,
+                                          horizontal: 12,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue.shade100,
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Text(
+                                              'Personal Details',
+                                              style: TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const Spacer(),
+                                            if (!_isEditing)
+                                              IconButton(
+                                                icon: const Icon(Icons.edit),
+                                                onPressed:
+                                                    () => _toggleEditing(
+                                                      'personal',
+                                                    ),
+                                                tooltip:
+                                                    'Edit Personal Details',
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      _isEditing
+                                          ? _buildPersonalDetailsForm()
+                                          : _buildPersonalDetailsView(),
+                                    ],
+                                  ),
                                 ),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.shade100,
-                                  borderRadius: BorderRadius.circular(4),
+
+                                const SizedBox(height: 24),
+
+                                // Education Details Section
+                                _buildSectionHeader(
+                                  'Education Details',
+                                  'education',
                                 ),
-                                child: Row(
-                                  children: [
-                                    const Text(
-                                      'Personal Details',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
+                                _buildEducationDetailsSection(),
+
+                                const SizedBox(height: 24),
+
+                                // Fellowships Section
+                                _buildSectionHeader(
+                                  'Fellowships',
+                                  'fellowships',
+                                ),
+                                _buildFellowshipsSection(),
+
+                                const SizedBox(height: 24),
+
+                                // Papers Section
+                                _buildSectionHeader('Papers', 'papers'),
+                                _buildPapersSection(),
+
+                                const SizedBox(height: 24),
+
+                                // Work Experience Section
+                                _buildSectionHeader('Work Experience', 'work'),
+                                _buildWorkExperienceSection(),
+
+                                const SizedBox(height: 24),
+
+                                // Medical Course Certificate Section
+                                _buildSectionHeader(
+                                  'Currently Active Medical Councel Certificate',
+                                  'certificate',
+                                ),
+                                if (_isEditing)
+                                  _buildMedicalCertificateForm()
+                                else
+                                  _buildMedicalCertificateView(),
+
+                                const SizedBox(height: 24),
+
+                                // Resume Upload Section
+                                _buildSectionHeader('Resume Upload', 'resume'),
+                                if (_isEditing)
+                                  _buildResumeUploadSection()
+                                else if (_resumeFileName != null)
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      'Resume: $_resumeFileName',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                  ),
+
+                                const SizedBox(height: 32),
+
+                                // Save / Edit Button
+                                Center(
+                                  child: ElevatedButton(
+                                    onPressed:
+                                        _isEditing
+                                            ? _saveForm
+                                            : () => _toggleEditing('all'),
+                                    style: ElevatedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 48,
+                                        vertical: 12,
                                       ),
                                     ),
-                                    const Spacer(),
-                                    if (!_isEditing)
-                                      IconButton(
-                                        icon: const Icon(Icons.edit),
-                                        onPressed:
-                                            () => _toggleEditing('personal'),
-                                        tooltip: 'Edit Personal Details',
-                                      ),
-                                  ],
+                                    child: Text(
+                                      _isEditing ? 'Save Form' : 'Edit Form',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 8),
-                              _isEditing
-                                  ? _buildPersonalDetailsForm()
-                                  : _buildPersonalDetailsView(),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Education Details Section
-                        _buildSectionHeader('Education Details', 'education'),
-                        _buildEducationDetailsSection(),
-
-                        const SizedBox(height: 24),
-
-                        // Fellowships Section
-                        _buildSectionHeader('Fellowships', 'fellowships'),
-                        _buildFellowshipsSection(),
-
-                        const SizedBox(height: 24),
-
-                        // Papers Section
-                        _buildSectionHeader('Papers', 'papers'),
-                        _buildPapersSection(),
-
-                        const SizedBox(height: 24),
-
-                        // Work Experience Section
-                        _buildSectionHeader('Work Experience', 'work'),
-                        _buildWorkExperienceSection(),
-
-                        const SizedBox(height: 24),
-
-                        // Medical Course Certificate Section
-                        _buildSectionHeader(
-                          'Currently Active Medical Councel Certificate',
-                          'certificate',
-                        ),
-                        if (_isEditing)
-                          _buildMedicalCertificateForm()
-                        else
-                          _buildMedicalCertificateView(),
-
-                        const SizedBox(height: 24),
-
-                        // Resume Upload Section
-                        _buildSectionHeader('Resume Upload', 'resume'),
-                        if (_isEditing)
-                          _buildResumeUploadSection()
-                        else if (_resumeFileName != null)
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              'Resume: $_resumeFileName',
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                          ),
-
-                        const SizedBox(height: 32),
-
-                        // Save / Edit Button
-                        Center(
-                          child: ElevatedButton(
-                            onPressed:
-                                _isEditing
-                                    ? _saveForm
-                                    : () => _toggleEditing('all'),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 48,
-                                vertical: 12,
-                              ),
-                            ),
-                            child: Text(
-                              _isEditing ? 'Save Form' : 'Edit Form',
-                              style: const TextStyle(fontSize: 16),
+                              ],
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-      ),
+              ),
     );
   }
 

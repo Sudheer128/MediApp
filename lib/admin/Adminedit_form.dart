@@ -56,6 +56,7 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
   List<Course> ssCourses = [];
 
   bool isLoadingCourses = false;
+  bool isSubmitting = false; // Add this new variable
   String? coursesError;
 
   // Separate lists for PG and SS details
@@ -330,11 +331,27 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
 
     // If all valid
     _formKey.currentState!.save();
-    setState(() => _isEditing = false);
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Form saved successfully!')));
-    _submitToBackend();
+    setState(() {
+      isSubmitting = true; // Start loading
+    });
+    _submitToBackend()
+        .then((_) {
+          setState(() {
+            isSubmitting = false; // Stop loading
+            _isEditing = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Form saved successfully!')),
+          );
+        })
+        .catchError((error) {
+          setState(() {
+            isSubmitting = false; // Stop loading on error
+          });
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error saving form: $error')));
+        });
   }
 
   bool _hasErrorInSection(GlobalKey key) {
@@ -612,256 +629,275 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
   Widget build(BuildContext context) {
     const Color primaryBlue = Color(0xFF007FFF);
 
-    return Scaffold(
-      drawer: Drawer(
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              DrawerHeader(
-                decoration: const BoxDecoration(color: primaryBlue),
-                child: const Center(
-                  child: Text(
-                    'Admin Menu',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+    return Stack(
+      children: [
+        Scaffold(
+          drawer: Drawer(
+            child: SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  DrawerHeader(
+                    decoration: const BoxDecoration(color: primaryBlue),
+                    child: const Center(
+                      child: Text(
+                        'Admin Menu',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              ListTile(
-                leading: Icon(Icons.home_filled, color: primaryBlue),
-                title: const Text('Home'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => AdminHomePage()),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.group, color: primaryBlue),
-                title: const Text('Manage Users'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => UserManagementPage(),
+                  ListTile(
+                    leading: Icon(Icons.home_filled, color: primaryBlue),
+                    title: const Text('Home'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AdminHomePage(),
+                        ),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.group, color: primaryBlue),
+                    title: const Text('Manage Users'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => UserManagementPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.school, color: primaryBlue),
+                    title: const Text('College Interests'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => InterestsPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(
+                      Icons.format_align_left_sharp,
+                      color: primaryBlue,
                     ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.school, color: primaryBlue),
-                title: const Text('College Interests'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => InterestsPage()),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(
-                  Icons.format_align_left_sharp,
-                  color: primaryBlue,
-                ),
-                title: const Text('New Student Form'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AdminApplicationForm(),
+                    title: const Text('New Student Form'),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AdminApplicationForm(),
+                        ),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.person, color: primaryBlue),
+                    title: const Text('Search Student'),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AdminEditForm(),
+                        ),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
+                    title: const Text('Available Doctors'),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AdminCollegeDegreesScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const Spacer(),
+                  const Divider(),
+                  ListTile(
+                    leading: const Icon(Icons.logout, color: Colors.red),
+                    title: const Text(
+                      'Logout',
+                      style: TextStyle(color: Colors.red),
                     ),
-                  );
-                },
+                    onTap: () {
+                      Navigator.pop(context);
+                      _logout(context);
+                    },
+                  ),
+                ],
               ),
-              ListTile(
-                leading: Icon(Icons.person, color: primaryBlue),
-                title: const Text('Search Student'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => AdminEditForm()),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
-                title: const Text('Available Doctors'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AdminCollegeDegreesScreen(),
-                    ),
-                  );
-                },
-              ),
-              const Spacer(),
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text(
-                  'Logout',
-                  style: TextStyle(color: Colors.red),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _logout(context);
-                },
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
-      appBar: AppBar(
-        title: const Text('Medical Professional Application Form'),
-        backgroundColor: primaryBlue,
-        actions: [],
-      ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Back Button Section
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16.0),
-                child: IconButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  icon: Icon(Icons.arrow_back, color: Colors.blue),
-                  tooltip: 'Go Back',
-                ),
-              ),
+          appBar: AppBar(
+            title: const Text('Medical Professional Application Form'),
+            backgroundColor: primaryBlue,
+            actions: [],
+          ),
+          body: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Back Button Section
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: IconButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      icon: Icon(Icons.arrow_back, color: Colors.blue),
+                      tooltip: 'Go Back',
+                    ),
+                  ),
 
-              // Personal Details Section
-              Container(
-                key: _personalKey,
-                margin: const EdgeInsets.only(bottom: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 8,
-                        horizontal: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade100,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Row(
-                        children: [
-                          const Text(
-                            'Personal Details',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+                  // Personal Details Section
+                  Container(
+                    key: _personalKey,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 12,
                           ),
-                          const Spacer(),
-                          if (!_isEditing)
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed: () => _toggleEditing('personal'),
-                              tooltip: 'Edit Personal Details',
-                            ),
-                        ],
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade100,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Row(
+                            children: [
+                              const Text(
+                                'Personal Details',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const Spacer(),
+                              if (!_isEditing)
+                                IconButton(
+                                  icon: const Icon(Icons.edit),
+                                  onPressed: () => _toggleEditing('personal'),
+                                  tooltip: 'Edit Personal Details',
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        _isEditing
+                            ? _buildPersonalDetailsForm()
+                            : _buildPersonalDetailsView(),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Education Details Section
+                  _buildSectionHeader('Education Details', 'education'),
+                  _buildEducationDetailsSection(),
+
+                  const SizedBox(height: 24),
+
+                  // Fellowships Section
+                  _buildSectionHeader('Fellowships', 'fellowships'),
+                  _buildFellowshipsSection(),
+
+                  const SizedBox(height: 24),
+
+                  // Papers Section
+                  _buildSectionHeader('Papers', 'papers'),
+                  _buildPapersSection(),
+
+                  const SizedBox(height: 24),
+
+                  // Work Experience Section
+                  _buildSectionHeader('Work Experience', 'work'),
+                  _buildWorkExperienceSection(),
+
+                  const SizedBox(height: 24),
+
+                  // Medical Course Certificate Section
+                  _buildSectionHeader(
+                    'Currently Active Medical Councel Certificate',
+                    'certificate',
+                  ),
+                  if (_isEditing)
+                    _buildMedicalCertificateForm()
+                  else
+                    _buildMedicalCertificateView(),
+
+                  const SizedBox(height: 24),
+
+                  // Resume Upload Section
+                  _buildSectionHeader('Resume Upload', 'resume'),
+                  if (_isEditing)
+                    _buildResumeUploadSection()
+                  else if (_resumeFileName != null)
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        'Resume: $_resumeFileName',
+                        style: const TextStyle(fontSize: 16),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    _isEditing
-                        ? _buildPersonalDetailsForm()
-                        : _buildPersonalDetailsView(),
-                  ],
-                ),
-              ),
 
-              const SizedBox(height: 24),
+                  const SizedBox(height: 32),
 
-              // Education Details Section
-              _buildSectionHeader('Education Details', 'education'),
-              _buildEducationDetailsSection(),
-
-              const SizedBox(height: 24),
-
-              // Fellowships Section
-              _buildSectionHeader('Fellowships', 'fellowships'),
-              _buildFellowshipsSection(),
-
-              const SizedBox(height: 24),
-
-              // Papers Section
-              _buildSectionHeader('Papers', 'papers'),
-              _buildPapersSection(),
-
-              const SizedBox(height: 24),
-
-              // Work Experience Section
-              _buildSectionHeader('Work Experience', 'work'),
-              _buildWorkExperienceSection(),
-
-              const SizedBox(height: 24),
-
-              // Medical Course Certificate Section
-              _buildSectionHeader(
-                'Currently Active Medical Councel Certificate',
-                'certificate',
-              ),
-              if (_isEditing)
-                _buildMedicalCertificateForm()
-              else
-                _buildMedicalCertificateView(),
-
-              const SizedBox(height: 24),
-
-              // Resume Upload Section
-              _buildSectionHeader('Resume Upload', 'resume'),
-              if (_isEditing)
-                _buildResumeUploadSection()
-              else if (_resumeFileName != null)
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    'Resume: $_resumeFileName',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
-
-              const SizedBox(height: 32),
-
-              // Save / Edit Button
-              Center(
-                child: ElevatedButton(
-                  onPressed:
-                      _isEditing ? _saveForm : () => _toggleEditing('all'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 48,
-                      vertical: 12,
+                  // Save / Edit Button
+                  Center(
+                    child: ElevatedButton(
+                      onPressed:
+                          _isEditing ? _saveForm : () => _toggleEditing('all'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 48,
+                          vertical: 12,
+                        ),
+                      ),
+                      child: Text(
+                        _isEditing ? 'Save Form' : 'Edit Form',
+                        style: const TextStyle(fontSize: 16),
+                      ),
                     ),
                   ),
-                  child: Text(
-                    _isEditing ? 'Save Form' : 'Edit Form',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
-      ),
+        if (isSubmitting)
+          Container(
+            color: Colors.black54,
+            child: const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(primaryBlue),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -875,9 +911,11 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
       ),
       child: Row(
         children: [
-          Text(
-            title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
           ),
           const Spacer(),
           if (!_isEditing)
