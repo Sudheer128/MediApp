@@ -20,7 +20,7 @@ class ApprovalScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 signOutGoogle();
-                Navigator.pushReplacement(
+                Navigator.push(
                   context,
                   MaterialPageRoute<void>(
                     builder: (BuildContext context) => Index(),

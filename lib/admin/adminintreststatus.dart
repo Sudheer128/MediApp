@@ -64,6 +64,8 @@ class _InterestsPageState extends State<InterestsPage> {
 
   String _searchQuery = '';
 
+  late InterestDataSource _dataSource;
+
   @override
   void initState() {
     super.initState();
@@ -85,11 +87,10 @@ class _InterestsPageState extends State<InterestsPage> {
         final data = jsonDecode(response.body);
         final List<dynamic> interestList = data['interests'];
 
-        setState(() {
-          _allInterests =
-              interestList.map((e) => Interest.fromJson(e)).toList();
-          _filteredInterests = List.from(_allInterests);
-        });
+        _allInterests = interestList.map((e) => Interest.fromJson(e)).toList();
+        _filteredInterests = List.from(_allInterests);
+
+        _dataSource = InterestDataSource(_filteredInterests);
       } else {
         throw Exception('Failed to load data: ${response.body}');
       }
@@ -116,6 +117,9 @@ class _InterestsPageState extends State<InterestsPage> {
           ? Comparable.compare(aValue, bValue)
           : Comparable.compare(bValue, aValue);
     });
+
+    _dataSource = InterestDataSource(_filteredInterests);
+
     setState(() {
       _sortColumnIndex = columnIndex;
       _sortAscending = ascending;
@@ -139,30 +143,29 @@ class _InterestsPageState extends State<InterestsPage> {
                 interest.collegeId.toString().contains(query) ||
                 interest.studentId.toString().contains(query);
           }).toList();
+
+      _dataSource = InterestDataSource(_filteredInterests);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('College Interests')),
+      appBar: AppBar(
+        title: const Text('College Interests'),
+        backgroundColor: Colors.blue, // Clear blue color
+      ),
       body:
           _isLoading
-              ? Center(child: CircularProgressIndicator())
+              ? const Center(child: CircularProgressIndicator())
               : _error != null
               ? Center(child: Text('Error: $_error'))
               : Column(
                 children: [
-                  IconButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    icon: Icon(Icons.arrow_back),
-                  ),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: TextField(
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Search',
                         prefixIcon: Icon(Icons.search),
                         border: OutlineInputBorder(),
@@ -172,106 +175,81 @@ class _InterestsPageState extends State<InterestsPage> {
                   ),
                   Expanded(
                     child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: SingleChildScrollView(
-                        child: DataTable(
-                          sortColumnIndex: _sortColumnIndex,
-                          sortAscending: _sortAscending,
-                          columns: [
-                            DataColumn(
-                              label: Text('ID'),
-                              numeric: true,
-                              onSort:
-                                  (i, asc) => _sort<num>((d) => d.id, i, asc),
-                            ),
-                            DataColumn(
-                              label: Text('College ID'),
-                              numeric: true,
-                              onSort:
-                                  (i, asc) =>
-                                      _sort<num>((d) => d.collegeId, i, asc),
-                            ),
-                            DataColumn(
-                              label: Text('College Name'),
-                              onSort:
-                                  (i, asc) => _sort<String>(
-                                    (d) => d.collegeName,
-                                    i,
-                                    asc,
-                                  ),
-                            ),
-                            DataColumn(
-                              label: Text('Student ID'),
-                              numeric: true,
-                              onSort:
-                                  (i, asc) =>
-                                      _sort<num>((d) => d.studentId, i, asc),
-                            ),
-                            DataColumn(
-                              label: Text('Student Name'),
-                              onSort:
-                                  (i, asc) => _sort<String>(
-                                    (d) => d.studentName,
-                                    i,
-                                    asc,
-                                  ),
-                            ),
-                            DataColumn(
-                              label: Text('Course Name'),
-                              onSort:
-                                  (i, asc) => _sort<String>(
-                                    (d) => d.courseName,
-                                    i,
-                                    asc,
-                                  ),
-                            ),
-                            DataColumn(
-                              label: Text('Degree'),
-                              onSort:
-                                  (i, asc) =>
-                                      _sort<String>((d) => d.degree, i, asc),
-                            ),
-                            DataColumn(
-                              label: Text('Message'),
-                              onSort:
-                                  (i, asc) =>
-                                      _sort<String>((d) => d.message, i, asc),
-                            ),
-                            DataColumn(
-                              label: Text('Status'),
-                              onSort:
-                                  (i, asc) =>
-                                      _sort<String>((d) => d.status, i, asc),
-                            ),
-                            DataColumn(
-                              label: Text('Created At'),
-                              onSort:
-                                  (i, asc) =>
-                                      _sort<String>((d) => d.createdAt, i, asc),
-                            ),
-                          ],
-                          rows:
-                              _filteredInterests.map((interest) {
-                                return DataRow(
-                                  cells: [
-                                    DataCell(Text(interest.id.toString())),
-                                    DataCell(
-                                      Text(interest.collegeId.toString()),
-                                    ),
-                                    DataCell(Text(interest.collegeName)),
-                                    DataCell(
-                                      Text(interest.studentId.toString()),
-                                    ),
-                                    DataCell(Text(interest.studentName)),
-                                    DataCell(Text(interest.courseName)),
-                                    DataCell(Text(interest.degree)),
-                                    DataCell(Text(interest.message)),
-                                    DataCell(Text(interest.status)),
-                                    DataCell(Text(interest.createdAt)),
-                                  ],
-                                );
-                              }).toList(),
-                        ),
+                      child: PaginatedDataTable(
+                        header: const Text('College Interests'),
+                        rowsPerPage: _rowsPerPage,
+                        availableRowsPerPage: const [5, 10, 20],
+                        onRowsPerPageChanged: (value) {
+                          setState(() {
+                            _rowsPerPage = value ?? 5;
+                          });
+                        },
+                        sortColumnIndex: _sortColumnIndex,
+                        sortAscending: _sortAscending,
+                        columns: [
+                          DataColumn(
+                            label: const Text('ID'),
+                            numeric: true,
+                            onSort: (i, asc) => _sort<num>((d) => d.id, i, asc),
+                          ),
+                          DataColumn(
+                            label: const Text('College ID'),
+                            numeric: true,
+                            onSort:
+                                (i, asc) =>
+                                    _sort<num>((d) => d.collegeId, i, asc),
+                          ),
+                          DataColumn(
+                            label: const Text('College Name'),
+                            onSort:
+                                (i, asc) =>
+                                    _sort<String>((d) => d.collegeName, i, asc),
+                          ),
+                          DataColumn(
+                            label: const Text('Student ID'),
+                            numeric: true,
+                            onSort:
+                                (i, asc) =>
+                                    _sort<num>((d) => d.studentId, i, asc),
+                          ),
+                          DataColumn(
+                            label: const Text('Student Name'),
+                            onSort:
+                                (i, asc) =>
+                                    _sort<String>((d) => d.studentName, i, asc),
+                          ),
+                          DataColumn(
+                            label: const Text('Course Name'),
+                            onSort:
+                                (i, asc) =>
+                                    _sort<String>((d) => d.courseName, i, asc),
+                          ),
+                          DataColumn(
+                            label: const Text('Degree'),
+                            onSort:
+                                (i, asc) =>
+                                    _sort<String>((d) => d.degree, i, asc),
+                          ),
+                          DataColumn(
+                            label: const Text('Message'),
+                            onSort:
+                                (i, asc) =>
+                                    _sort<String>((d) => d.message, i, asc),
+                          ),
+                          DataColumn(
+                            label: const Text('Status'),
+                            onSort:
+                                (i, asc) =>
+                                    _sort<String>((d) => d.status, i, asc),
+                          ),
+                          DataColumn(
+                            label: const Text('Created At'),
+                            onSort:
+                                (i, asc) =>
+                                    _sort<String>((d) => d.createdAt, i, asc),
+                          ),
+                        ],
+                        source: _dataSource,
                       ),
                     ),
                   ),
@@ -279,4 +257,41 @@ class _InterestsPageState extends State<InterestsPage> {
               ),
     );
   }
+}
+
+// DataTableSource implementation for pagination support
+class InterestDataSource extends DataTableSource {
+  final List<Interest> _interests;
+
+  InterestDataSource(this._interests);
+
+  @override
+  DataRow? getRow(int index) {
+    if (index >= _interests.length) return null;
+    final interest = _interests[index];
+    return DataRow.byIndex(
+      index: index,
+      cells: [
+        DataCell(Text(interest.id.toString())),
+        DataCell(Text(interest.collegeId.toString())),
+        DataCell(Text(interest.collegeName)),
+        DataCell(Text(interest.studentId.toString())),
+        DataCell(Text(interest.studentName)),
+        DataCell(Text(interest.courseName)),
+        DataCell(Text(interest.degree)),
+        DataCell(Text(interest.message)),
+        DataCell(Text(interest.status)),
+        DataCell(Text(interest.createdAt)),
+      ],
+    );
+  }
+
+  @override
+  bool get isRowCountApproximate => false;
+
+  @override
+  int get rowCount => _interests.length;
+
+  @override
+  int get selectedRowCount => 0;
 }

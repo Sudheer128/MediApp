@@ -1,11 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:medicalapp/admin/adminCollegedocList.dart';
 import 'package:medicalapp/admin/adminintreststatus.dart';
 import 'package:medicalapp/admin/form_page.dart';
 import 'package:medicalapp/admin/searchstudent.dart';
 import 'package:medicalapp/admin/userstable.dart';
-import 'package:medicalapp/college/homepage.dart';
-import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
 
 class AdminHomePage extends StatelessWidget {
@@ -13,12 +13,20 @@ class AdminHomePage extends StatelessWidget {
 
   static const Color primaryBlue = Color(0xFF007FFF);
 
-  void _logout(BuildContext context) {
-    signOutGoogle();
-    Navigator.pushReplacement(
+  void _logout(BuildContext context) async {
+    await signOutGoogle();
+
+    Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute<void>(builder: (BuildContext context) => Index()),
+      MaterialPageRoute(builder: (context) => Index()),
+      (Route<dynamic> route) => false,
     );
+  }
+
+  Future<void> signOutGoogle() async {
+    await GoogleSignIn().signOut();
+    await FirebaseAuth.instance.signOut();
+    print('User signed out');
   }
 
   Widget _buildCard(
@@ -180,7 +188,6 @@ class AdminHomePage extends StatelessWidget {
                   style: TextStyle(color: Colors.red),
                 ),
                 onTap: () {
-                  Navigator.pop(context);
                   _logout(context);
                 },
               ),

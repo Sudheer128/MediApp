@@ -187,7 +187,7 @@ class UserHomePage extends StatelessWidget {
               icon: Icons.search,
               subtitle: 'Locate student information',
               onTap: () {
-                Navigator.push(
+                Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => UserEditForm()),
                 );

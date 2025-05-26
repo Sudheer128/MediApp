@@ -3,6 +3,13 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/admin/Adminedit_form.dart';
+import 'package:medicalapp/admin/adminCollegedocList.dart';
+import 'package:medicalapp/admin/adminintreststatus.dart';
+import 'package:medicalapp/admin/form_page.dart';
+import 'package:medicalapp/admin/mainscreen.dart';
+import 'package:medicalapp/admin/userstable.dart';
+import 'package:medicalapp/googlesignin.dart';
+import 'package:medicalapp/index.dart';
 import 'package:medicalapp/pdf.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -18,6 +25,7 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
   bool loading = false;
   String? error;
   final TextEditingController _userIdController = TextEditingController();
+  static const Color primaryBlue = Color(0xFF007FFF);
 
   @override
   void dispose() {
@@ -64,25 +72,29 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
   // Removed onEdit param and edit icon button here
   Widget buildSectionHeader(String title, IconData icon) {
     return Container(
+      width: double.infinity, // Make background span full width
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.blue.shade100,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, color: Colors.blue.shade800),
           const SizedBox(width: 8),
-          Text(
-            title,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-              color: Colors.blue.shade800,
+          // Wrap text in Expanded + Text to allow line wrapping
+          Expanded(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.blue.shade800,
+              ),
             ),
           ),
-          // No edit button here anymore
         ],
       ),
     );
@@ -168,6 +180,14 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
           );
         }).toList(),
       ],
+    );
+  }
+
+  void _logout(BuildContext context) {
+    signOutGoogle();
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(builder: (BuildContext context) => Index()),
     );
   }
 
@@ -310,6 +330,113 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: Drawer(
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              DrawerHeader(
+                decoration: const BoxDecoration(color: primaryBlue),
+                child: const Center(
+                  child: Text(
+                    'Admin Menu',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: Icon(Icons.home_filled, color: primaryBlue),
+                title: const Text('Home'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AdminHomePage()),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.group, color: primaryBlue),
+                title: const Text('Manage Users'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UserManagementPage(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.school, color: primaryBlue),
+                title: const Text('College Interests'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => InterestsPage()),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.format_align_left_sharp,
+                  color: primaryBlue,
+                ),
+                title: const Text('New Student Form'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AdminApplicationForm(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.person, color: primaryBlue),
+                title: const Text('Search Student'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AdminEditForm()),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
+                title: const Text('Available Doctors'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AdminCollegeDegreesScreen(),
+                    ),
+                  );
+                },
+              ),
+              const Spacer(),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.logout, color: Colors.red),
+                title: const Text(
+                  'Logout',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _logout(context);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
       appBar: AppBar(
         title: const Text('Student Details'),
         backgroundColor: Colors.blue.shade700,

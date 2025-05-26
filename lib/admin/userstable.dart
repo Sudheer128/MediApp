@@ -30,6 +30,8 @@ class User {
 }
 
 class UserManagementPage extends StatefulWidget {
+  const UserManagementPage({Key? key}) : super(key: key);
+
   @override
   _UserManagementPageState createState() => _UserManagementPageState();
 }
@@ -49,7 +51,6 @@ class _UserManagementPageState extends State<UserManagementPage> {
 
   String _searchQuery = '';
 
-  // Roles including known defaults
   final List<String> _knownRoles = [
     'admin',
     'college',
@@ -60,6 +61,8 @@ class _UserManagementPageState extends State<UserManagementPage> {
 
   late List<String> _roles;
 
+  late UserDataTableSource _dataSource;
+
   @override
   void initState() {
     super.initState();
@@ -68,12 +71,18 @@ class _UserManagementPageState extends State<UserManagementPage> {
       setState(() {
         _allUsers = users;
         _filteredUsers = List.from(_allUsers);
-        // Combine known roles + any new roles found dynamically
-        final userRoles = users.map((u) => u.role).toSet();
         _roles = List<String>.from(_knownRoles);
+        final userRoles = users.map((u) => u.role).toSet();
         for (var r in userRoles) {
           if (!_roles.contains(r)) _roles.add(r);
         }
+        _dataSource = UserDataTableSource(
+          context: context,
+          users: _filteredUsers,
+          roles: _roles,
+          userService: userService,
+          onRoleUpdated: () => setState(() {}),
+        );
       });
     });
   }
@@ -93,6 +102,13 @@ class _UserManagementPageState extends State<UserManagementPage> {
     setState(() {
       _sortColumnIndex = columnIndex;
       _sortAscending = ascending;
+      _dataSource = UserDataTableSource(
+        context: context,
+        users: _filteredUsers,
+        roles: _roles,
+        userService: userService,
+        onRoleUpdated: () => setState(() {}),
+      );
     });
   }
 
@@ -108,122 +124,15 @@ class _UserManagementPageState extends State<UserManagementPage> {
                 user.createdAt.toLowerCase().contains(query) ||
                 user.userId.toString().contains(query);
           }).toList();
-    });
-  }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Manage Users'),
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(56),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search users...',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              onChanged: _filterUsers,
-            ),
-          ),
-        ),
-      ),
-      body: FutureBuilder<List<User>>(
-        future: futureUsers,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (_filteredUsers.isEmpty) {
-            return Center(child: Text('No users found'));
-          } else {
-            return SingleChildScrollView(
-              padding: EdgeInsets.all(16),
-              child: PaginatedDataTable(
-                header: Text('Users'),
-                rowsPerPage: _rowsPerPage,
-                availableRowsPerPage: [5, 10, 20],
-                onRowsPerPageChanged: (rows) {
-                  setState(() {
-                    if (rows != null) _rowsPerPage = rows;
-                  });
-                },
-                sortColumnIndex: _sortColumnIndex,
-                sortAscending: _sortAscending,
-                columns: [
-                  DataColumn(
-                    label: Text('User ID'),
-                    numeric: true,
-                    onSort:
-                        (columnIndex, ascending) => _sort<num>(
-                          (user) => user.userId,
-                          columnIndex,
-                          ascending,
-                        ),
-                  ),
-                  DataColumn(
-                    label: Text('Name'),
-                    onSort:
-                        (columnIndex, ascending) => _sort<String>(
-                          (user) => user.name,
-                          columnIndex,
-                          ascending,
-                        ),
-                  ),
-                  DataColumn(
-                    label: Text('Email'),
-                    onSort:
-                        (columnIndex, ascending) => _sort<String>(
-                          (user) => user.email,
-                          columnIndex,
-                          ascending,
-                        ),
-                  ),
-                  DataColumn(
-                    label: Text('Role'),
-                    onSort:
-                        (columnIndex, ascending) => _sort<String>(
-                          (user) => user.role,
-                          columnIndex,
-                          ascending,
-                        ),
-                  ),
-                  DataColumn(
-                    label: Text('Created At'),
-                    onSort:
-                        (columnIndex, ascending) => _sort<String>(
-                          (user) => user.createdAt,
-                          columnIndex,
-                          ascending,
-                        ),
-                  ),
-                  DataColumn(label: Text('Actions')),
-                ],
-                source: UserDataTableSource(
-                  context: context,
-                  users: _filteredUsers,
-                  roles: _roles,
-                  userService: userService,
-                  onRoleUpdated: () {
-                    setState(() {});
-                  },
-                ),
-              ),
-            );
-          }
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.person_add),
-        onPressed: () => _showAddUserDialog(context),
-      ),
-    );
+      _dataSource = UserDataTableSource(
+        context: context,
+        users: _filteredUsers,
+        roles: _roles,
+        userService: userService,
+        onRoleUpdated: () => setState(() {}),
+      );
+    });
   }
 
   void _showAddUserDialog(BuildContext context) {
@@ -235,17 +144,17 @@ class _UserManagementPageState extends State<UserManagementPage> {
       context: context,
       builder: (_) {
         return AlertDialog(
-          title: Text('Add New User'),
+          title: const Text('Add New User'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: _emailController,
-                decoration: InputDecoration(labelText: 'Email'),
+                decoration: const InputDecoration(labelText: 'Email'),
               ),
               TextField(
                 controller: _nameController,
-                decoration: InputDecoration(labelText: 'Name'),
+                decoration: const InputDecoration(labelText: 'Name'),
               ),
               DropdownButtonFormField<String>(
                 value:
@@ -255,16 +164,14 @@ class _UserManagementPageState extends State<UserManagementPage> {
                 items:
                     _roles
                         .map(
-                          (role) => DropdownMenuItem<String>(
-                            value: role,
-                            child: Text(role),
-                          ),
+                          (role) =>
+                              DropdownMenuItem(value: role, child: Text(role)),
                         )
                         .toList(),
                 onChanged: (val) {
                   if (val != null) _selectedRole = val;
                 },
-                decoration: InputDecoration(labelText: 'Role'),
+                decoration: const InputDecoration(labelText: 'Role'),
               ),
             ],
           ),
@@ -281,32 +188,125 @@ class _UserManagementPageState extends State<UserManagementPage> {
                       _allUsers = users;
                       _filteredUsers = List.from(users);
 
-                      // Update roles with any new roles added by backend
                       final userRoles = users.map((u) => u.role).toSet();
                       for (var r in userRoles) {
                         if (!_roles.contains(r)) _roles.add(r);
                       }
+
+                      _dataSource = UserDataTableSource(
+                        context: context,
+                        users: _filteredUsers,
+                        roles: _roles,
+                        userService: userService,
+                        onRoleUpdated: () => setState(() {}),
+                      );
                     });
                     Navigator.of(context).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('User added successfully')),
+                      const SnackBar(content: Text('User added successfully')),
                     );
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to add user')),
+                      const SnackBar(content: Text('Failed to add user')),
                     );
                   }
                 }
               },
-              child: Text('Add'),
+              child: const Text('Add'),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
           ],
         );
       },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Manage Users'),
+        backgroundColor: Colors.blue,
+      ),
+      body:
+          _allUsers.isEmpty
+              ? const Center(child: CircularProgressIndicator())
+              : _filteredUsers.isEmpty
+              ? const Center(child: Text('No users found'))
+              : Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    // Search field outside AppBar, above table
+                    TextField(
+                      decoration: const InputDecoration(
+                        hintText: 'Search users...',
+                        prefixIcon: Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                      ),
+                      onChanged: _filterUsers,
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: PaginatedDataTable(
+                        header: const Text('Users'),
+                        rowsPerPage: _rowsPerPage,
+                        availableRowsPerPage: const [5, 10, 20],
+                        onRowsPerPageChanged: (rows) {
+                          setState(() {
+                            if (rows != null) _rowsPerPage = rows;
+                          });
+                        },
+                        sortColumnIndex: _sortColumnIndex,
+                        sortAscending: _sortAscending,
+                        columns: [
+                          DataColumn(
+                            label: const Text('User ID'),
+                            numeric: true,
+                            onSort:
+                                (i, asc) => _sort<num>((u) => u.userId, i, asc),
+                          ),
+                          DataColumn(
+                            label: const Text('Name'),
+                            onSort:
+                                (i, asc) =>
+                                    _sort<String>((u) => u.name, i, asc),
+                          ),
+                          DataColumn(
+                            label: const Text('Email'),
+                            onSort:
+                                (i, asc) =>
+                                    _sort<String>((u) => u.email, i, asc),
+                          ),
+                          DataColumn(
+                            label: const Text('Role'),
+                            onSort:
+                                (i, asc) =>
+                                    _sort<String>((u) => u.role, i, asc),
+                          ),
+                          DataColumn(
+                            label: const Text('Created At'),
+                            onSort:
+                                (i, asc) =>
+                                    _sort<String>((u) => u.createdAt, i, asc),
+                          ),
+                        ],
+                        source: _dataSource,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddUserDialog(context),
+        child: const Icon(Icons.person_add),
+        backgroundColor: Colors.blue,
+      ),
     );
   }
 }
@@ -327,12 +327,10 @@ class UserDataTableSource extends DataTableSource {
   });
 
   @override
-  DataRow getRow(int index) {
-    assert(index >= 0);
-    if (index >= users.length) return null!;
+  DataRow? getRow(int index) {
+    if (index >= users.length) return null;
     final user = users[index];
 
-    // Safe dropdown value fallback
     final dropdownValue =
         roles.contains(user.role) ? user.role : 'not_assigned';
 
@@ -348,10 +346,8 @@ class UserDataTableSource extends DataTableSource {
             items:
                 roles
                     .map(
-                      (role) => DropdownMenuItem<String>(
-                        value: role,
-                        child: Text(role),
-                      ),
+                      (role) =>
+                          DropdownMenuItem(value: role, child: Text(role)),
                     )
                     .toList(),
             onChanged: (newRole) async {
@@ -361,11 +357,11 @@ class UserDataTableSource extends DataTableSource {
                   user.role = newRole;
                   onRoleUpdated();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Role updated successfully')),
+                    const SnackBar(content: Text('Role updated successfully')),
                   );
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to update role')),
+                    const SnackBar(content: Text('Failed to update role')),
                   );
                 }
               }
@@ -373,13 +369,6 @@ class UserDataTableSource extends DataTableSource {
           ),
         ),
         DataCell(Text(user.createdAt)),
-        DataCell(
-          Row(
-            children: [
-              // Add buttons here if needed (e.g. edit/delete)
-            ],
-          ),
-        ),
       ],
     );
   }

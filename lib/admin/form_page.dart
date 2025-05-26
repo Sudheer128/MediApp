@@ -510,7 +510,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
 
   void _logout(BuildContext context) {
     signOutGoogle();
-    Navigator.pushReplacement(
+    Navigator.push(
       context,
       MaterialPageRoute<void>(builder: (BuildContext context) => Index()),
     );
@@ -621,7 +621,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
                 ),
                 onTap: () {
                   signOutGoogle();
-                  Navigator.pushReplacement(
+                  Navigator.push(
                     context,
                     MaterialPageRoute<void>(
                       builder: (BuildContext context) => Index(),

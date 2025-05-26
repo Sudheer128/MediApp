@@ -112,9 +112,10 @@ class _HomePageState extends State<HomePage> {
         }
 
         setState(() => _isLoading = false);
-        Navigator.pushReplacement(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => destinationPage),
+          (Route<dynamic> route) => false,
         );
       } else {
         setState(() => _isLoading = false);
