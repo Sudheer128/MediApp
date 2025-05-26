@@ -28,9 +28,9 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
 
   void _logout(BuildContext context) {
     signOutGoogle();
-    Navigator.pushReplacement(
+    Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => Index()),
+      MaterialPageRoute<void>(builder: (BuildContext context) => Index()),
     );
   }
 

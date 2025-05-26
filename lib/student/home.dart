@@ -379,7 +379,9 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
                       signOutGoogle();
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => Index()),
+                        MaterialPageRoute<void>(
+                          builder: (BuildContext context) => Index(),
+                        ),
                       );
                     },
                   ),

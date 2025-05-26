@@ -69,7 +69,7 @@ class _SignInScreenState extends State<SignInScreen> {
             destinationPage = ApprovalScreen();
         }
 
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => destinationPage),
         );
@@ -133,7 +133,7 @@ Future<User?> signInWithGoogle() async {
 }
 
 Future<void> signOutGoogle() async {
-  await _auth.signOut();
-  await _googleSignIn.signOut();
+  await GoogleSignIn().signOut();
+  await FirebaseAuth.instance.signOut();
   print('User signed out');
 }
