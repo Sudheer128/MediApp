@@ -18,33 +18,68 @@ const medicalLight = Color(0xFFE0F7FF);
 const medicalDark = Color(0xFF005F9E);
 const medicalAccent = Color(0xFF00B4FF);
 
-class Index extends StatelessWidget {
+class Index extends StatefulWidget {
   const Index({super.key});
 
   @override
+  State<Index> createState() => _IndexState();
+}
+
+class _IndexState extends State<Index> {
+  bool _isCheckingAuth = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkIfLoggedIn();
+  }
+
+  Future<void> _checkIfLoggedIn() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      // Fetch role and user ID from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final role = prefs.getString('role');
+      final userId = prefs.getInt('userid');
+
+      Widget destinationPage;
+
+      switch (role) {
+        case 'admin':
+          destinationPage = AdminHomePage();
+          break;
+        case 'college':
+          destinationPage = CollegeDegreesScreen();
+          break;
+        case 'doctor':
+          destinationPage = DoctorDashboardApp();
+          break;
+        case 'myrank_user':
+          destinationPage = UserHomePage();
+          break;
+        case 'myrank_cm':
+          destinationPage = CmHomePage();
+          break;
+        default:
+          destinationPage = ApprovalScreen();
+      }
+
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => destinationPage));
+    } else {
+      // No user is logged in
+      setState(() => _isCheckingAuth = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'MedConnect',
-      theme: ThemeData(
-        primaryColor: medical,
-        colorScheme: ColorScheme.light(
-          primary: medical,
-          secondary: medicalAccent,
-        ),
-        scaffoldBackgroundColor: Colors.white,
-        appBarTheme: const AppBarTheme(
-          elevation: 0,
-          centerTitle: false,
-          titleTextStyle: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-      ),
-      debugShowCheckedModeBanner: false,
-      home: const HomePage(),
-    );
+    if (_isCheckingAuth) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    } else {
+      return const HomePage();
+    }
   }
 }
 
@@ -86,12 +121,17 @@ class _HomePageState extends State<HomePage> {
         final prefs = await SharedPreferences.getInstance();
         final userId = data['userid'];
         final userName = data['name'];
+        final role = data['role'];
+        await prefs.setString('name', userName);
+        await prefs.setString('role', role); // ← Add this
+        if (userId != null) {
+          await prefs.setInt('userid', userId);
+        }
         await prefs.setString('name', userName);
         if (userId != null) {
           await prefs.setInt('userid', userId);
         }
 
-        final role = data['role'];
         print(role);
         Widget destinationPage;
 
