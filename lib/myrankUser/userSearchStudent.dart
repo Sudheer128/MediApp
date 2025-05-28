@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/admin/Adminedit_form.dart';
 import 'package:medicalapp/myrankUser/useredit_form.dart';
+import 'package:medicalapp/url.dart';
 
 class UserEditForm extends StatefulWidget {
   const UserEditForm({Key? key}) : super(key: key);
@@ -34,9 +35,7 @@ class _StudentDetailScreenState extends State<UserEditForm> {
     });
     try {
       final response = await http.get(
-        Uri.parse(
-          'http://192.168.0.103:8080/studentscompletedetails?user_id=$userId',
-        ),
+        Uri.parse('$baseurl/studentscompletedetails?user_id=$userId'),
       );
 
       if (response.statusCode == 200) {

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/college/studentList.dart';
+import 'package:medicalapp/url.dart';
 
 class DegreesScreen extends StatefulWidget {
   @override
@@ -37,9 +38,7 @@ class _DegreesScreenState extends State<DegreesScreen>
   }
 
   Future<List<dynamic>> fetchDegrees() async {
-    final response = await http.get(
-      Uri.parse('http://192.168.0.103:8080/degree-course-counts'),
-    );
+    final response = await http.get(Uri.parse('$baseurl/degree-course-counts'));
 
     if (response.statusCode == 200) {
       _animationController.forward();

@@ -5,6 +5,7 @@ import 'package:medicalapp/edit_formAfterSave.dart';
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
 import 'package:medicalapp/student/form_page.dart';
+import 'package:medicalapp/url.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DoctorDashboardApp extends StatelessWidget {
@@ -60,9 +61,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('userid') ?? 0;
 
-    final uri = Uri.parse(
-      'http://192.168.0.103:8080/getuserstatus?userid=$userId',
-    );
+    final uri = Uri.parse('$baseurl/getuserstatus?userid=$userId');
 
     try {
       final response = await http.get(
@@ -99,7 +98,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
 
     final statusValue = isActive ? 1 : 0;
     final uri = Uri.parse(
-      'http://192.168.0.103:8080/userstatus?user_id=$userId&status=$statusValue',
+      '$baseurl/userstatus?userid=$userId&status=$statusValue',
     );
     print('userId: $userId, status: $statusValue'); // Debugging line
     try {

@@ -14,6 +14,7 @@ import 'package:medicalapp/edit_formAfterSave.dart';
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
 import 'package:medicalapp/student/home.dart';
+import 'package:medicalapp/url.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApplicationForm extends StatefulWidget {
@@ -275,7 +276,7 @@ class _ApplicationFormState extends State<ApplicationForm> {
       coursesError = null;
     });
 
-    final uri = Uri.parse('http://192.168.0.103:8080/courses');
+    final uri = Uri.parse('$baseurl/courses');
 
     try {
       final response = await http.get(uri);
@@ -354,7 +355,7 @@ class _ApplicationFormState extends State<ApplicationForm> {
       },
     };
 
-    final uri = Uri.parse('http://192.168.0.103:8080/counsel');
+    final uri = Uri.parse('$baseurl/counsel');
     late http.Response response;
 
     try {
@@ -513,7 +514,7 @@ class _ApplicationFormState extends State<ApplicationForm> {
     final userId = prefs.getInt('userid') ?? 0;
 
     final statusValue = isActive ? 1 : 0;
-    final uri = Uri.parse('http://192.168.0.103:8080/userstatus');
+    final uri = Uri.parse('$baseurl/userstatus');
 
     print('Updating status to $statusValue for user $userId');
 
