@@ -43,7 +43,7 @@ class _DegreesScreenState extends State<CollegeDegreesScreen>
     return {
       'name': _prefs.getString('name') ?? 'Admin',
       'email': _prefs.getString('email') ?? '',
-      'photoUrl': _prefs.getString('photoUrl') ?? '',
+      'photourl': _prefs.getString('photourl') ?? '',
     };
   }
 
@@ -80,7 +80,7 @@ class _DegreesScreenState extends State<CollegeDegreesScreen>
                 builder: (context, snapshot) {
                   final name = snapshot.data?['name'] ?? 'Admin';
                   final email = snapshot.data?['email'] ?? '';
-                  final photoUrl = snapshot.data?['photoUrl'] ?? '';
+                  final photoUrl = snapshot.data?['photourl'] ?? '';
 
                   return UserAccountsDrawerHeader(
                     decoration: BoxDecoration(
@@ -219,6 +219,7 @@ class _DegreesScreenState extends State<CollegeDegreesScreen>
         backgroundColor: Colors.deepPurple.shade700,
         elevation: 4,
         centerTitle: true,
+        iconTheme: IconThemeData(color: Colors.white),
         title: Text(
           'Degrees & Courses',
           style: TextStyle(
@@ -229,183 +230,191 @@ class _DegreesScreenState extends State<CollegeDegreesScreen>
           ),
         ),
       ),
-      body: FutureBuilder<List<dynamic>>(
-        future: degreesFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-              child: SizedBox(
-                width: 48,
-                height: 48,
-                child: CircularProgressIndicator(
-                  strokeWidth: 4.2,
-                  color: Colors.deepPurple.shade600,
+      body: RefreshIndicator(
+        onRefresh: () async {
+          setState(() {
+            degreesFuture = fetchDegrees(); // Trigger a reload of the degrees
+          });
+          await degreesFuture; // Ensure the fetch completes
+        },
+        child: FutureBuilder<List<dynamic>>(
+          future: degreesFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(
+                child: SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 4.2,
+                    color: Colors.deepPurple.shade600,
+                  ),
                 ),
-              ),
-            );
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                'Error: ${snapshot.error}',
-                style: TextStyle(color: Colors.red.shade700, fontSize: 16),
-              ),
-            );
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(
-              child: Text(
-                'No data available',
-                style: TextStyle(fontSize: 18, color: Colors.grey.shade600),
-              ),
-            );
-          }
+              );
+            } else if (snapshot.hasError) {
+              return Center(
+                child: Text(
+                  'Error: ${snapshot.error}',
+                  style: TextStyle(color: Colors.red.shade700, fontSize: 16),
+                ),
+              );
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(
+                child: Text(
+                  'No data available',
+                  style: TextStyle(fontSize: 18, color: Colors.grey.shade600),
+                ),
+              );
+            }
 
-          final data = snapshot.data!;
-          return FadeTransition(
-            opacity: _fadeInAnimation,
-            child: ListView.builder(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-              itemCount: data.length,
-              itemBuilder: (context, index) {
-                final degree = data[index]['degree'];
-                final courses = data[index]['courses'] as List<dynamic>;
+            final data = snapshot.data!;
+            return FadeTransition(
+              opacity: _fadeInAnimation,
+              child: ListView.builder(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                itemCount: data.length,
+                itemBuilder: (context, index) {
+                  final degree = data[index]['degree'];
+                  final courses = data[index]['courses'] as List<dynamic>;
 
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 28),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Degree heading with underline accent
-                      Container(
-                        padding: EdgeInsets.only(bottom: 6),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(
-                              color: Colors.deepPurple.shade300,
-                              width: 3,
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 28),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Degree heading with underline accent
+                        Container(
+                          padding: EdgeInsets.only(bottom: 6),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                color: Colors.deepPurple.shade300,
+                                width: 3,
+                              ),
                             ),
                           ),
-                        ),
-                        child: Text(
-                          degree,
-                          style: TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.deepPurple.shade800,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 12),
-
-                      if (courses.isEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12),
                           child: Text(
-                            "No Data available for $degree Degree",
+                            degree,
                             style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey.shade700,
-                              fontStyle: FontStyle.italic,
+                              fontSize: 26,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.deepPurple.shade800,
                             ),
                           ),
-                        )
-                      else
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 12,
-                          children:
-                              courses.map<Widget>((course) {
-                                final courseName =
-                                    (course['course_name'] ?? '').trim();
-                                final studentCount =
-                                    course['student_count'] ?? 0;
+                        ),
+                        SizedBox(height: 12),
 
-                                return InkWell(
-                                  borderRadius: BorderRadius.circular(14),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (context) => CourseDetailsScreen(
-                                              degree: degree,
-                                              courseName: courseName,
-                                            ),
-                                      ),
-                                    );
-                                  },
-                                  child: Container(
-                                    constraints: BoxConstraints(
-                                      minWidth: 120,
-                                      maxWidth: 180,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          Colors.deepPurple.shade400,
-                                          Colors.deepPurple.shade700,
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
-                                      borderRadius: BorderRadius.circular(14),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.deepPurple.shade200
-                                              .withOpacity(0.6),
-                                          offset: Offset(0, 4),
-                                          blurRadius: 8,
+                        if (courses.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: Text(
+                              "No Data available for $degree Degree",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey.shade700,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          )
+                        else
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            children:
+                                courses.map<Widget>((course) {
+                                  final courseName =
+                                      (course['course_name'] ?? '').trim();
+                                  final studentCount =
+                                      course['student_count'] ?? 0;
+
+                                  return InkWell(
+                                    borderRadius: BorderRadius.circular(14),
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) => CourseDetailsScreen(
+                                                degree: degree,
+                                                courseName: courseName,
+                                              ),
                                         ),
-                                      ],
-                                    ),
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 14,
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          courseName,
-                                          style: TextStyle(
-                                            fontSize: 17,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.white,
+                                      );
+                                    },
+                                    child: Container(
+                                      constraints: BoxConstraints(
+                                        minWidth: 120,
+                                        maxWidth: 180,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Colors.deepPurple.shade400,
+                                            Colors.deepPurple.shade700,
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ),
+                                        borderRadius: BorderRadius.circular(14),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.deepPurple.shade200
+                                                .withOpacity(0.6),
+                                            offset: Offset(0, 4),
+                                            blurRadius: 8,
                                           ),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        SizedBox(height: 6),
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.people,
-                                              size: 18,
-                                              color: Colors.white70,
+                                        ],
+                                      ),
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 14,
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            courseName,
+                                            style: TextStyle(
+                                              fontSize: 17,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.white,
                                             ),
-                                            SizedBox(width: 6),
-                                            Text(
-                                              '$studentCount students',
-                                              style: TextStyle(
-                                                fontSize: 14,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          SizedBox(height: 6),
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.people,
+                                                size: 18,
                                                 color: Colors.white70,
                                               ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
+                                              SizedBox(width: 6),
+                                              Text(
+                                                '$studentCount students',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.white70,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                );
-                              }).toList(),
-                        ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          );
-        },
+                                  );
+                                }).toList(),
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            );
+          },
+        ),
       ),
     );
   }

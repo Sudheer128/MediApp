@@ -99,7 +99,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
 
     final statusValue = isActive ? 1 : 0;
     final uri = Uri.parse(
-      'http://192.168.0.103:8080/userstatus?userid=$userId&status=$statusValue',
+      'http://192.168.0.103:8080/userstatus?user_id=$userId&status=$statusValue',
     );
     print('userId: $userId, status: $statusValue'); // Debugging line
     try {
