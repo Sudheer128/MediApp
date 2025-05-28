@@ -18,23 +18,26 @@ import 'package:medicalapp/college_view.dart';
 import 'package:medicalapp/edit_formAfterSave.dart';
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
+import 'package:medicalapp/myrank_cm/cmCollegeDocList.dart';
+import 'package:medicalapp/myrank_cm/cmForm.dart';
+import 'package:medicalapp/myrank_cm/home_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class AdminEditApplicationForm extends StatefulWidget {
+class CmEditApplicationForm extends StatefulWidget {
   final Map<String, dynamic>? existingData;
   final int? userId;
 
-  const AdminEditApplicationForm({
+  const CmEditApplicationForm({
     Key? key,
     this.existingData,
     required this.userId,
   }) : super(key: key);
 
   @override
-  State<AdminEditApplicationForm> createState() => _EditApplicationFormState();
+  State<CmEditApplicationForm> createState() => _EditApplicationFormState();
 }
 
-class _EditApplicationFormState extends State<AdminEditApplicationForm> {
+class _EditApplicationFormState extends State<CmEditApplicationForm> {
   final _formKey = GlobalKey<FormState>();
   bool _isEditing = true;
 
@@ -658,25 +661,11 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
                       Navigator.pop(context);
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => AdminHomePage(),
-                        ),
+                        MaterialPageRoute(builder: (context) => CmHomePage()),
                       );
                     },
                   ),
-                  ListTile(
-                    leading: Icon(Icons.group, color: primaryBlue),
-                    title: const Text('Manage Users'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => UserManagementPage(),
-                        ),
-                      );
-                    },
-                  ),
+
                   ListTile(
                     leading: Icon(Icons.school, color: primaryBlue),
                     title: const Text('College Interests'),
@@ -700,23 +689,12 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => AdminApplicationForm(),
+                          builder: (context) => CmApplicationForm(),
                         ),
                       );
                     },
                   ),
-                  ListTile(
-                    leading: Icon(Icons.person, color: primaryBlue),
-                    title: const Text('Search Student'),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AdminEditForm(),
-                        ),
-                      );
-                    },
-                  ),
+
                   ListTile(
                     leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
                     title: const Text('Available Doctors'),
@@ -724,7 +702,7 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => AdminCollegeDegreesScreen(),
+                          builder: (context) => CmCollegeDegreesScreen(),
                         ),
                       );
                     },

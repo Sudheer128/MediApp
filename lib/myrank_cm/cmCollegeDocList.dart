@@ -11,19 +11,22 @@ import 'package:medicalapp/college/collegeintrests.dart';
 import 'package:medicalapp/college/studentList.dart';
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
+import 'package:medicalapp/myrank_cm/home_page.dart';
+import 'package:medicalapp/myrank_cm/studentList.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class AdminCollegeDegreesScreen extends StatefulWidget {
+class CmCollegeDegreesScreen extends StatefulWidget {
   @override
   _DegreesScreenState createState() => _DegreesScreenState();
 }
 
-class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
+class _DegreesScreenState extends State<CmCollegeDegreesScreen>
     with SingleTickerProviderStateMixin {
   late Future<List<dynamic>> degreesFuture;
   late AnimationController _animationController;
   late Animation<double> _fadeInAnimation;
 
-  static const Color primaryBlue = Color(0xFF007FFF);
+  static const Color primaryBlue = Color.fromARGB(255, 250, 110, 110);
 
   // Track selected status: 1 = Active, 0 = Inactive
   int _selectedStatus = 1;
@@ -49,9 +52,13 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
   }
 
   Future<List<dynamic>> fetchDegrees({required int status}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedName = prefs.getString('name') ?? 'Admin';
     final uri = Uri.parse(
-      'http://192.168.0.103:8080/degree-course-counts',
-    ).replace(queryParameters: {'status': status.toString()});
+      'http://192.168.0.103:8080/degreecoursecountsbycmname',
+    ).replace(
+      queryParameters: {'status': status.toString(), 'name': savedName},
+    );
     final response = await http.get(uri);
 
     if (response.statusCode == 200) {
@@ -113,21 +120,11 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => AdminHomePage()),
+                    MaterialPageRoute(builder: (_) => CmHomePage()),
                   );
                 },
               ),
-              ListTile(
-                leading: Icon(Icons.group, color: primaryBlue),
-                title: const Text('Manage Users'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => UserManagementPage()),
-                  );
-                },
-              ),
+
               ListTile(
                 leading: Icon(Icons.school, color: primaryBlue),
                 title: const Text('College Interests'),
@@ -152,25 +149,14 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
                   );
                 },
               ),
-              ListTile(
-                leading: Icon(Icons.person, color: primaryBlue),
-                title: const Text('Search Student'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => AdminEditForm()),
-                  );
-                },
-              ),
+
               ListTile(
                 leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
                 title: const Text('Available Doctors'),
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => AdminCollegeDegreesScreen(),
-                    ),
+                    MaterialPageRoute(builder: (_) => CmCollegeDegreesScreen()),
                   );
                 },
               ),
@@ -255,7 +241,6 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
                     ),
                   );
                 }
-
                 final data = snapshot.data!;
                 return FadeTransition(
                   opacity: _fadeInAnimation,
@@ -287,7 +272,7 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
                                 style: TextStyle(
                                   fontSize: 26,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF005BBB),
+                                  color: Colors.black87,
                                 ),
                               ),
                             ),
@@ -323,12 +308,11 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
                                             context,
                                             MaterialPageRoute(
                                               builder:
-                                                  (_) =>
-                                                      AdminCourseDetailsScreen(
-                                                        degree: degree,
-                                                        courseName: courseName,
-                                                        status: _selectedStatus,
-                                                      ),
+                                                  (_) => CmCourseDetailsScreen(
+                                                    degree: degree,
+                                                    courseName: courseName,
+                                                    status: _selectedStatus,
+                                                  ),
                                             ),
                                           );
                                         },

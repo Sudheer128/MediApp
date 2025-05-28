@@ -9,7 +9,6 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:medicalapp/admin/adminCollegedocList.dart';
 import 'package:medicalapp/admin/adminintreststatus.dart';
-import 'package:medicalapp/admin/form_page.dart';
 import 'package:medicalapp/admin/mainscreen.dart';
 import 'package:medicalapp/admin/searchstudent.dart';
 import 'package:medicalapp/admin/userstable.dart';
@@ -18,25 +17,22 @@ import 'package:medicalapp/college_view.dart';
 import 'package:medicalapp/edit_formAfterSave.dart';
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
+import 'package:medicalapp/myrank_cm/cmCollegeDocList.dart';
+import 'package:medicalapp/myrank_cm/home_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class AdminEditApplicationForm extends StatefulWidget {
-  final Map<String, dynamic>? existingData;
-  final int? userId;
-
-  const AdminEditApplicationForm({
-    Key? key,
-    this.existingData,
-    required this.userId,
-  }) : super(key: key);
+class CmApplicationForm extends StatefulWidget {
+  const CmApplicationForm({Key? key}) : super(key: key);
 
   @override
-  State<AdminEditApplicationForm> createState() => _EditApplicationFormState();
+  State<CmApplicationForm> createState() => _ApplicationFormState();
 }
 
-class _EditApplicationFormState extends State<AdminEditApplicationForm> {
+class _ApplicationFormState extends State<CmApplicationForm> {
   final _formKey = GlobalKey<FormState>();
   bool _isEditing = true;
+  bool _isFormSubmitted = false;
+  bool _isLoading = false; // Add this line
 
   final GlobalKey _educationKey = GlobalKey();
   final GlobalKey _fellowshipKey = GlobalKey();
@@ -56,7 +52,6 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
   List<Course> ssCourses = [];
 
   bool isLoadingCourses = false;
-  bool isSubmitting = false; // Add this new variable
   String? coursesError;
 
   // Separate lists for PG and SS details
@@ -66,6 +61,7 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
   // Scroll & Keys for Drawer navigation
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _personalKey = GlobalKey();
+  final _userIdController = TextEditingController();
 
   // Personal Details
   final _nameController = TextEditingController();
@@ -108,117 +104,15 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
     _validityFromController.dispose();
     _validityToController.dispose();
     _registrationNumberController.dispose();
+    _userIdController.dispose();
+
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
-    fetchCourses().then((_) {
-      if (widget.existingData != null) {
-        _populateFormWithExistingData(widget.existingData!);
-      }
-    });
-  }
-
-  void _populateFormWithExistingData(Map<String, dynamic> data) {
-    // Personal details
-    _nameController.text = data['name'] ?? '';
-    _phoneController.text = (data['phone'] ?? '').toString();
-    _emailController.text = data['email'] ?? '';
-    _addressController.text = data['address'] ?? '';
-
-    // Clear existing lists before populating
-    educationDetails.clear();
-    pgDetails.clear();
-    ssDetails.clear();
-
-    List<dynamic> educations = data['education'] ?? [];
-
-    for (var edu in educations) {
-      final type = edu['type'] ?? 'MBBS';
-      final ed = EducationDetail(type: type);
-      ed.courseName = edu['courseName'] ?? '';
-      ed.collegeName = edu['collegeName'] ?? '';
-      ed.fromDateController.text = _formatDateForController(edu['fromDate']);
-      ed.toDateController.text = _formatDateForController(edu['toDate']);
-
-      if (type == 'MBBS') {
-        educationDetails.add(ed);
-      } else if (type == 'PG') {
-        pgDetails.add(ed);
-        _hasPG = true;
-      } else if (type == 'SS') {
-        ssDetails.add(ed);
-        _hasSS = true;
-      }
-    }
-
-    // Fellowships
-    fellowships.clear();
-    List<dynamic> fellows = data['fellowships'] ?? [];
-    _hasFellowships = fellows.isNotEmpty;
-    for (var f in fellows) {
-      final fellowship = Fellowship();
-      fellowship.courseName = f['courseName'] ?? '';
-      fellowship.collegeName = f['collegeName'] ?? '';
-      fellowship.fromDateController.text = _formatDateForController(
-        f['fromDate'],
-      );
-      fellowship.toDateController.text = _formatDateForController(f['toDate']);
-      fellowships.add(fellowship);
-    }
-
-    // Papers
-    papers.clear();
-    List<dynamic> papersData = data['papers'] ?? [];
-    _hasPapers = papersData.isNotEmpty;
-    for (var p in papersData) {
-      final paper = Paper();
-      paper.name = p['name'] ?? '';
-      paper.description = p['description'] ?? '';
-      paper.submittedDateController.text = _formatDateForController(
-        p['submittedOn'],
-      );
-      papers.add(paper);
-    }
-
-    // Work Experience
-    workExperiences.clear();
-    List<dynamic> workData = data['workExperiences'] ?? [];
-    _hasWorkExperience = workData.isNotEmpty;
-    for (var w in workData) {
-      final work = WorkExperience();
-      work.role = w['role'] ?? '';
-      work.name = w['name'] ?? '';
-      work.fromDateController.text = _formatDateForController(w['from']);
-      work.toDateController.text = _formatDateForController(w['to']);
-      work.place = w['place'] ?? '';
-      work.description = w['description'] ?? '';
-      workExperiences.add(work);
-    }
-
-    // Certificate
-    final cert = data['certificate'] ?? {};
-    _counselNameController.text = cert['counselName'] ?? '';
-    _courseNameController.text = cert['courseName'] ?? '';
-    _validityFromController.text = _formatDateForController(cert['validFrom']);
-    _validityToController.text = _formatDateForController(cert['validTo']);
-    _registrationNumberController.text = cert['registrationNumber'] ?? '';
-
-    setState(() {
-      _isEditing = true; // open form in edit mode
-    });
-  }
-
-  String _formatDateForController(String? backendDate) {
-    if (backendDate == null || backendDate.isEmpty) return '';
-    try {
-      final date = DateTime.parse(backendDate);
-      return DateFormat('dd/MM/yyyy').format(date);
-    } catch (_) {
-      return backendDate;
-    }
+    fetchCourses();
   }
 
   Future<void> _pickDate(TextEditingController controller) async {
@@ -267,13 +161,18 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
     });
   }
 
-  void _saveForm() {
+  Future<void> _saveForm() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     final isValid = _formKey.currentState!.validate();
 
     // Check resume upload separately
     if (_resumeFile == null && _resumeBytes == null) {
       setState(() {
         _resumeError = true;
+        _isLoading = false;
       });
       _scrollToSection(_resumeKey);
       return;
@@ -329,29 +228,25 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
       return;
     }
 
+    setState(() {
+      _isLoading = true; // Start loading
+    });
+
     // If all valid
     _formKey.currentState!.save();
+    // Submit to backend first, await completion
+    final success = await _submitToBackend();
+
     setState(() {
-      isSubmitting = true; // Start loading
+      _isLoading = false; // Stop loading
     });
-    _submitToBackend()
-        .then((_) {
-          setState(() {
-            isSubmitting = false; // Stop loading
-            _isEditing = false;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Form saved successfully!')),
-          );
-        })
-        .catchError((error) {
-          setState(() {
-            isSubmitting = false; // Stop loading on error
-          });
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error saving form: $error')));
-        });
+
+    if (success) {
+      setState(() {
+        _isFormSubmitted = true;
+        _isEditing = false;
+      });
+    }
   }
 
   bool _hasErrorInSection(GlobalKey key) {
@@ -432,10 +327,13 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
     }
   }
 
-  Future<void> _submitToBackend() async {
+  Future<bool> _submitToBackend() async {
+    final userIdText = _userIdController.text.trim();
+    final userId = int.tryParse(userIdText) ?? 0;
+
     final payload = {
       // Personal
-      'userid': widget.userId,
+      // 'userid': userId,
       'name': _nameController.text,
       'phone': int.tryParse(_phoneController.text) ?? 0,
       'email': _emailController.text,
@@ -472,53 +370,81 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
 
     print(payload);
 
-    final uri = Uri.parse('http://192.168.0.103:8080/application/update');
+    final uri = Uri.parse('http://192.168.0.103:8080/counsel');
     late http.Response response;
 
-    if (!kIsWeb && _resumeFile != null) {
-      // Mobile/native platforms: use fromPath
-      var request = http.MultipartRequest('POST', uri);
-      request.fields['data'] = jsonEncode(payload);
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'resume',
-          _resumeFile!.path,
-          filename: _resumeFileName,
-        ),
-      );
-      final streamedResponse = await request.send();
-      response = await http.Response.fromStream(streamedResponse);
-    } else if (kIsWeb && _resumeBytes != null) {
-      // Web platforms: use fromBytes
-      var request = http.MultipartRequest('POST', uri);
-      request.fields['data'] = jsonEncode(payload);
-      request.files.add(
-        http.MultipartFile.fromBytes(
-          'resume',
-          _resumeBytes!,
-          filename: _resumeFileName,
-        ),
-      );
-      final streamedResponse = await request.send();
-      response = await http.Response.fromStream(streamedResponse);
-    } else {
-      // No resume, just send JSON
-      response = await http.post(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(payload),
-      );
-    }
+    try {
+      if (!kIsWeb && _resumeFile != null) {
+        // Mobile/native platforms: use fromPath
+        var request = http.MultipartRequest('POST', uri);
+        request.fields['data'] = jsonEncode(payload);
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'resume',
+            _resumeFile!.path,
+            filename: _resumeFileName,
+          ),
+        );
+        final streamedResponse = await request.send();
+        response = await http.Response.fromStream(streamedResponse);
+      } else if (kIsWeb && _resumeBytes != null) {
+        // Web platforms: use fromBytes
+        var request = http.MultipartRequest('POST', uri);
+        request.fields['data'] = jsonEncode(payload);
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            'resume',
+            _resumeBytes!,
+            filename: _resumeFileName,
+          ),
+        );
+        final streamedResponse = await request.send();
+        response = await http.Response.fromStream(streamedResponse);
+      } else {
+        // No resume, just send JSON
+        response = await http.post(
+          uri,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(payload),
+        );
+      }
 
-    if (response.statusCode == 200) {
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Submitted successfully!')),
+        );
+        return true;
+      } else {
+        // Show alert dialog when the email is already registered (non-200 response)
+        _showEmailAlreadyRegisteredDialog();
+        return false;
+      }
+    } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Submitted successfully!')));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Submission failed: ${response.statusCode}')),
-      );
+      ).showSnackBar(SnackBar(content: Text('Submission error: $e')));
+      return false;
     }
+  }
+
+  void _showEmailAlreadyRegisteredDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Error'),
+          content: Text('${_emailController.text} already registered.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<String?> _showSearchableCourseDialog(
@@ -628,277 +554,288 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
 
   @override
   Widget build(BuildContext context) {
-    const Color primaryBlue = Color(0xFF007FFF);
+    const Color primaryBlue = Color.fromARGB(255, 250, 110, 110);
 
-    return Stack(
-      children: [
-        Scaffold(
-          drawer: Drawer(
-            child: SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  DrawerHeader(
-                    decoration: const BoxDecoration(color: primaryBlue),
-                    child: const Center(
-                      child: Text(
-                        'Admin Menu',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+    return Scaffold(
+      drawer: Drawer(
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              DrawerHeader(
+                decoration: const BoxDecoration(color: primaryBlue),
+                child: const Center(
+                  child: Text(
+                    'Admin Menu',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  ListTile(
-                    leading: Icon(Icons.home_filled, color: primaryBlue),
-                    title: const Text('Home'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AdminHomePage(),
-                        ),
-                      );
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.group, color: primaryBlue),
-                    title: const Text('Manage Users'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => UserManagementPage(),
-                        ),
-                      );
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.school, color: primaryBlue),
-                    title: const Text('College Interests'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => InterestsPage(),
-                        ),
-                      );
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(
-                      Icons.format_align_left_sharp,
-                      color: primaryBlue,
-                    ),
-                    title: const Text('New Student Form'),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AdminApplicationForm(),
-                        ),
-                      );
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.person, color: primaryBlue),
-                    title: const Text('Search Student'),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AdminEditForm(),
-                        ),
-                      );
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
-                    title: const Text('Available Doctors'),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AdminCollegeDegreesScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  const Spacer(),
-                  const Divider(),
-                  ListTile(
-                    leading: const Icon(Icons.logout, color: Colors.red),
-                    title: const Text(
-                      'Logout',
-                      style: TextStyle(color: Colors.red),
-                    ),
-                    onTap: () {
-                      Navigator.pop(context);
-                      _logout(context);
-                    },
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
-          appBar: AppBar(
-            title: const Text('Medical Professional Application Form'),
-            backgroundColor: primaryBlue,
-            actions: [],
-          ),
-          body: Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Back Button Section
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16.0),
-                    child: IconButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      icon: Icon(Icons.arrow_back, color: Colors.blue),
-                      tooltip: 'Go Back',
-                    ),
-                  ),
-
-                  // Personal Details Section
-                  Container(
-                    key: _personalKey,
-                    margin: const EdgeInsets.only(bottom: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 8,
-                            horizontal: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade100,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Row(
-                            children: [
-                              const Text(
-                                'Personal Details',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const Spacer(),
-                              if (!_isEditing)
-                                IconButton(
-                                  icon: const Icon(Icons.edit),
-                                  onPressed: () => _toggleEditing('personal'),
-                                  tooltip: 'Edit Personal Details',
-                                ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        _isEditing
-                            ? _buildPersonalDetailsForm()
-                            : _buildPersonalDetailsView(),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Education Details Section
-                  _buildSectionHeader('Education Details', 'education'),
-                  _buildEducationDetailsSection(),
-
-                  const SizedBox(height: 24),
-
-                  // Fellowships Section
-                  _buildSectionHeader('Fellowships', 'fellowships'),
-                  _buildFellowshipsSection(),
-
-                  const SizedBox(height: 24),
-
-                  // Papers Section
-                  _buildSectionHeader('Papers', 'papers'),
-                  _buildPapersSection(),
-
-                  const SizedBox(height: 24),
-
-                  // Work Experience Section
-                  _buildSectionHeader('Work Experience', 'work'),
-                  _buildWorkExperienceSection(),
-
-                  const SizedBox(height: 24),
-
-                  // Medical Course Certificate Section
-                  _buildSectionHeader(
-                    'Currently Active Medical Councel Certificate',
-                    'certificate',
-                  ),
-                  if (_isEditing)
-                    _buildMedicalCertificateForm()
-                  else
-                    _buildMedicalCertificateView(),
-
-                  const SizedBox(height: 24),
-
-                  // Resume Upload Section
-                  _buildSectionHeader('Resume Upload', 'resume'),
-                  if (_isEditing)
-                    _buildResumeUploadSection()
-                  else if (_resumeFileName != null)
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        'Resume: $_resumeFileName',
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ),
-
-                  const SizedBox(height: 32),
-
-                  // Save / Edit Button
-                  Center(
-                    child: ElevatedButton(
-                      onPressed:
-                          _isEditing ? _saveForm : () => _toggleEditing('all'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 48,
-                          vertical: 12,
-                        ),
-                      ),
-                      child: Text(
-                        _isEditing ? 'Save Form' : 'Edit Form',
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ),
-                  ),
-                ],
+              ListTile(
+                leading: Icon(Icons.home_filled, color: primaryBlue),
+                title: const Text('Home'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => CmHomePage()),
+                  );
+                },
               ),
-            ),
+
+              ListTile(
+                leading: Icon(Icons.school, color: primaryBlue),
+                title: const Text('College Interests'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => InterestsPage()),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.format_align_left_sharp,
+                  color: primaryBlue,
+                ),
+                title: const Text('New Student Form'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CmApplicationForm(),
+                    ),
+                  );
+                },
+              ),
+
+              ListTile(
+                leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
+                title: const Text('Available Doctors'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CmCollegeDegreesScreen(),
+                    ),
+                  );
+                },
+              ),
+              const Spacer(),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.logout, color: Colors.red),
+                title: const Text(
+                  'Logout',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onTap: () {
+                  signOutGoogle();
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => Index()),
+                    (Route<dynamic> route) =>
+                        false, // Remove all previous routes
+                  );
+                },
+              ),
+            ],
           ),
         ),
-        if (isSubmitting)
-          Container(
-            color: Colors.black54,
-            child: const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(primaryBlue),
+      ),
+      appBar: AppBar(
+        title: const Text('Medical Professional Application Form'),
+        actions: [],
+        backgroundColor: primaryBlue,
+      ),
+      body:
+          _isLoading
+              ? const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('Saving form...', style: TextStyle(fontSize: 16)),
+                  ],
+                ),
+              )
+              : Center(
+                child:
+                    _isFormSubmitted
+                        ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              ' Form Submitted Successfully!',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 20),
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.pop(context); // close drawer
+
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AdminEditForm(),
+                                  ),
+                                );
+                              },
+                              child: const Text('View Student Profile'),
+                            ),
+                          ],
+                        )
+                        : Form(
+                          key: _formKey,
+                          child: SingleChildScrollView(
+                            controller: _scrollController,
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Personal Details Section
+                                Container(
+                                  key: _personalKey,
+                                  margin: const EdgeInsets.only(bottom: 16),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 8,
+                                          horizontal: 12,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue.shade100,
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Text(
+                                              'Personal Details',
+                                              style: TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const Spacer(),
+                                            if (!_isEditing)
+                                              IconButton(
+                                                icon: const Icon(Icons.edit),
+                                                onPressed:
+                                                    () => _toggleEditing(
+                                                      'personal',
+                                                    ),
+                                                tooltip:
+                                                    'Edit Personal Details',
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      _isEditing
+                                          ? _buildPersonalDetailsForm()
+                                          : _buildPersonalDetailsView(),
+                                    ],
+                                  ),
+                                ),
+
+                                const SizedBox(height: 24),
+
+                                // Education Details Section
+                                _buildSectionHeader(
+                                  'Education Details',
+                                  'education',
+                                ),
+                                _buildEducationDetailsSection(),
+
+                                const SizedBox(height: 24),
+
+                                // Fellowships Section
+                                _buildSectionHeader(
+                                  'Fellowships',
+                                  'fellowships',
+                                ),
+                                _buildFellowshipsSection(),
+
+                                const SizedBox(height: 24),
+
+                                // Papers Section
+                                _buildSectionHeader('Papers', 'papers'),
+                                _buildPapersSection(),
+
+                                const SizedBox(height: 24),
+
+                                // Work Experience Section
+                                _buildSectionHeader('Work Experience', 'work'),
+                                _buildWorkExperienceSection(),
+
+                                const SizedBox(height: 24),
+
+                                // Medical Course Certificate Section
+                                _buildSectionHeader(
+                                  'Currently Active Medical Councel Certificate',
+                                  'certificate',
+                                ),
+                                if (_isEditing)
+                                  _buildMedicalCertificateForm()
+                                else
+                                  _buildMedicalCertificateView(),
+
+                                const SizedBox(height: 24),
+
+                                // Resume Upload Section
+                                _buildSectionHeader('Resume Upload', 'resume'),
+                                if (_isEditing)
+                                  _buildResumeUploadSection()
+                                else if (_resumeFileName != null)
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      'Resume: $_resumeFileName',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                  ),
+
+                                const SizedBox(height: 32),
+
+                                // Save / Edit Button
+                                Center(
+                                  child: ElevatedButton(
+                                    onPressed:
+                                        _isEditing
+                                            ? _saveForm
+                                            : () => _toggleEditing('all'),
+                                    style: ElevatedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 48,
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      _isEditing ? 'Save Form' : 'Edit Form',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
               ),
-            ),
-          ),
-      ],
     );
   }
 
@@ -912,11 +849,9 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
       ),
       child: Row(
         children: [
-          Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+          Text(
+            title,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const Spacer(),
           if (!_isEditing)

@@ -77,13 +77,15 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
         children: [
           Icon(icon, color: Colors.deepPurple.shade700),
           const SizedBox(width: 8),
-          Text(
-            title,
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 20,
-              color: Colors.deepPurple.shade700,
-              letterSpacing: 0.5,
+          Expanded(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 20,
+                color: Colors.deepPurple.shade700,
+                letterSpacing: 0.5,
+              ),
             ),
           ),
           Expanded(

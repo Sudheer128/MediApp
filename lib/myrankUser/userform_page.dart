@@ -89,9 +89,10 @@ class _ApplicationFormState extends State<UserApplicationForm> {
 
   void _logout(BuildContext context) {
     signOutGoogle();
-    Navigator.pushReplacement(
+    Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => Index()),
+      (Route<dynamic> route) => false, // Remove all previous routes
     );
   }
 
