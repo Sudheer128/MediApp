@@ -4,18 +4,19 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:medicalapp/admin/collegeStudentsform.dart';
 import 'package:medicalapp/college/college_student_form.dart';
+import 'package:medicalapp/myrankUser/studentDetails.dart';
 import 'package:medicalapp/myrank_cm/studentdetails.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Define a custom primary color
-const Color kPrimaryColor = Color.fromARGB(255, 250, 110, 110);
+const Color primaryBlue = Color(0xFF00897B);
 
-class CmCourseDetailsScreen extends StatefulWidget {
+class UserCourseDetailsScreen extends StatefulWidget {
   final String degree;
   final String courseName;
   final int status;
 
-  const CmCourseDetailsScreen({
+  const UserCourseDetailsScreen({
     Key? key,
     required this.degree,
     required this.courseName,
@@ -23,10 +24,10 @@ class CmCourseDetailsScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<CmCourseDetailsScreen> createState() => _CourseDetailsScreenState();
+  State<UserCourseDetailsScreen> createState() => _CourseDetailsScreenState();
 }
 
-class _CourseDetailsScreenState extends State<CmCourseDetailsScreen> {
+class _CourseDetailsScreenState extends State<UserCourseDetailsScreen> {
   List<dynamic> students = [];
   List<dynamic> filteredStudents = [];
   bool isLoading = true;
@@ -40,16 +41,13 @@ class _CourseDetailsScreenState extends State<CmCourseDetailsScreen> {
   }
 
   Future<void> fetchStudents() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedName = prefs.getString('name') ?? '';
     final url = Uri.parse(
-      'http://192.168.0.103:8080/studentsbycoursebycmname',
+      'http://192.168.0.103:8080/students-by-course',
     ).replace(
       queryParameters: {
         'degree': widget.degree,
         'course': widget.courseName == 'MBBS' ? ' ' : widget.courseName,
         'status': widget.status.toString(),
-        'name': savedName,
       },
     );
 
@@ -102,7 +100,7 @@ class _CourseDetailsScreenState extends State<CmCourseDetailsScreen> {
           context,
           MaterialPageRoute(
             builder:
-                (_) => CmStudentDetailScreen(
+                (_) => UserStudentDetailScreen(
                   applicationId: applicationId,
                   StudentName: studentName,
                   courseName: widget.courseName,
@@ -120,7 +118,7 @@ class _CourseDetailsScreenState extends State<CmCourseDetailsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.courseName} Details'),
-        backgroundColor: kPrimaryColor,
+        backgroundColor: primaryBlue,
       ),
       body:
           isLoading
@@ -255,13 +253,13 @@ class _StudentCardState extends State<StudentCard> {
     return Card(
       elevation: 6,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      shadowColor: kPrimaryColor.withOpacity(0.2),
+      shadowColor: primaryBlue.withOpacity(0.2),
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              kPrimaryColor.withOpacity(0.2),
-              kPrimaryColor.withOpacity(0.5),
+              primaryBlue.withOpacity(0.2),
+              primaryBlue.withOpacity(0.5),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -281,7 +279,7 @@ class _StudentCardState extends State<StudentCard> {
                 color: Colors.black87,
                 shadows: [
                   Shadow(
-                    color: kPrimaryColor.withOpacity(0.4),
+                    color: primaryBlue.withOpacity(0.4),
                     blurRadius: 2,
                     offset: const Offset(1, 1),
                   ),
@@ -334,7 +332,7 @@ class _StudentCardState extends State<StudentCard> {
                 Switch(
                   value: _isVisible,
                   onChanged: _toggleVisibility,
-                  activeColor: kPrimaryColor,
+                  activeColor: primaryBlue,
                 ),
               ],
             ),

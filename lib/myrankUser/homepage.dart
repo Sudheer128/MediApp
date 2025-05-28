@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:medicalapp/myrankUser/UserCollegeDocList.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // add this import
 import 'package:medicalapp/admin/adminintreststatus.dart';
 import 'package:medicalapp/admin/form_page.dart';
@@ -161,6 +162,17 @@ class _UserHomePageState extends State<UserHomePage> {
                 },
               ),
               ListTile(
+                leading: Icon(Icons.school, color: UserHomePage.primaryBlue),
+                title: const Text('College Interests'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => InterestsPage()),
+                  );
+                },
+              ),
+              ListTile(
                 leading: Icon(
                   Icons.format_align_left_sharp,
                   color: UserHomePage.primaryBlue,
@@ -182,6 +194,21 @@ class _UserHomePageState extends State<UserHomePage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => UserEditForm()),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.person_pin_sharp,
+                  color: UserHomePage.primaryBlue,
+                ),
+                title: const Text('Available Doctors'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UserCollegeDegreesScreen(),
+                    ),
                   );
                 },
               ),
@@ -236,6 +263,21 @@ class _UserHomePageState extends State<UserHomePage> {
               },
             ),
             const SizedBox(height: 20),
+
+            _buildCard(
+              context,
+              title: 'Available Doctors',
+              icon: Icons.medical_services_outlined,
+              subtitle: 'List of Doctors in Particular Courses',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserCollegeDegreesScreen(),
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),

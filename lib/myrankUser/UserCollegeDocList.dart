@@ -4,23 +4,26 @@ import 'package:http/http.dart' as http;
 import 'package:medicalapp/admin/adminintreststatus.dart';
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
+import 'package:medicalapp/myrankUser/homepage.dart';
+import 'package:medicalapp/myrankUser/studentList.dart';
+import 'package:medicalapp/myrankUser/userform_page.dart';
 import 'package:medicalapp/myrank_cm/cmForm.dart';
 import 'package:medicalapp/myrank_cm/home_page.dart';
 import 'package:medicalapp/myrank_cm/studentList.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class CmCollegeDegreesScreen extends StatefulWidget {
+class UserCollegeDegreesScreen extends StatefulWidget {
   @override
   _DegreesScreenState createState() => _DegreesScreenState();
 }
 
-class _DegreesScreenState extends State<CmCollegeDegreesScreen>
+class _DegreesScreenState extends State<UserCollegeDegreesScreen>
     with SingleTickerProviderStateMixin {
   late Future<List<dynamic>> degreesFuture;
   late AnimationController _animationController;
   late Animation<double> _fadeInAnimation;
 
-  static const Color primaryBlue = Color.fromARGB(255, 250, 110, 110);
+  static const Color primaryBlue = Color(0xFF00897B);
 
   // Track selected status: 1 = Active, 0 = Inactive
   int _selectedStatus = 1;
@@ -46,20 +49,14 @@ class _DegreesScreenState extends State<CmCollegeDegreesScreen>
   }
 
   Future<List<dynamic>> fetchDegrees({required int status}) async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedName = prefs.getString('name') ?? '';
     final uri = Uri.parse(
-      'http://192.168.0.103:8080/degreecoursecountsbycmname',
-    ).replace(
-      queryParameters: {'status': status.toString(), 'name': savedName},
-    );
+      'http://192.168.0.103:8080/degree-course-counts',
+    ).replace(queryParameters: {'status': status.toString()});
     final response = await http.get(uri);
 
     if (response.statusCode == 200) {
       _animationController.forward();
-      final decoded = json.decode(response.body);
-      // If server returns null, treat it as an empty list
-      return (decoded as List<dynamic>?) ?? <dynamic>[];
+      return json.decode(response.body);
     } else {
       throw Exception('Failed to load degrees');
     }
@@ -116,7 +113,7 @@ class _DegreesScreenState extends State<CmCollegeDegreesScreen>
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => CmHomePage()),
+                    MaterialPageRoute(builder: (_) => UserHomePage()),
                   );
                 },
               ),
@@ -140,7 +137,7 @@ class _DegreesScreenState extends State<CmCollegeDegreesScreen>
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => CmApplicationForm()),
+                    MaterialPageRoute(builder: (_) => UserApplicationForm()),
                   );
                 },
               ),
@@ -150,7 +147,9 @@ class _DegreesScreenState extends State<CmCollegeDegreesScreen>
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => CmCollegeDegreesScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => UserCollegeDegreesScreen(),
+                    ),
                   );
                 },
               ),
@@ -306,11 +305,12 @@ class _DegreesScreenState extends State<CmCollegeDegreesScreen>
                                             context,
                                             MaterialPageRoute(
                                               builder:
-                                                  (_) => CmCourseDetailsScreen(
-                                                    degree: degree,
-                                                    courseName: courseName,
-                                                    status: _selectedStatus,
-                                                  ),
+                                                  (_) =>
+                                                      UserCourseDetailsScreen(
+                                                        degree: degree,
+                                                        courseName: courseName,
+                                                        status: _selectedStatus,
+                                                      ),
                                             ),
                                           );
                                         },
