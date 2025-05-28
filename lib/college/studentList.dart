@@ -36,6 +36,7 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
       queryParameters: {
         'degree': widget.degree,
         'course': widget.courseName == 'MBBS' ? ' ' : widget.courseName,
+        'status': "1",
       },
     );
 

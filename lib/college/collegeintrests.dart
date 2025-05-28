@@ -151,7 +151,10 @@ class _InterestsPageState extends State<CollegeInterestsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('College Interests')),
+      appBar: AppBar(
+        title: Text('College Interests'),
+        backgroundColor: Colors.deepPurple.shade700,
+      ),
       body:
           _isLoading
               ? Center(child: CircularProgressIndicator())

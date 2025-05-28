@@ -377,9 +377,11 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
                     title: Text('Log Out'),
                     onTap: () {
                       signOutGoogle();
-                      Navigator.pushReplacement(
+                      Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(builder: (context) => Index()),
+                        (Route<dynamic> route) =>
+                            false, // Remove all previous routes
                       );
                     },
                   ),

@@ -4,13 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-class StudentDetailScreen extends StatefulWidget {
+// Your shared primary color
+const Color kPrimaryColor = Color(0xFF00897B);
+
+class UserStudentDetailScreen extends StatefulWidget {
   final int applicationId;
   final String? StudentName;
   final String degree;
   final String courseName;
 
-  const StudentDetailScreen({
+  const UserStudentDetailScreen({
     Key? key,
     required this.applicationId,
     required this.StudentName,
@@ -19,10 +22,10 @@ class StudentDetailScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<StudentDetailScreen> createState() => _StudentDetailScreenState();
+  State<UserStudentDetailScreen> createState() => _StudentDetailScreenState();
 }
 
-class _StudentDetailScreenState extends State<StudentDetailScreen> {
+class _StudentDetailScreenState extends State<UserStudentDetailScreen> {
   Map<String, dynamic>? data;
   bool loading = true;
   String? error;
@@ -40,7 +43,6 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
           'http://192.168.0.103:8080/studentscompletedetails?user_id=${widget.applicationId}',
         ),
       );
-
       if (response.statusCode == 200) {
         if (mounted) {
           setState(() {
@@ -66,16 +68,15 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
     }
   }
 
-  bool isWideScreen(BuildContext context) {
-    return MediaQuery.of(context).size.width >= 800 || kIsWeb;
-  }
+  bool isWideScreen(BuildContext context) =>
+      MediaQuery.of(context).size.width >= 800 || kIsWeb;
 
   Widget buildSectionTitle(String title, IconData icon) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
         children: [
-          Icon(icon, color: Colors.deepPurple.shade700),
+          Icon(icon, color: kPrimaryColor),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -83,7 +84,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
               style: TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 20,
-                color: Colors.deepPurple.shade700,
+                color: kPrimaryColor,
                 letterSpacing: 0.5,
               ),
             ),
@@ -92,7 +93,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
             child: Container(
               margin: const EdgeInsets.only(left: 12),
               height: 1,
-              color: Colors.deepPurple.shade100,
+              color: kPrimaryColor.withOpacity(0.2),
             ),
           ),
         ],
@@ -130,34 +131,24 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
   Widget buildCard(Widget child) {
     return Card(
       elevation: 5,
-      shadowColor: Colors.deepPurple.shade100,
+      shadowColor: kPrimaryColor.withOpacity(0.2),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       margin: const EdgeInsets.all(8),
       child: Container(
-        width: 600, // fixed width for cards on web for nice row wrapping
+        width: 600,
         padding: const EdgeInsets.all(16),
         child: child,
       ),
     );
   }
 
-  Widget buildCardsList(BuildContext context, List<Widget> cards) {
-    if (isWideScreen(context)) {
-      // For web or wide screen, wrap cards horizontally with spacing, wrap to new line if needed
-      return Wrap(spacing: 12, runSpacing: 12, children: cards);
-    } else {
-      // Mobile: stack vertically
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: cards,
-      );
-    }
+  Widget buildCardsList(BuildContext ctx, List<Widget> cards) {
+    return isWideScreen(ctx)
+        ? Wrap(spacing: 12, runSpacing: 12, children: cards)
+        : Column(crossAxisAlignment: CrossAxisAlignment.start, children: cards);
   }
 
-  Widget buildEducationSection(
-    List<dynamic> educationList,
-    BuildContext context,
-  ) {
+  Widget buildEducationSection(List<dynamic> educationList, BuildContext ctx) {
     final cards =
         educationList.map((edu) {
           return buildCard(
@@ -180,15 +171,12 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         buildSectionTitle('Education', Icons.school),
-        buildCardsList(context, cards),
+        buildCardsList(ctx, cards),
       ],
     );
   }
 
-  Widget buildFellowshipsSection(
-    List<dynamic> fellowships,
-    BuildContext context,
-  ) {
+  Widget buildFellowshipsSection(List<dynamic> fellowships, BuildContext ctx) {
     final cards =
         fellowships.asMap().entries.map((entry) {
           int idx = entry.key + 1;
@@ -204,11 +192,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                     fontSize: 16,
                   ),
                 ),
-                const Divider(
-                  color: Colors.deepPurple,
-                  thickness: 1,
-                  height: 16,
-                ),
+                Divider(color: kPrimaryColor, thickness: 1, height: 16),
                 buildKeyValueRow('Course Name', fellowship['courseName'] ?? ''),
                 buildKeyValueRow(
                   'College Name',
@@ -227,12 +211,12 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         buildSectionTitle('Fellowships', Icons.workspace_premium),
-        buildCardsList(context, cards),
+        buildCardsList(ctx, cards),
       ],
     );
   }
 
-  Widget buildPapersSection(List<dynamic> papers, BuildContext context) {
+  Widget buildPapersSection(List<dynamic> papers, BuildContext ctx) {
     final cards =
         papers.map((paper) {
           return buildCard(
@@ -251,14 +235,14 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         buildSectionTitle('Papers', Icons.menu_book),
-        buildCardsList(context, cards),
+        buildCardsList(ctx, cards),
       ],
     );
   }
 
   Widget buildWorkExperienceSection(
     List<dynamic> workExperiences,
-    BuildContext context,
+    BuildContext ctx,
   ) {
     final cards =
         workExperiences.asMap().entries.map((entry) {
@@ -275,11 +259,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                     fontSize: 16,
                   ),
                 ),
-                const Divider(
-                  color: Colors.deepPurple,
-                  thickness: 1,
-                  height: 16,
-                ),
+                Divider(color: kPrimaryColor, thickness: 1, height: 16),
                 buildKeyValueRow('Role', work['role'] ?? ''),
                 buildKeyValueRow('Hospital Name', work['name'] ?? ''),
                 buildKeyValueRow(
@@ -297,7 +277,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         buildSectionTitle('Work Experience', Icons.work),
-        buildCardsList(context, cards),
+        buildCardsList(ctx, cards),
       ],
     );
   }
@@ -368,6 +348,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                 child: const Text('Cancel'),
               ),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: kPrimaryColor),
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     _formKey.currentState!.save();
@@ -382,18 +363,13 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
   }
 
   Future<void> _sendInterestRequest(String? message) async {
-    // Close the form dialog first
     Navigator.of(context).pop();
-
-    // Check if widget is still mounted
     if (!mounted) return;
-
-    // Show loading dialog
     showDialog(
       context: context,
       barrierDismissible: false,
       builder:
-          (BuildContext context) => const AlertDialog(
+          (_) => const AlertDialog(
             content: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -404,7 +380,6 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
             ),
           ),
     );
-
     try {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getInt('userid') ?? 0;
@@ -423,48 +398,29 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
           'course_name': widget.courseName,
         }),
       );
-      print(widget.courseName);
-      print(widget.degree);
-      // Check if widget is still mounted before proceeding
-      if (!mounted) return;
-
-      // Dismiss loading dialog
       Navigator.of(context).pop();
-
-      // Show result
       if (response.statusCode == 200) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Interest expressed successfully!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Failed to send interest. Status: ${response.statusCode}',
-              ),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      // Check if widget is still mounted before proceeding
-      if (!mounted) return;
-
-      // Dismiss loading dialog if it's still showing
-      Navigator.of(context).pop();
-
-      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          const SnackBar(
+            content: Text('Interest expressed successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to send interest. Status: ${response.statusCode}',
+            ),
+            backgroundColor: Colors.red,
+          ),
         );
       }
+    } catch (e) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
     }
   }
 
@@ -474,28 +430,25 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Student Details'),
-          backgroundColor: Colors.deepPurple,
+          backgroundColor: kPrimaryColor,
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
-
     if (error != null) {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Student Details'),
-          backgroundColor: Colors.deepPurple,
+          backgroundColor: kPrimaryColor,
         ),
         body: Center(child: Text(error!)),
       );
     }
-
     final name = data?['name'] ?? '';
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Student Details'),
-        backgroundColor: Colors.deepPurple.shade700,
+        backgroundColor: kPrimaryColor,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -506,15 +459,12 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
               margin: const EdgeInsets.only(bottom: 24),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [
-                    Colors.deepPurple.shade400,
-                    Colors.deepPurple.shade700,
-                  ],
+                  colors: [kPrimaryColor.withOpacity(0.6), kPrimaryColor],
                 ),
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.deepPurple.shade200.withOpacity(0.6),
+                    color: kPrimaryColor.withOpacity(0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 6),
                   ),
@@ -542,22 +492,6 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
             if (data?['certificate'] != null)
               buildCertificatesSection(data!['certificate']),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: showExpressInterestDialog,
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text(
-                  'Express Interest',
-                  style: TextStyle(fontSize: 18),
-                ),
-              ),
-            ),
           ],
         ),
       ),

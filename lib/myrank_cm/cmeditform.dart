@@ -622,9 +622,10 @@ class _EditApplicationFormState extends State<CmEditApplicationForm> {
 
   void _logout(BuildContext context) {
     signOutGoogle();
-    Navigator.push(
+    Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute<void>(builder: (BuildContext context) => Index()),
+      MaterialPageRoute(builder: (context) => Index()),
+      (Route<dynamic> route) => false, // Remove all previous routes
     );
   }
 

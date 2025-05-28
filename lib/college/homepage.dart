@@ -99,13 +99,13 @@ class _DegreesScreenState extends State<CollegeDegreesScreen>
               leading: const Icon(Icons.person),
               title: const Text('LogOut'),
               onTap: () {
-                Navigator.pop(context); // close drawer
                 signOutGoogle();
-                Navigator.pushReplacement(
+                Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute<void>(
                     builder: (BuildContext context) => Index(),
                   ),
+                  (Route<dynamic> route) => false, // Remove all previous routes
                 );
               },
             ),
