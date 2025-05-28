@@ -109,6 +109,12 @@ class _HomePageState extends State<HomePage> {
     final email = user.email ?? "";
     final name = user.displayName ?? "";
 
+    final prefs = await SharedPreferences.getInstance();
+    final photourl = user.photoURL ?? "";
+    await prefs.setString('photourl', photourl);
+
+    print("photourlssssss$photourl");
+
     try {
       final response = await http.post(
         Uri.parse('http://192.168.0.103:8080/api/user/check-or-insert'),
