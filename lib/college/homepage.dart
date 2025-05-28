@@ -41,7 +41,7 @@ class _DegreesScreenState extends State<CollegeDegreesScreen>
 
   Future<List<dynamic>> fetchDegrees() async {
     final response = await http.get(
-      Uri.parse('http://192.168.0.103:8080/degree-course-counts'),
+      Uri.parse('http://192.168.0.103:8080/degree-course-counts?status=1'),
     );
 
     if (response.statusCode == 200) {

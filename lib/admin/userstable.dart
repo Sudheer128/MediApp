@@ -3,11 +3,14 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+// --- Models ---
+
 class User {
   final int userId;
   final String name;
   final String email;
   String role;
+  String cmName;
   final String createdAt;
 
   User({
@@ -15,6 +18,7 @@ class User {
     required this.name,
     required this.email,
     required this.role,
+    required this.cmName,
     required this.createdAt,
   });
 
@@ -24,10 +28,81 @@ class User {
       name: json['name'],
       email: json['email'],
       role: json['role'],
+      cmName: json['cm_name'] ?? '',
       createdAt: json['created_at'],
     );
   }
 }
+
+class UserResponse {
+  final List<User> users;
+  final List<String> cmNames;
+
+  UserResponse({required this.users, required this.cmNames});
+}
+
+// --- Service ---
+
+class UserService {
+  final String baseUrl;
+
+  UserService({required this.baseUrl});
+
+  Future<UserResponse> fetchUsers() async {
+    final response = await http.get(Uri.parse('$baseUrl/users'));
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(response.body);
+      // top-level list of all CM names for dropdown
+      final cmNames = List<String>.from(
+        data['myrank_cm_names'] as List<dynamic>,
+      );
+      // list of users
+      final usersJson = data['users'] as List<dynamic>;
+      final users =
+          usersJson
+              .map((j) => User.fromJson(j as Map<String, dynamic>))
+              .toList();
+      return UserResponse(users: users, cmNames: cmNames);
+    } else {
+      throw Exception('Failed to load users');
+    }
+  }
+
+  Future<void> updateUserRole(int userId, String role) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/users/$userId/role'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'role': role}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update role');
+    }
+  }
+
+  Future<void> updateUserCMName(int userId, String cmName) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/users/$userId/cm_name'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'cm_name': cmName}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update CM Name');
+    }
+  }
+
+  Future<void> addUser(String email, String name, String role) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/users'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'email': email, 'name': name, 'role': role}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to add user');
+    }
+  }
+}
+
+// --- UI ---
 
 class UserManagementPage extends StatefulWidget {
   const UserManagementPage({Key? key}) : super(key: key);
@@ -37,51 +112,56 @@ class UserManagementPage extends StatefulWidget {
 }
 
 class _UserManagementPageState extends State<UserManagementPage> {
-  late Future<List<User>> futureUsers;
+  late Future<UserResponse> futureUserData;
   final UserService userService = UserService(
     baseUrl: 'http://192.168.0.103:8080',
   );
 
   List<User> _allUsers = [];
   List<User> _filteredUsers = [];
+  List<String> _roles = [];
+  List<String> _cmNames = [];
 
   int _rowsPerPage = PaginatedDataTable.defaultRowsPerPage;
   int _sortColumnIndex = 0;
   bool _sortAscending = true;
-
   String _searchQuery = '';
-
-  final List<String> _knownRoles = [
-    'admin',
-    'college',
-    'doctor',
-    'not_assigned',
-    'myrank_user',
-  ];
-
-  late List<String> _roles;
 
   late UserDataTableSource _dataSource;
 
   @override
   void initState() {
     super.initState();
-    futureUsers = userService.fetchUsers();
-    futureUsers.then((users) {
+    futureUserData = userService.fetchUsers();
+    futureUserData.then((resp) {
       setState(() {
-        _allUsers = users;
+        _allUsers = resp.users;
         _filteredUsers = List.from(_allUsers);
-        _roles = List<String>.from(_knownRoles);
-        final userRoles = users.map((u) => u.role).toSet();
-        for (var r in userRoles) {
+        _cmNames = resp.cmNames;
+
+        // build roles list (known + any extra)
+        const knownRoles = [
+          'admin',
+          'college',
+          'doctor',
+          'not_assigned',
+          'myrank_user',
+          'myrank_cm',
+        ];
+        _roles = List<String>.from(knownRoles);
+        final extraRoles = _allUsers.map((u) => u.role).toSet();
+        for (var r in extraRoles) {
           if (!_roles.contains(r)) _roles.add(r);
         }
+
         _dataSource = UserDataTableSource(
           context: context,
           users: _filteredUsers,
           roles: _roles,
+          cmNames: _cmNames,
           userService: userService,
           onRoleUpdated: () => setState(() {}),
+          onCMNameUpdated: () => setState(() {}),
         );
       });
     });
@@ -106,8 +186,10 @@ class _UserManagementPageState extends State<UserManagementPage> {
         context: context,
         users: _filteredUsers,
         roles: _roles,
+        cmNames: _cmNames,
         userService: userService,
         onRoleUpdated: () => setState(() {}),
+        onCMNameUpdated: () => setState(() {}),
       );
     });
   }
@@ -121,6 +203,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
             return user.name.toLowerCase().contains(query) ||
                 user.email.toLowerCase().contains(query) ||
                 user.role.toLowerCase().contains(query) ||
+                user.cmName.toLowerCase().contains(query) ||
                 user.createdAt.toLowerCase().contains(query) ||
                 user.userId.toString().contains(query);
           }).toList();
@@ -129,8 +212,10 @@ class _UserManagementPageState extends State<UserManagementPage> {
         context: context,
         users: _filteredUsers,
         roles: _roles,
+        cmNames: _cmNames,
         userService: userService,
         onRoleUpdated: () => setState(() {}),
+        onCMNameUpdated: () => setState(() {}),
       );
     });
   }
@@ -183,13 +268,14 @@ class _UserManagementPageState extends State<UserManagementPage> {
                 if (email.isNotEmpty && name.isNotEmpty) {
                   try {
                     await userService.addUser(email, name, _selectedRole);
-                    final users = await userService.fetchUsers();
+                    final resp = await userService.fetchUsers();
                     setState(() {
-                      _allUsers = users;
-                      _filteredUsers = List.from(users);
+                      _allUsers = resp.users;
+                      _filteredUsers = List.from(resp.users);
+                      _cmNames = resp.cmNames;
 
-                      final userRoles = users.map((u) => u.role).toSet();
-                      for (var r in userRoles) {
+                      final extraRoles = resp.users.map((u) => u.role).toSet();
+                      for (var r in extraRoles) {
                         if (!_roles.contains(r)) _roles.add(r);
                       }
 
@@ -197,8 +283,10 @@ class _UserManagementPageState extends State<UserManagementPage> {
                         context: context,
                         users: _filteredUsers,
                         roles: _roles,
+                        cmNames: _cmNames,
                         userService: userService,
                         onRoleUpdated: () => setState(() {}),
+                        onCMNameUpdated: () => setState(() {}),
                       );
                     });
                     Navigator.of(context).pop();
@@ -240,7 +328,6 @@ class _UserManagementPageState extends State<UserManagementPage> {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    // Search field outside AppBar, above table
                     TextField(
                       decoration: const InputDecoration(
                         hintText: 'Search users...',
@@ -290,6 +377,10 @@ class _UserManagementPageState extends State<UserManagementPage> {
                                     _sort<String>((u) => u.role, i, asc),
                           ),
                           DataColumn(
+                            label: const Text('CM Name'),
+                            // no sort on this one
+                          ),
+                          DataColumn(
                             label: const Text('Created At'),
                             onSort:
                                 (i, asc) =>
@@ -315,15 +406,19 @@ class UserDataTableSource extends DataTableSource {
   final BuildContext context;
   final List<User> users;
   final List<String> roles;
+  final List<String> cmNames;
   final UserService userService;
   final VoidCallback onRoleUpdated;
+  final VoidCallback onCMNameUpdated;
 
   UserDataTableSource({
     required this.context,
     required this.users,
     required this.roles,
+    required this.cmNames,
     required this.userService,
     required this.onRoleUpdated,
+    required this.onCMNameUpdated,
   });
 
   @override
@@ -331,8 +426,9 @@ class UserDataTableSource extends DataTableSource {
     if (index >= users.length) return null;
     final user = users[index];
 
-    final dropdownValue =
+    final roleDropdownValue =
         roles.contains(user.role) ? user.role : 'not_assigned';
+    final cmDropdownValue = cmNames.contains(user.cmName) ? user.cmName : null;
 
     return DataRow.byIndex(
       index: index,
@@ -342,7 +438,7 @@ class UserDataTableSource extends DataTableSource {
         DataCell(Text(user.email)),
         DataCell(
           DropdownButton<String>(
-            value: dropdownValue,
+            value: roleDropdownValue,
             items:
                 roles
                     .map(
@@ -368,6 +464,34 @@ class UserDataTableSource extends DataTableSource {
             },
           ),
         ),
+        DataCell(
+          DropdownButton<String>(
+            hint: const Text('Select CM'),
+            value: cmDropdownValue,
+            items:
+                cmNames
+                    .map((cm) => DropdownMenuItem(value: cm, child: Text(cm)))
+                    .toList(),
+            onChanged: (newCm) async {
+              if (newCm != null && newCm != user.cmName) {
+                try {
+                  await userService.updateUserCMName(user.userId, newCm);
+                  user.cmName = newCm;
+                  onCMNameUpdated();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('CM Name updated successfully'),
+                    ),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Failed to update CM Name')),
+                  );
+                }
+              }
+            },
+          ),
+        ),
         DataCell(Text(user.createdAt)),
       ],
     );
@@ -381,42 +505,4 @@ class UserDataTableSource extends DataTableSource {
 
   @override
   int get selectedRowCount => 0;
-}
-
-class UserService {
-  final String baseUrl;
-
-  UserService({required this.baseUrl});
-
-  Future<List<User>> fetchUsers() async {
-    final response = await http.get(Uri.parse('$baseUrl/users'));
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body)['users'];
-      return data.map((json) => User.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to load users');
-    }
-  }
-
-  Future<void> updateUserRole(int userId, String role) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/users/$userId/role'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({'role': role}),
-    );
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update role');
-    }
-  }
-
-  Future<void> addUser(String email, String name, String role) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/users'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({'email': email, 'name': name, 'role': role}),
-    );
-    if (response.statusCode != 200) {
-      throw Exception('Failed to add user');
-    }
-  }
 }

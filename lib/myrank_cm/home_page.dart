@@ -1,0 +1,238 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // add this import
+import 'package:medicalapp/admin/adminintreststatus.dart';
+import 'package:medicalapp/admin/form_page.dart';
+import 'package:medicalapp/admin/searchstudent.dart';
+import 'package:medicalapp/admin/userstable.dart';
+
+import 'package:medicalapp/googlesignin.dart';
+import 'package:medicalapp/index.dart';
+import 'package:medicalapp/myrankUser/userSearchStudent.dart';
+import 'package:medicalapp/myrankUser/useredit_form.dart';
+import 'package:medicalapp/myrankUser/userform_page.dart';
+
+class CmHomePage extends StatefulWidget {
+  const CmHomePage({super.key});
+
+  static const Color primaryBlue = Color.fromARGB(255, 250, 110, 110);
+
+  @override
+  State<CmHomePage> createState() => _UserHomePageState();
+}
+
+class _UserHomePageState extends State<CmHomePage> {
+  String? userName;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedName = prefs.getString('name') ?? 'Admin'; // key matches here
+    setState(() {
+      userName = savedName;
+    });
+  }
+
+  void _logout(BuildContext context) {
+    signOutGoogle();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => Index()),
+    );
+  }
+
+  Widget _buildCard(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Card(
+      elevation: 8,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        splashColor: CmHomePage.primaryBlue.withOpacity(0.3),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          width: double.infinity,
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 28,
+                backgroundColor: CmHomePage.primaryBlue.withOpacity(0.15),
+                child: Icon(icon, size: 32, color: CmHomePage.primaryBlue),
+              ),
+              const SizedBox(width: 24),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      subtitle,
+                      style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: CmHomePage.primaryBlue,
+        title: const Text('Admin Dashboard'),
+        automaticallyImplyLeading: true,
+      ),
+      drawer: Drawer(
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                color: CmHomePage.primaryBlue,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 40,
+                  horizontal: 20,
+                ),
+                child: Row(
+                  children: [
+                    // Placeholder profile pic - replace with your image widget later
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: Colors.white,
+                      child: Icon(
+                        Icons.person,
+                        size: 40,
+                        color: CmHomePage.primaryBlue,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(
+                        userName ?? 'Admin',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ListTile(
+                leading: Icon(Icons.home_filled, color: CmHomePage.primaryBlue),
+                title: const Text('Home'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const CmHomePage()),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.format_align_left_sharp,
+                  color: CmHomePage.primaryBlue,
+                ),
+                title: const Text('New Student Form'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UserApplicationForm(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.person, color: CmHomePage.primaryBlue),
+                title: const Text('Search Student'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => UserEditForm()),
+                  );
+                },
+              ),
+              const Spacer(),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.logout, color: Colors.red),
+                title: const Text(
+                  'Logout',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _logout(context);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            _buildCard(
+              context,
+              title: 'Create New Student Form',
+              icon: Icons.analytics,
+              subtitle: 'Add new student application',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserApplicationForm(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 20),
+            _buildCard(
+              context,
+              title: 'Search and Find Student Details',
+              icon: Icons.search,
+              subtitle: 'Locate student information',
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => UserEditForm()),
+                );
+              },
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+}

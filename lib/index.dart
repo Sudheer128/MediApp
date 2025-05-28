@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:medicalapp/admin/mainscreen.dart';
 import 'package:medicalapp/college/homepage.dart';
 import 'package:medicalapp/myrankUser/homepage.dart';
+import 'package:medicalapp/myrank_cm/home_page.dart';
 import 'package:medicalapp/newUser.dart';
 import 'package:medicalapp/student/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -91,6 +92,7 @@ class _HomePageState extends State<HomePage> {
         }
 
         final role = data['role'];
+        print(role);
         Widget destinationPage;
 
         switch (role) {
@@ -106,7 +108,9 @@ class _HomePageState extends State<HomePage> {
           case 'myrank_user':
             destinationPage = UserHomePage();
             break;
-          case 'notassigned':
+          case 'myrank_cm':
+            destinationPage = CmHomePage();
+            break;
           default:
             destinationPage = ApprovalScreen();
         }
