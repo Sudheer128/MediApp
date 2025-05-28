@@ -92,7 +92,10 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.courseName} Details'),
+        title: Text(
+          '${widget.courseName} Details',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.deepPurple.shade700,
       ),
       body:

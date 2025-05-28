@@ -152,7 +152,7 @@ class _InterestsPageState extends State<CollegeInterestsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('College Interests'),
+        title: Text('College Interests', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.deepPurple.shade700,
       ),
       body:

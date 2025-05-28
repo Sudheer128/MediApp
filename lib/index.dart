@@ -186,7 +186,7 @@ class _HomePageState extends State<HomePage> {
             // ✅ Logo inside a white, rounded container
             Container(
               decoration: BoxDecoration(
-                color: Colors.white, // White background
+                // color: Colors.white, // White background
                 borderRadius: BorderRadius.circular(8), // Rounded edges
               ),
               padding: const EdgeInsets.all(4), // Padding around the image
@@ -427,7 +427,7 @@ class HeroSection extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             ),
-                            onPressed: handleSignIn,
+                            onPressed: () {},
                             child: const Text('Learn More'),
                           ),
                         ],

@@ -6,6 +6,7 @@ import 'package:medicalapp/college/collegeintrests.dart';
 import 'package:medicalapp/college/studentList.dart';
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CollegeDegreesScreen extends StatefulWidget {
   @override
@@ -18,10 +19,14 @@ class _DegreesScreenState extends State<CollegeDegreesScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeInAnimation;
 
+  late Future<Map<String, String>> _userProfileFuture;
+  late SharedPreferences _prefs;
+
   @override
   void initState() {
     super.initState();
     degreesFuture = fetchDegrees();
+    _userProfileFuture = _loadUserProfile();
 
     _animationController = AnimationController(
       vsync: this,
@@ -31,6 +36,15 @@ class _DegreesScreenState extends State<CollegeDegreesScreen>
       parent: _animationController,
       curve: Curves.easeIn,
     );
+  }
+
+  Future<Map<String, String>> _loadUserProfile() async {
+    _prefs = await SharedPreferences.getInstance();
+    return {
+      'name': _prefs.getString('name') ?? 'Admin',
+      'email': _prefs.getString('email') ?? '',
+      'photoUrl': _prefs.getString('photoUrl') ?? '',
+    };
   }
 
   @override
@@ -57,61 +71,147 @@ class _DegreesScreenState extends State<CollegeDegreesScreen>
     final theme = Theme.of(context);
     return Scaffold(
       drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue),
-              child: Text(
-                'Menu',
-                style: TextStyle(color: Colors.white, fontSize: 24),
+        child: Container(
+          color: Colors.deepPurple.shade50,
+          child: Column(
+            children: [
+              FutureBuilder<Map<String, String>>(
+                future: _userProfileFuture,
+                builder: (context, snapshot) {
+                  final name = snapshot.data?['name'] ?? 'Admin';
+                  final email = snapshot.data?['email'] ?? '';
+                  final photoUrl = snapshot.data?['photoUrl'] ?? '';
+
+                  return UserAccountsDrawerHeader(
+                    decoration: BoxDecoration(
+                      color: Colors.deepPurple.shade700,
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.deepPurple.shade800,
+                          Colors.deepPurple.shade600,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    accountName: Text(
+                      name,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    accountEmail:
+                        email.isNotEmpty
+                            ? Text(email, style: TextStyle(fontSize: 14))
+                            : null,
+                    currentAccountPicture: CircleAvatar(
+                      backgroundColor: Colors.white,
+                      backgroundImage:
+                          photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+                      child:
+                          photoUrl.isEmpty
+                              ? Icon(
+                                Icons.person,
+                                size: 40,
+                                color: Colors.deepPurple.shade700,
+                              )
+                              : null,
+                    ),
+                  );
+                },
               ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('Home'),
-              onTap: () {
-                Navigator.pop(context); // close drawer
+              Expanded(
+                child: ListView(
+                  padding: EdgeInsets.zero,
+                  children: [
+                    ListTile(
+                      leading: Icon(
+                        Icons.home,
+                        color: Colors.deepPurple.shade700,
+                      ),
+                      title: Text(
+                        'Home',
+                        style: TextStyle(
+                          color: Colors.deepPurple.shade900,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CollegeDegreesScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    ListTile(
+                      leading: Icon(
+                        Icons.person,
+                        color: Colors.deepPurple.shade700,
+                      ),
+                      title: Text(
+                        'Interests Sent',
+                        style: TextStyle(
+                          color: Colors.deepPurple.shade900,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CollegeInterestsPage(),
+                          ),
+                        );
+                      },
+                    ),
 
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CollegeDegreesScreen(),
+                    // You can add more menu items here...
+                  ],
+                ),
+              ),
+              // Logout button at the bottom
+              Container(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                      color: Colors.deepPurple.shade200,
+                      width: 1,
+                    ),
                   ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('Interests Sent'),
-              onTap: () {
-                Navigator.pop(context); // close drawer
-
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CollegeInterestsPage(),
+                ),
+                child: ListTile(
+                  leading: Icon(
+                    Icons.logout,
+                    color: Colors.deepPurple.shade700,
                   ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('LogOut'),
-              onTap: () {
-                signOutGoogle();
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (BuildContext context) => Index(),
+                  title: Text(
+                    'LogOut',
+                    style: TextStyle(
+                      color: Colors.deepPurple.shade900,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                  (Route<dynamic> route) => false, // Remove all previous routes
-                );
-              },
-            ),
-
-            // You can add more menu items here...
-          ],
+                  onTap: () {
+                    signOutGoogle();
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (BuildContext context) => Index(),
+                      ),
+                      (Route<dynamic> route) =>
+                          false, // Remove all previous routes
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       backgroundColor: Color(0xFFF5F7FA),
@@ -124,6 +224,7 @@ class _DegreesScreenState extends State<CollegeDegreesScreen>
           style: TextStyle(
             fontWeight: FontWeight.w700,
             letterSpacing: 1.1,
+            color: Colors.white,
             fontSize: 22,
           ),
         ),

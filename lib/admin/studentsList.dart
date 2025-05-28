@@ -205,21 +205,22 @@ class _StudentCardState extends State<StudentCard> {
     setState(() => _isVisible = newValue);
 
     final statusInt = newValue ? 1 : 0;
-    final uri = Uri.parse('http://192.168.0.103:8080/status');
+    // build URI with query parameters
+    final uri = Uri.parse('http://192.168.0.103:8080/userstatus').replace(
+      queryParameters: {
+        'user_id': widget.student['application'].toString(),
+        'status': statusInt.toString(),
+      },
+    );
 
     try {
-      final resp = await http.post(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'applicationId': widget.student['application'],
-          'status': statusInt,
-        }),
-      );
+      final resp = await http.get(uri);
+      print('GET $uri');
       if (resp.statusCode != 200) {
         throw Exception('Server returned ${resp.statusCode}');
       }
     } catch (e) {
+      // roll back toggle on error
       setState(() => _isVisible = !newValue);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to update visibility: $e')),

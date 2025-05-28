@@ -18,6 +18,7 @@ import 'package:medicalapp/college_view.dart';
 import 'package:medicalapp/edit_formAfterSave.dart';
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
+import 'package:medicalapp/myrank_cm/CmusersTable.dart';
 import 'package:medicalapp/myrank_cm/cmCollegeDocList.dart';
 import 'package:medicalapp/myrank_cm/cmForm.dart';
 import 'package:medicalapp/myrank_cm/home_page.dart';
@@ -665,7 +666,19 @@ class _EditApplicationFormState extends State<CmEditApplicationForm> {
                       );
                     },
                   ),
-
+                  ListTile(
+                    leading: Icon(Icons.school, color: primaryBlue),
+                    title: const Text('Manage Users'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CmManagementPage(),
+                        ),
+                      );
+                    },
+                  ),
                   ListTile(
                     leading: Icon(Icons.school, color: primaryBlue),
                     title: const Text('College Interests'),

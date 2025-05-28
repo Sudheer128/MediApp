@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:medicalapp/admin/adminCollegedocList.dart';
+import 'package:medicalapp/myrank_cm/CmusersTable.dart';
 import 'package:medicalapp/myrank_cm/cmCollegeDocList.dart';
 import 'package:medicalapp/myrank_cm/cmForm.dart';
+import 'package:medicalapp/myrank_cm/collegeInterests.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // add this import
 import 'package:medicalapp/admin/adminintreststatus.dart';
 import 'package:medicalapp/admin/form_page.dart';
@@ -139,6 +141,17 @@ class _UserHomePageState extends State<CmHomePage> {
                   );
                 },
               ),
+              ListTile(
+                leading: Icon(Icons.school, color: primaryBlue),
+                title: const Text('Manage Users'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => CmManagementPage()),
+                  );
+                },
+              ),
 
               ListTile(
                 leading: Icon(Icons.school, color: primaryBlue),
@@ -147,7 +160,7 @@ class _UserHomePageState extends State<CmHomePage> {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => InterestsPage()),
+                    MaterialPageRoute(builder: (context) => CmInterestsPage()),
                   );
                 },
               ),

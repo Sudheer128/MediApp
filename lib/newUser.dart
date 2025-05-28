@@ -13,7 +13,7 @@ class ApprovalScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
-              'Wait for Admin Approval',
+              'Please get in touch with MyRank team to get login approval for your account.',
               style: TextStyle(fontSize: 24),
             ),
             const SizedBox(height: 20),

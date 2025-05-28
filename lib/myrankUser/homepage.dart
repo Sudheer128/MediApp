@@ -256,7 +256,7 @@ class _UserHomePageState extends State<UserHomePage> {
               icon: Icons.search,
               subtitle: 'Locate student information',
               onTap: () {
-                Navigator.pushReplacement(
+                Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => UserEditForm()),
                 );

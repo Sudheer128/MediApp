@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:medicalapp/admin/adminintreststatus.dart';
 import 'package:medicalapp/admin/mainscreen.dart';
 import 'package:medicalapp/admin/searchstudent.dart';
 
@@ -14,6 +15,7 @@ import 'package:medicalapp/college_view.dart';
 import 'package:medicalapp/edit_formAfterSave.dart';
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
+import 'package:medicalapp/myrankUser/UserCollegeDocList.dart';
 import 'package:medicalapp/myrankUser/homepage.dart';
 import 'package:medicalapp/myrankUser/userSearchStudent.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,6 +31,7 @@ class _ApplicationFormState extends State<UserApplicationForm> {
   final _formKey = GlobalKey<FormState>();
   bool _isEditing = true;
   bool _isFormSubmitted = false;
+  bool _isLoading = false; // Add this line after other state variables
 
   final GlobalKey _educationKey = GlobalKey();
   final GlobalKey _fellowshipKey = GlobalKey();
@@ -241,13 +244,24 @@ class _ApplicationFormState extends State<UserApplicationForm> {
 
     // If all valid
     _formKey.currentState!.save();
-    // Submit to backend first, await completion
-    final success = await _submitToBackend();
 
-    if (success) {
+    // Set loading state
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Submit to backend first, await completion
+    try {
+      final success = await _submitToBackend();
+      if (success) {
+        setState(() {
+          _isFormSubmitted = true;
+          _isEditing = false;
+        });
+      }
+    } finally {
       setState(() {
-        _isFormSubmitted = true;
-        _isEditing = false;
+        _isLoading = false;
       });
     }
   }
@@ -331,12 +345,8 @@ class _ApplicationFormState extends State<UserApplicationForm> {
   }
 
   Future<bool> _submitToBackend() async {
-    final userIdText = _userIdController.text.trim();
-    final userId = int.tryParse(userIdText) ?? 0;
-
     final payload = {
       // Personal
-      'userid': userId,
       'name': _nameController.text,
       'phone': int.tryParse(_phoneController.text) ?? 0,
       'email': _emailController.text,
@@ -529,263 +539,316 @@ class _ApplicationFormState extends State<UserApplicationForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      drawer: Drawer(
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                color: UserHomePage.primaryBlue,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 40,
-                  horizontal: 20,
-                ),
-                child: Row(
-                  children: [
-                    // Placeholder profile pic - replace with your image widget later
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundColor: Colors.white,
-                      child: Icon(
-                        Icons.person,
-                        size: 40,
-                        color: UserHomePage.primaryBlue,
-                      ),
+    return Stack(
+      children: [
+        Scaffold(
+          drawer: Drawer(
+            child: SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    color: UserHomePage.primaryBlue,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 40,
+                      horizontal: 20,
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Text(
-                        userName ?? 'Admin',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              ListTile(
-                leading: Icon(
-                  Icons.home_filled,
-                  color: UserHomePage.primaryBlue,
-                ),
-                title: const Text('Home'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const UserHomePage(),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(
-                  Icons.format_align_left_sharp,
-                  color: UserHomePage.primaryBlue,
-                ),
-                title: const Text('New Student Form'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => UserApplicationForm(),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.person, color: UserHomePage.primaryBlue),
-                title: const Text('Search Student'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => UserEditForm()),
-                  );
-                },
-              ),
-              const Spacer(),
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text(
-                  'Logout',
-                  style: TextStyle(color: Colors.red),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _logout(context);
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-      appBar: AppBar(
-        title: const Text('Medical Professional Application Form'),
-        backgroundColor: primaryBlue,
-        actions: [],
-      ),
-      body: Center(
-        child:
-            _isFormSubmitted
-                ? const Text(
-                  'Profile successfully created!',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                )
-                : Form(
-                  key: _formKey,
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
                       children: [
-                        // User Id field
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          child: TextFormField(
-                            controller: _userIdController,
-                            decoration: const InputDecoration(
-                              labelText: 'User Id',
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty)
-                                return 'Please enter User Id';
-                              if (int.tryParse(value) == null)
-                                return 'User Id must be a number';
-                              return null;
-                            },
+                        // Placeholder profile pic - replace with your image widget later
+                        CircleAvatar(
+                          radius: 30,
+                          backgroundColor: Colors.white,
+                          child: Icon(
+                            Icons.person,
+                            size: 40,
+                            color: UserHomePage.primaryBlue,
                           ),
                         ),
-
-                        // Personal Details Section
-                        Container(
-                          key: _personalKey,
-                          margin: const EdgeInsets.only(bottom: 16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                  horizontal: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.shade100,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Text(
-                                      'Personal Details',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    if (!_isEditing)
-                                      IconButton(
-                                        icon: const Icon(Icons.edit),
-                                        onPressed:
-                                            () => _toggleEditing('personal'),
-                                        tooltip: 'Edit Personal Details',
-                                      ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              _isEditing
-                                  ? _buildPersonalDetailsForm()
-                                  : _buildPersonalDetailsView(),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Education Details Section
-                        _buildSectionHeader('Education Details', 'education'),
-                        _buildEducationDetailsSection(),
-
-                        const SizedBox(height: 24),
-
-                        // Fellowships Section
-                        _buildSectionHeader('Fellowships', 'fellowships'),
-                        _buildFellowshipsSection(),
-
-                        const SizedBox(height: 24),
-
-                        // Papers Section
-                        _buildSectionHeader('Papers', 'papers'),
-                        _buildPapersSection(),
-
-                        const SizedBox(height: 24),
-
-                        // Work Experience Section
-                        _buildSectionHeader('Work Experience', 'work'),
-                        _buildWorkExperienceSection(),
-
-                        const SizedBox(height: 24),
-
-                        // Medical Course Certificate Section
-                        _buildSectionHeader(
-                          'Currently Active Medical Councel Certificate',
-                          'certificate',
-                        ),
-                        if (_isEditing)
-                          _buildMedicalCertificateForm()
-                        else
-                          _buildMedicalCertificateView(),
-
-                        const SizedBox(height: 24),
-
-                        // Resume Upload Section
-                        _buildSectionHeader('Resume Upload', 'resume'),
-                        if (_isEditing)
-                          _buildResumeUploadSection()
-                        else if (_resumeFileName != null)
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              'Resume: $_resumeFileName',
-                              style: const TextStyle(fontSize: 16),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            userName ?? 'Admin',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
                             ),
-                          ),
-
-                        const SizedBox(height: 32),
-
-                        // Save / Edit Button
-                        Center(
-                          child: ElevatedButton(
-                            onPressed:
-                                _isEditing
-                                    ? _saveForm
-                                    : () => _toggleEditing('all'),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 48,
-                                vertical: 12,
-                              ),
-                            ),
-                            child: Text(
-                              _isEditing ? 'Save Form' : 'Edit Form',
-                              style: const TextStyle(fontSize: 16),
-                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-      ),
+                  ListTile(
+                    leading: Icon(
+                      Icons.home_filled,
+                      color: UserHomePage.primaryBlue,
+                    ),
+                    title: const Text('Home'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const UserHomePage(),
+                        ),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(
+                      Icons.school,
+                      color: UserHomePage.primaryBlue,
+                    ),
+                    title: const Text('College Interests'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => InterestsPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(
+                      Icons.format_align_left_sharp,
+                      color: UserHomePage.primaryBlue,
+                    ),
+                    title: const Text('New Student Form'),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => UserApplicationForm(),
+                        ),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(
+                      Icons.person,
+                      color: UserHomePage.primaryBlue,
+                    ),
+                    title: const Text('Search Student'),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => UserEditForm()),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(
+                      Icons.person_pin_sharp,
+                      color: UserHomePage.primaryBlue,
+                    ),
+                    title: const Text('Available Doctors'),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => UserCollegeDegreesScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const Spacer(),
+                  const Divider(),
+                  ListTile(
+                    leading: const Icon(Icons.logout, color: Colors.red),
+                    title: const Text(
+                      'Logout',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _logout(context);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          appBar: AppBar(
+            title: const Text('Medical Professional Application Form'),
+            backgroundColor: primaryBlue,
+            actions: [],
+          ),
+          body: Center(
+            child:
+                _isFormSubmitted
+                    ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Profile Successfully Submitted!',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context); // close drawer
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => UserHomePage(),
+                              ),
+                            );
+                          },
+                          child: const Text('Go Home'),
+                        ),
+                      ],
+                    )
+                    : Form(
+                      key: _formKey,
+                      child: SingleChildScrollView(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // User Id field
+
+                            // Personal Details Section
+                            Container(
+                              key: _personalKey,
+                              margin: const EdgeInsets.only(bottom: 16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                      horizontal: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.shade100,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Text(
+                                          'Personal Details',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const Spacer(),
+                                        if (!_isEditing)
+                                          IconButton(
+                                            icon: const Icon(Icons.edit),
+                                            onPressed:
+                                                () =>
+                                                    _toggleEditing('personal'),
+                                            tooltip: 'Edit Personal Details',
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  _isEditing
+                                      ? _buildPersonalDetailsForm()
+                                      : _buildPersonalDetailsView(),
+                                ],
+                              ),
+                            ),
+
+                            const SizedBox(height: 24),
+
+                            // Education Details Section
+                            _buildSectionHeader(
+                              'Education Details',
+                              'education',
+                            ),
+                            _buildEducationDetailsSection(),
+
+                            const SizedBox(height: 24),
+
+                            // Fellowships Section
+                            _buildSectionHeader('Fellowships', 'fellowships'),
+                            _buildFellowshipsSection(),
+
+                            const SizedBox(height: 24),
+
+                            // Papers Section
+                            _buildSectionHeader('Papers', 'papers'),
+                            _buildPapersSection(),
+
+                            const SizedBox(height: 24),
+
+                            // Work Experience Section
+                            _buildSectionHeader('Work Experience', 'work'),
+                            _buildWorkExperienceSection(),
+
+                            const SizedBox(height: 24),
+
+                            // Medical Course Certificate Section
+                            _buildSectionHeader(
+                              'Currently Active Medical Councel Certificate',
+                              'certificate',
+                            ),
+                            if (_isEditing)
+                              _buildMedicalCertificateForm()
+                            else
+                              _buildMedicalCertificateView(),
+
+                            const SizedBox(height: 24),
+
+                            // Resume Upload Section
+                            _buildSectionHeader('Resume Upload', 'resume'),
+                            if (_isEditing)
+                              _buildResumeUploadSection()
+                            else if (_resumeFileName != null)
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  'Resume: $_resumeFileName',
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                              ),
+
+                            const SizedBox(height: 32),
+
+                            // Save / Edit Button
+                            Center(
+                              child: ElevatedButton(
+                                onPressed:
+                                    _isEditing
+                                        ? _saveForm
+                                        : () => _toggleEditing('all'),
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 48,
+                                    vertical: 12,
+                                  ),
+                                ),
+                                child: Text(
+                                  _isEditing ? 'Save Form' : 'Edit Form',
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+          ),
+        ),
+        if (_isLoading)
+          Container(
+            color: Colors.black.withOpacity(0.3),
+            child: const Center(child: CircularProgressIndicator()),
+          ),
+      ],
     );
   }
 

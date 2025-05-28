@@ -7,12 +7,14 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:medicalapp/admin/adminintreststatus.dart';
 import 'package:medicalapp/admin/mainscreen.dart';
 
 import 'package:medicalapp/college_view.dart';
 import 'package:medicalapp/edit_formAfterSave.dart';
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
+import 'package:medicalapp/myrankUser/UserCollegeDocList.dart';
 import 'package:medicalapp/myrankUser/homepage.dart';
 import 'package:medicalapp/myrankUser/userSearchStudent.dart';
 import 'package:medicalapp/myrankUser/userform_page.dart';
@@ -676,6 +678,17 @@ class _EditApplicationFormState extends State<UserEditApplicationForm> {
                 },
               ),
               ListTile(
+                leading: Icon(Icons.school, color: UserHomePage.primaryBlue),
+                title: const Text('College Interests'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => InterestsPage()),
+                  );
+                },
+              ),
+              ListTile(
                 leading: Icon(
                   Icons.format_align_left_sharp,
                   color: UserHomePage.primaryBlue,
@@ -697,6 +710,21 @@ class _EditApplicationFormState extends State<UserEditApplicationForm> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => UserEditForm()),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.person_pin_sharp,
+                  color: UserHomePage.primaryBlue,
+                ),
+                title: const Text('Available Doctors'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UserCollegeDegreesScreen(),
+                    ),
                   );
                 },
               ),

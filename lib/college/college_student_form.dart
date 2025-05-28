@@ -473,7 +473,10 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
     if (loading) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Student Details'),
+          title: const Text(
+            'Student Details',
+            style: TextStyle(color: Colors.white),
+          ),
           backgroundColor: Colors.deepPurple,
         ),
         body: const Center(child: CircularProgressIndicator()),
@@ -483,7 +486,10 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
     if (error != null) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Student Details'),
+          title: const Text(
+            'Student Details',
+            style: TextStyle(color: Colors.white),
+          ),
           backgroundColor: Colors.deepPurple,
         ),
         body: Center(child: Text(error!)),
@@ -494,7 +500,10 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Student Details'),
+        title: const Text(
+          'Student Details',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.deepPurple.shade700,
       ),
       body: SingleChildScrollView(
