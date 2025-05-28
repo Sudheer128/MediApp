@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:medicalapp/admin/adminCollegedocList.dart';
+import 'package:medicalapp/myrank_cm/cmCollegeDocList.dart';
+import 'package:medicalapp/myrank_cm/cmForm.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // add this import
 import 'package:medicalapp/admin/adminintreststatus.dart';
 import 'package:medicalapp/admin/form_page.dart';
@@ -99,9 +102,10 @@ class _UserHomePageState extends State<CmHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    const Color primaryBlue = Color.fromARGB(255, 250, 110, 110);
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: CmHomePage.primaryBlue,
+        backgroundColor: primaryBlue,
         title: const Text('Admin Dashboard'),
         automaticallyImplyLeading: true,
       ),
@@ -110,72 +114,67 @@ class _UserHomePageState extends State<CmHomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                color: CmHomePage.primaryBlue,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 40,
-                  horizontal: 20,
-                ),
-                child: Row(
-                  children: [
-                    // Placeholder profile pic - replace with your image widget later
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundColor: Colors.white,
-                      child: Icon(
-                        Icons.person,
-                        size: 40,
-                        color: CmHomePage.primaryBlue,
-                      ),
+              DrawerHeader(
+                decoration: const BoxDecoration(color: primaryBlue),
+                child: const Center(
+                  child: Text(
+                    'Admin Menu',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Text(
-                        userName ?? 'Admin',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
               ListTile(
-                leading: Icon(Icons.home_filled, color: CmHomePage.primaryBlue),
+                leading: Icon(Icons.home_filled, color: primaryBlue),
                 title: const Text('Home'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const CmHomePage()),
+                    MaterialPageRoute(builder: (context) => CmHomePage()),
+                  );
+                },
+              ),
+
+              ListTile(
+                leading: Icon(Icons.school, color: primaryBlue),
+                title: const Text('College Interests'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => InterestsPage()),
                   );
                 },
               ),
               ListTile(
                 leading: Icon(
                   Icons.format_align_left_sharp,
-                  color: CmHomePage.primaryBlue,
+                  color: primaryBlue,
                 ),
                 title: const Text('New Student Form'),
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => UserApplicationForm(),
+                      builder: (context) => CmApplicationForm(),
                     ),
                   );
                 },
               ),
+
               ListTile(
-                leading: Icon(Icons.person, color: CmHomePage.primaryBlue),
-                title: const Text('Search Student'),
+                leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
+                title: const Text('Available Doctors'),
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => UserEditForm()),
+                    MaterialPageRoute(
+                      builder: (context) => CmCollegeDegreesScreen(),
+                    ),
                   );
                 },
               ),
@@ -188,7 +187,6 @@ class _UserHomePageState extends State<CmHomePage> {
                   style: TextStyle(color: Colors.red),
                 ),
                 onTap: () {
-                  Navigator.pop(context);
                   _logout(context);
                 },
               ),
@@ -201,7 +199,11 @@ class _UserHomePageState extends State<CmHomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 20),
+            const Text(
+              'Welcome, Admin!',
+              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 30),
             _buildCard(
               context,
               title: 'Create New Student Form',
@@ -210,26 +212,26 @@ class _UserHomePageState extends State<CmHomePage> {
               onTap: () {
                 Navigator.push(
                   context,
+                  MaterialPageRoute(builder: (context) => CmApplicationForm()),
+                );
+              },
+            ),
+
+            const SizedBox(height: 20),
+            _buildCard(
+              context,
+              title: 'Available Doctors',
+              icon: Icons.medical_services_outlined,
+              subtitle: 'List of Doctors in Particular Courses',
+              onTap: () {
+                Navigator.push(
+                  context,
                   MaterialPageRoute(
-                    builder: (context) => UserApplicationForm(),
+                    builder: (context) => CmCollegeDegreesScreen(),
                   ),
                 );
               },
             ),
-            const SizedBox(height: 20),
-            _buildCard(
-              context,
-              title: 'Search and Find Student Details',
-              icon: Icons.search,
-              subtitle: 'Locate student information',
-              onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => UserEditForm()),
-                );
-              },
-            ),
-            const SizedBox(height: 20),
           ],
         ),
       ),
