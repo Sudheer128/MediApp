@@ -6,6 +6,7 @@ import 'package:medicalapp/college/collegeintrests.dart';
 import 'package:medicalapp/college/studentList.dart';
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
+import 'package:medicalapp/url.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CollegeDegreesScreen extends StatefulWidget {
@@ -55,7 +56,7 @@ class _DegreesScreenState extends State<CollegeDegreesScreen>
 
   Future<List<dynamic>> fetchDegrees() async {
     final response = await http.get(
-      Uri.parse('http://192.168.0.103:8080/degree-course-counts?status=1'),
+      Uri.parse('$baseurl/degree-course-counts?status=1'),
     );
 
     if (response.statusCode == 200) {

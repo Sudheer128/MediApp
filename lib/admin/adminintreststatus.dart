@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:medicalapp/url.dart';
 
 class Interest {
   final int id;
@@ -80,7 +81,7 @@ class _InterestsPageState extends State<InterestsPage> {
 
     try {
       final response = await http.get(
-        Uri.parse("http://192.168.0.103:8080/get-college-interests"),
+        Uri.parse("$baseurl/get-college-interests"),
       );
 
       if (response.statusCode == 200) {

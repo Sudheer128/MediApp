@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:medicalapp/url.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class StudentDetailScreen extends StatefulWidget {
@@ -37,7 +38,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
     try {
       final response = await http.get(
         Uri.parse(
-          'http://192.168.0.103:8080/studentscompletedetails?user_id=${widget.applicationId}',
+          '$baseurl/studentscompletedetails?user_id=${widget.applicationId}',
         ),
       );
 
@@ -411,7 +412,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
       final userName = prefs.getString('name') ?? "";
 
       final response = await http.post(
-        Uri.parse('http://192.168.0.103:8080/add-interest'),
+        Uri.parse('$baseurl/add-interest'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'college_id': userId,

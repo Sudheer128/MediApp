@@ -11,6 +11,7 @@ import 'package:medicalapp/admin/userstable.dart';
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
 import 'package:medicalapp/pdf.dart';
+import 'package:medicalapp/url.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AdminEditForm extends StatefulWidget {
@@ -41,9 +42,7 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
     });
     try {
       final response = await http.get(
-        Uri.parse(
-          'http://192.168.0.103:8080/studentscompletedetails?user_id=$userId',
-        ),
+        Uri.parse('$baseurl/studentscompletedetails?user_id=$userId'),
       );
 
       if (response.statusCode == 200) {

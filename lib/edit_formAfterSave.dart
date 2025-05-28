@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:medicalapp/student/edit.dart';
+import 'package:medicalapp/url.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class EditForm extends StatefulWidget {
@@ -31,7 +32,7 @@ class _StudentDetailScreenState extends State<EditForm> {
     try {
       final response = await http.get(
         Uri.parse(
-          'http://192.168.0.103:8080/studentscompletedetails?user_id=${widget.applicationId}',
+          '$baseurl/studentscompletedetails?user_id=${widget.applicationId}',
         ),
       );
 

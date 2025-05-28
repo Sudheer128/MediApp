@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:medicalapp/url.dart';
 
 // --- Models ---
 
@@ -113,9 +114,7 @@ class UserManagementPage extends StatefulWidget {
 
 class _UserManagementPageState extends State<UserManagementPage> {
   late Future<UserResponse> futureUserData;
-  final UserService userService = UserService(
-    baseUrl: 'http://192.168.0.103:8080',
-  );
+  final UserService userService = UserService(baseUrl: baseurl);
 
   List<User> _allUsers = [];
   List<User> _filteredUsers = [];

@@ -18,6 +18,7 @@ import 'package:medicalapp/index.dart';
 import 'package:medicalapp/myrankUser/UserCollegeDocList.dart';
 import 'package:medicalapp/myrankUser/homepage.dart';
 import 'package:medicalapp/myrankUser/userSearchStudent.dart';
+import 'package:medicalapp/url.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserApplicationForm extends StatefulWidget {
@@ -299,7 +300,7 @@ class _ApplicationFormState extends State<UserApplicationForm> {
       coursesError = null;
     });
 
-    final uri = Uri.parse('http://192.168.0.103:8080/courses');
+    final uri = Uri.parse('$baseurl/courses');
 
     try {
       final response = await http.get(uri);
@@ -383,7 +384,7 @@ class _ApplicationFormState extends State<UserApplicationForm> {
 
     print(payload);
 
-    final uri = Uri.parse('http://192.168.0.103:8080/counsel');
+    final uri = Uri.parse('$baseurl/counsel');
     late http.Response response;
 
     try {

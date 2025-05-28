@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:medicalapp/college/college_student_form.dart';
+import 'package:medicalapp/url.dart';
 
 class CourseDetailsScreen extends StatefulWidget {
   final String degree;
@@ -30,9 +31,7 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
   }
 
   Future<void> fetchStudents() async {
-    final url = Uri.parse(
-      'http://192.168.0.103:8080/students-by-course',
-    ).replace(
+    final url = Uri.parse('$baseurl/students-by-course').replace(
       queryParameters: {
         'degree': widget.degree,
         'course': widget.courseName == 'MBBS' ? ' ' : widget.courseName,

@@ -10,6 +10,7 @@ import 'package:medicalapp/myrankUser/homepage.dart';
 import 'package:medicalapp/myrank_cm/home_page.dart';
 import 'package:medicalapp/newUser.dart';
 import 'package:medicalapp/student/home.dart';
+import 'package:medicalapp/url.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // === Colors ===
@@ -117,7 +118,7 @@ class _HomePageState extends State<HomePage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.0.103:8080/api/user/check-or-insert'),
+        Uri.parse('$baseurl/api/user/check-or-insert'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'name': name}),
       );

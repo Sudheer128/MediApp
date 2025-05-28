@@ -7,6 +7,7 @@ import 'package:medicalapp/index.dart';
 import 'package:medicalapp/myrank_cm/cmForm.dart';
 import 'package:medicalapp/myrank_cm/home_page.dart';
 import 'package:medicalapp/myrank_cm/studentList.dart';
+import 'package:medicalapp/url.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CmCollegeDegreesScreen extends StatefulWidget {
@@ -48,9 +49,7 @@ class _DegreesScreenState extends State<CmCollegeDegreesScreen>
   Future<List<dynamic>> fetchDegrees({required int status}) async {
     final prefs = await SharedPreferences.getInstance();
     final savedName = prefs.getString('name') ?? '';
-    final uri = Uri.parse(
-      'http://192.168.0.103:8080/degreecoursecountsbycmname',
-    ).replace(
+    final uri = Uri.parse('$baseurl/degreecoursecountsbycmname').replace(
       queryParameters: {'status': status.toString(), 'name': savedName},
     );
     final response = await http.get(uri);

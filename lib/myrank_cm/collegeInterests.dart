@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:medicalapp/url.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Interest {
@@ -83,7 +84,7 @@ class _InterestsPageState extends State<CmInterestsPage> {
 
     try {
       final response = await http.get(
-        Uri.parse("http://192.168.0.103:8080/interests/cm?cm_name=$savedName"),
+        Uri.parse("$baseurl/interests/cm?cm_name=$savedName"),
       );
 
       if (response.statusCode == 200) {

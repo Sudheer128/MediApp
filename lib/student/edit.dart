@@ -14,6 +14,7 @@ import 'package:medicalapp/edit_formAfterSave.dart';
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
 import 'package:medicalapp/student/home.dart';
+import 'package:medicalapp/url.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class EditApplicationForm extends StatefulWidget {
@@ -377,7 +378,7 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
       coursesError = null;
     });
 
-    final uri = Uri.parse('http://192.168.0.103:8080/courses');
+    final uri = Uri.parse('$baseurl/courses');
 
     try {
       final response = await http.get(uri);
@@ -456,7 +457,7 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
       },
     };
 
-    final uri = Uri.parse('http://192.168.0.103:8080/application/update');
+    final uri = Uri.parse('$baseurl/application/update');
     late http.Response response;
 
     try {

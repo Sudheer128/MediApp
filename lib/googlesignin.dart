@@ -11,6 +11,7 @@ import 'package:medicalapp/newUser.dart';
 
 import 'package:medicalapp/student/form_page.dart';
 import 'package:medicalapp/student/home.dart';
+import 'package:medicalapp/url.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -28,7 +29,7 @@ class _SignInScreenState extends State<SignInScreen> {
       final name = user.displayName ?? "";
 
       final response = await http.post(
-        Uri.parse('http://192.168.0.103:8080/api/user/check-or-insert'),
+        Uri.parse('$baseurl/api/user/check-or-insert'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'name': name}),
       );

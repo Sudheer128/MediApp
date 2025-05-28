@@ -22,6 +22,7 @@ import 'package:medicalapp/myrank_cm/CmusersTable.dart';
 import 'package:medicalapp/myrank_cm/cmCollegeDocList.dart';
 import 'package:medicalapp/myrank_cm/cmForm.dart';
 import 'package:medicalapp/myrank_cm/home_page.dart';
+import 'package:medicalapp/url.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CmEditApplicationForm extends StatefulWidget {
@@ -391,7 +392,7 @@ class _EditApplicationFormState extends State<CmEditApplicationForm> {
       coursesError = null;
     });
 
-    final uri = Uri.parse('http://192.168.0.103:8080/courses');
+    final uri = Uri.parse('$baseurl/courses');
 
     try {
       final response = await http.get(uri);
@@ -476,7 +477,7 @@ class _EditApplicationFormState extends State<CmEditApplicationForm> {
 
     print(payload);
 
-    final uri = Uri.parse('http://192.168.0.103:8080/application/update');
+    final uri = Uri.parse('$baseurl/application/update');
     late http.Response response;
 
     if (!kIsWeb && _resumeFile != null) {
