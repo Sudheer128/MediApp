@@ -69,7 +69,7 @@ class _SignInScreenState extends State<SignInScreen> {
             destinationPage = ApprovalScreen();
         }
 
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => destinationPage),
         );
