@@ -522,22 +522,6 @@ class _StudentDetailScreenState extends State<AdminStudentDetailScreen> {
             if (data?['certificate'] != null)
               buildCertificatesSection(data!['certificate']),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: showExpressInterestDialog,
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text(
-                  'Express Interest',
-                  style: TextStyle(fontSize: 18),
-                ),
-              ),
-            ),
           ],
         ),
       ),
