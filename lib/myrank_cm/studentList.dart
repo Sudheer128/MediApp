@@ -4,7 +4,11 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:medicalapp/admin/collegeStudentsform.dart';
 import 'package:medicalapp/college/college_student_form.dart';
+import 'package:medicalapp/myrank_cm/studentdetails.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+// Define a custom primary color
+const Color kPrimaryColor = Color.fromARGB(255, 250, 110, 110);
 
 class CmCourseDetailsScreen extends StatefulWidget {
   final String degree;
@@ -98,7 +102,7 @@ class _CourseDetailsScreenState extends State<CmCourseDetailsScreen> {
           context,
           MaterialPageRoute(
             builder:
-                (_) => AdminStudentDetailScreen(
+                (_) => CmStudentDetailScreen(
                   applicationId: applicationId,
                   StudentName: studentName,
                   courseName: widget.courseName,
@@ -116,13 +120,15 @@ class _CourseDetailsScreenState extends State<CmCourseDetailsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.courseName} Details'),
-        backgroundColor: Colors.blue.shade700,
+        backgroundColor: kPrimaryColor,
       ),
       body:
           isLoading
               ? const Center(child: CircularProgressIndicator())
               : error != null
               ? Center(child: Text(error!))
+              : filteredStudents.isEmpty
+              ? const Center(child: Text("No Data Available"))
               : Column(
                 children: [
                   // --- Search Bar ---
@@ -249,11 +255,14 @@ class _StudentCardState extends State<StudentCard> {
     return Card(
       elevation: 6,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      shadowColor: Colors.blue.shade100,
+      shadowColor: kPrimaryColor.withOpacity(0.2),
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.blue.shade50, Colors.blue.shade100],
+            colors: [
+              kPrimaryColor.withOpacity(0.2),
+              kPrimaryColor.withOpacity(0.5),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -269,10 +278,10 @@ class _StudentCardState extends State<StudentCard> {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Colors.blue.shade900,
+                color: Colors.black87,
                 shadows: [
                   Shadow(
-                    color: Colors.blue.shade200,
+                    color: kPrimaryColor.withOpacity(0.4),
                     blurRadius: 2,
                     offset: const Offset(1, 1),
                   ),
@@ -285,7 +294,7 @@ class _StudentCardState extends State<StudentCard> {
             // Highest Degree
             RichText(
               text: TextSpan(
-                style: TextStyle(fontSize: 17, color: Colors.blue.shade800),
+                style: TextStyle(fontSize: 17, color: Colors.black87),
                 children: [
                   const TextSpan(
                     text: 'Highest Degree: ',
@@ -301,7 +310,7 @@ class _StudentCardState extends State<StudentCard> {
             // Experience
             RichText(
               text: TextSpan(
-                style: TextStyle(fontSize: 17, color: Colors.blue.shade800),
+                style: TextStyle(fontSize: 17, color: Colors.black87),
                 children: [
                   const TextSpan(
                     text: 'Experience: ',
@@ -322,7 +331,11 @@ class _StudentCardState extends State<StudentCard> {
                   'Visibility',
                   style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                 ),
-                Switch(value: _isVisible, onChanged: _toggleVisibility),
+                Switch(
+                  value: _isVisible,
+                  onChanged: _toggleVisibility,
+                  activeColor: kPrimaryColor,
+                ),
               ],
             ),
           ],

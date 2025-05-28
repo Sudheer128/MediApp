@@ -2,15 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/admin/adminintreststatus.dart';
-import 'package:medicalapp/admin/form_page.dart';
-import 'package:medicalapp/admin/mainscreen.dart';
-import 'package:medicalapp/admin/searchstudent.dart';
-import 'package:medicalapp/admin/studentsList.dart';
-import 'package:medicalapp/admin/userstable.dart';
-import 'package:medicalapp/college/collegeintrests.dart';
-import 'package:medicalapp/college/studentList.dart';
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
+import 'package:medicalapp/myrank_cm/cmForm.dart';
 import 'package:medicalapp/myrank_cm/home_page.dart';
 import 'package:medicalapp/myrank_cm/studentList.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -53,7 +47,7 @@ class _DegreesScreenState extends State<CmCollegeDegreesScreen>
 
   Future<List<dynamic>> fetchDegrees({required int status}) async {
     final prefs = await SharedPreferences.getInstance();
-    final savedName = prefs.getString('name') ?? 'Admin';
+    final savedName = prefs.getString('name') ?? '';
     final uri = Uri.parse(
       'http://192.168.0.103:8080/degreecoursecountsbycmname',
     ).replace(
@@ -63,7 +57,9 @@ class _DegreesScreenState extends State<CmCollegeDegreesScreen>
 
     if (response.statusCode == 200) {
       _animationController.forward();
-      return json.decode(response.body);
+      final decoded = json.decode(response.body);
+      // If server returns null, treat it as an empty list
+      return (decoded as List<dynamic>?) ?? <dynamic>[];
     } else {
       throw Exception('Failed to load degrees');
     }
@@ -123,7 +119,6 @@ class _DegreesScreenState extends State<CmCollegeDegreesScreen>
                   );
                 },
               ),
-
               ListTile(
                 leading: Icon(Icons.school, color: primaryBlue),
                 title: const Text('College Interests'),
@@ -144,11 +139,10 @@ class _DegreesScreenState extends State<CmCollegeDegreesScreen>
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => AdminApplicationForm()),
+                    MaterialPageRoute(builder: (_) => CmApplicationForm()),
                   );
                 },
               ),
-
               ListTile(
                 leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
                 title: const Text('Available Doctors'),
@@ -229,10 +223,13 @@ class _DegreesScreenState extends State<CmCollegeDegreesScreen>
                       ),
                     ),
                   );
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                } else if (snapshot.connectionState == ConnectionState.done &&
+                    (snapshot.data == null || snapshot.data!.isEmpty)) {
+                  // page‐level empty state
                   return Center(
                     child: Text(
-                      'No data available',
+                      'No Data Available',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 18,
                         color: Colors.grey.shade600,
@@ -240,11 +237,12 @@ class _DegreesScreenState extends State<CmCollegeDegreesScreen>
                     ),
                   );
                 }
+
                 final data = snapshot.data!;
                 return FadeTransition(
                   opacity: _fadeInAnimation,
                   child: ListView.builder(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                    padding: EdgeInsets.symmetric(horizontal: 16),
                     itemCount: data.length,
                     itemBuilder: (context, index) {
                       final degree = data[index]['degree'];
