@@ -332,108 +332,109 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
     return Scaffold(
       drawer: Drawer(
         child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              DrawerHeader(
-                decoration: const BoxDecoration(color: primaryBlue),
-                child: const Center(
-                  child: Text(
-                    'Admin Menu',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                DrawerHeader(
+                  decoration: const BoxDecoration(color: primaryBlue),
+                  child: const Center(
+                    child: Text(
+                      'Admin Menu',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              ListTile(
-                leading: Icon(Icons.home_filled, color: primaryBlue),
-                title: const Text('Home'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => AdminHomePage()),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.group, color: primaryBlue),
-                title: const Text('Manage Users'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => UserManagementPage(),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.school, color: primaryBlue),
-                title: const Text('College Interests'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => InterestsPage()),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(
-                  Icons.format_align_left_sharp,
-                  color: primaryBlue,
+                ListTile(
+                  leading: Icon(Icons.home_filled, color: primaryBlue),
+                  title: const Text('Home'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AdminHomePage()),
+                    );
+                  },
                 ),
-                title: const Text('New Student Form'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AdminApplicationForm(),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.person, color: primaryBlue),
-                title: const Text('Search Student'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => AdminEditForm()),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
-                title: const Text('Available Doctors'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AdminCollegeDegreesScreen(),
-                    ),
-                  );
-                },
-              ),
-              const Spacer(),
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text(
-                  'Logout',
-                  style: TextStyle(color: Colors.red),
+                ListTile(
+                  leading: Icon(Icons.group, color: primaryBlue),
+                  title: const Text('Manage Users'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UserManagementPage(),
+                      ),
+                    );
+                  },
                 ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _logout(context);
-                },
-              ),
-            ],
+                ListTile(
+                  leading: Icon(Icons.school, color: primaryBlue),
+                  title: const Text('College Interests'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => InterestsPage()),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(
+                    Icons.format_align_left_sharp,
+                    color: primaryBlue,
+                  ),
+                  title: const Text('New Student Form'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AdminApplicationForm(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.person, color: primaryBlue),
+                  title: const Text('Search Student'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AdminEditForm()),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
+                  title: const Text('Available Doctors'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AdminCollegeDegreesScreen(),
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(height: 24), // or whatever spacing you want
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.logout, color: Colors.red),
+                  title: const Text(
+                    'Logout',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  onTap: () {
+                    _logout(context);
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),

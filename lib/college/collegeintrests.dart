@@ -175,105 +175,89 @@ class _InterestsPageState extends State<CollegeInterestsPage> {
                   Expanded(
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
-                      child: SingleChildScrollView(
-                        child: DataTable(
-                          sortColumnIndex: _sortColumnIndex,
-                          sortAscending: _sortAscending,
-                          columns: [
-                            DataColumn(
-                              label: Text('ID'),
-                              numeric: true,
-                              onSort:
-                                  (i, asc) => _sort<num>((d) => d.id, i, asc),
-                            ),
-                            DataColumn(
-                              label: Text('College ID'),
-                              numeric: true,
-                              onSort:
-                                  (i, asc) =>
-                                      _sort<num>((d) => d.collegeId, i, asc),
-                            ),
-                            DataColumn(
-                              label: Text('College Name'),
-                              onSort:
-                                  (i, asc) => _sort<String>(
-                                    (d) => d.collegeName,
-                                    i,
-                                    asc,
-                                  ),
-                            ),
-                            DataColumn(
-                              label: Text('Student ID'),
-                              numeric: true,
-                              onSort:
-                                  (i, asc) =>
-                                      _sort<num>((d) => d.studentId, i, asc),
-                            ),
-                            DataColumn(
-                              label: Text('Student Name'),
-                              onSort:
-                                  (i, asc) => _sort<String>(
-                                    (d) => d.studentName,
-                                    i,
-                                    asc,
-                                  ),
-                            ),
-                            DataColumn(
-                              label: Text('Course Name'),
-                              onSort:
-                                  (i, asc) => _sort<String>(
-                                    (d) => d.courseName,
-                                    i,
-                                    asc,
-                                  ),
-                            ),
-                            DataColumn(
-                              label: Text('Degree'),
-                              onSort:
-                                  (i, asc) =>
-                                      _sort<String>((d) => d.degree, i, asc),
-                            ),
-                            DataColumn(
-                              label: Text('Message'),
-                              onSort:
-                                  (i, asc) =>
-                                      _sort<String>((d) => d.message, i, asc),
-                            ),
-                            DataColumn(
-                              label: Text('Status'),
-                              onSort:
-                                  (i, asc) =>
-                                      _sort<String>((d) => d.status, i, asc),
-                            ),
-                            DataColumn(
-                              label: Text('Created At'),
-                              onSort:
-                                  (i, asc) =>
-                                      _sort<String>((d) => d.createdAt, i, asc),
-                            ),
-                          ],
-                          rows:
-                              _filteredInterests.map((interest) {
-                                return DataRow(
-                                  cells: [
-                                    DataCell(Text(interest.id.toString())),
-                                    DataCell(
-                                      Text(interest.collegeId.toString()),
-                                    ),
-                                    DataCell(Text(interest.collegeName)),
-                                    DataCell(
-                                      Text(interest.studentId.toString()),
-                                    ),
-                                    DataCell(Text(interest.studentName)),
-                                    DataCell(Text(interest.courseName)),
-                                    DataCell(Text(interest.degree)),
-                                    DataCell(Text(interest.message)),
-                                    DataCell(Text(interest.status)),
-                                    DataCell(Text(interest.createdAt)),
-                                  ],
-                                );
-                              }).toList(),
-                        ),
+                      child: DataTable(
+                        sortColumnIndex: _sortColumnIndex,
+                        sortAscending: _sortAscending,
+                        columns: [
+                          DataColumn(
+                            label: Text('ID'),
+                            numeric: true,
+                            onSort: (i, asc) => _sort<num>((d) => d.id, i, asc),
+                          ),
+                          DataColumn(
+                            label: Text('College ID'),
+                            numeric: true,
+                            onSort:
+                                (i, asc) =>
+                                    _sort<num>((d) => d.collegeId, i, asc),
+                          ),
+                          DataColumn(
+                            label: Text('College Name'),
+                            onSort:
+                                (i, asc) =>
+                                    _sort<String>((d) => d.collegeName, i, asc),
+                          ),
+                          DataColumn(
+                            label: Text('Student ID'),
+                            numeric: true,
+                            onSort:
+                                (i, asc) =>
+                                    _sort<num>((d) => d.studentId, i, asc),
+                          ),
+                          DataColumn(
+                            label: Text('Student Name'),
+                            onSort:
+                                (i, asc) =>
+                                    _sort<String>((d) => d.studentName, i, asc),
+                          ),
+                          DataColumn(
+                            label: Text('Course Name'),
+                            onSort:
+                                (i, asc) =>
+                                    _sort<String>((d) => d.courseName, i, asc),
+                          ),
+                          DataColumn(
+                            label: Text('Degree'),
+                            onSort:
+                                (i, asc) =>
+                                    _sort<String>((d) => d.degree, i, asc),
+                          ),
+                          DataColumn(
+                            label: Text('Message'),
+                            onSort:
+                                (i, asc) =>
+                                    _sort<String>((d) => d.message, i, asc),
+                          ),
+                          DataColumn(
+                            label: Text('Status'),
+                            onSort:
+                                (i, asc) =>
+                                    _sort<String>((d) => d.status, i, asc),
+                          ),
+                          DataColumn(
+                            label: Text('Created At'),
+                            onSort:
+                                (i, asc) =>
+                                    _sort<String>((d) => d.createdAt, i, asc),
+                          ),
+                        ],
+                        rows:
+                            _filteredInterests.map((interest) {
+                              return DataRow(
+                                cells: [
+                                  DataCell(Text(interest.id.toString())),
+                                  DataCell(Text(interest.collegeId.toString())),
+                                  DataCell(Text(interest.collegeName)),
+                                  DataCell(Text(interest.studentId.toString())),
+                                  DataCell(Text(interest.studentName)),
+                                  DataCell(Text(interest.courseName)),
+                                  DataCell(Text(interest.degree)),
+                                  DataCell(Text(interest.message)),
+                                  DataCell(Text(interest.status)),
+                                  DataCell(Text(interest.createdAt)),
+                                ],
+                              );
+                            }).toList(),
                       ),
                     ),
                   ),
