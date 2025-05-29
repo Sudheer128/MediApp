@@ -475,10 +475,15 @@ class UserDataTableSource extends DataTableSource {
           DropdownButton<String>(
             hint: const Text('Select CM'),
             value: cmDropdownValue,
-            items:
-                cmNames
-                    .map((cm) => DropdownMenuItem(value: cm, child: Text(cm)))
-                    .toList(),
+            items: [
+              const DropdownMenuItem<String>(
+                value: 'not_assigned',
+                child: Text('not_assigned'),
+              ),
+              ...cmNames.map(
+                (cm) => DropdownMenuItem(value: cm, child: Text(cm)),
+              ),
+            ],
             onChanged: (newCm) async {
               if (newCm != null && newCm != user.cmName) {
                 try {
@@ -499,6 +504,7 @@ class UserDataTableSource extends DataTableSource {
             },
           ),
         ),
+
         DataCell(Text(user.createdAt)),
       ],
     );
