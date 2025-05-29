@@ -56,7 +56,7 @@ class CmInterestsPage extends StatefulWidget {
 class _InterestsPageState extends State<CmInterestsPage> {
   List<Interest> _allInterests = [];
   List<Interest> _filteredInterests = [];
-
+  static const Color primaryBlue = Color.fromARGB(255, 250, 110, 110);
   bool _isLoading = false;
   String? _error;
 
@@ -157,7 +157,7 @@ class _InterestsPageState extends State<CmInterestsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('College Interests'),
-        backgroundColor: Colors.blue, // Clear blue color
+        backgroundColor: primaryBlue,
       ),
       body:
           _isLoading

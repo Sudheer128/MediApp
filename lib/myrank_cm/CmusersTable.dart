@@ -101,6 +101,7 @@ class UserService {
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'email': email, 'name': name, 'cmname': savedName}),
     );
+    print('email: $email, name: $name, cmname: $savedName');
     if (response.statusCode != 200) {
       throw Exception('Failed to add user');
     }

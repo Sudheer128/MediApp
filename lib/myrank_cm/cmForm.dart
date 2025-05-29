@@ -163,18 +163,13 @@ class _ApplicationFormState extends State<CmApplicationForm> {
     });
   }
 
-  Future<void> _saveForm() async {
-    setState(() {
-      _isLoading = true;
-    });
-
+  void _saveForm() {
     final isValid = _formKey.currentState!.validate();
 
     // Check resume upload separately
     if (_resumeFile == null && _resumeBytes == null) {
       setState(() {
         _resumeError = true;
-        _isLoading = false;
       });
       _scrollToSection(_resumeKey);
       return;
@@ -230,25 +225,37 @@ class _ApplicationFormState extends State<CmApplicationForm> {
       return;
     }
 
-    setState(() {
-      _isLoading = true; // Start loading
-    });
-
-    // If all valid
     _formKey.currentState!.save();
-    // Submit to backend first, await completion
-    final success = await _submitToBackend();
 
     setState(() {
-      _isLoading = false; // Stop loading
+      _isLoading = true; // Start loading spinner
+      _isFormSubmitted = false; // Hide success message during loading
     });
 
-    if (success) {
-      setState(() {
-        _isFormSubmitted = true;
-        _isEditing = false;
-      });
-    }
+    _submitToBackend()
+        .then((success) {
+          if (success) {
+            setState(() {
+              _isLoading = false; // Stop loading spinner
+              _isFormSubmitted = true; // Show success message
+              _isEditing = false; // Disable editing after submit
+            });
+          } else {
+            setState(() {
+              _isLoading = false;
+              _isFormSubmitted = false;
+            });
+          }
+        })
+        .catchError((error) {
+          setState(() {
+            _isLoading = false;
+            _isFormSubmitted = false;
+          });
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error saving form: $error')));
+        });
   }
 
   bool _hasErrorInSection(GlobalKey key) {
@@ -332,6 +339,8 @@ class _ApplicationFormState extends State<CmApplicationForm> {
   Future<bool> _submitToBackend() async {
     final userIdText = _userIdController.text.trim();
     final userId = int.tryParse(userIdText) ?? 0;
+    final prefs = await SharedPreferences.getInstance();
+    final savedName = prefs.getString('name') ?? 'CM';
 
     final payload = {
       // Personal
@@ -415,6 +424,9 @@ class _ApplicationFormState extends State<CmApplicationForm> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Submitted successfully!')),
         );
+        setState(() {
+          _isLoading = false;
+        });
         return true;
       } else {
         // Show alert dialog when the email is already registered (non-200 response)
