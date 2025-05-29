@@ -115,11 +115,10 @@ class _StudentDetailScreenState extends State<EditForm> {
     );
   }
 
-  Widget buildEducationSection(List<dynamic> educationList) {
+  Widget buildPersonalDetailsSection(Map<String, dynamic> data) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Edit button at the top right
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
@@ -143,6 +142,28 @@ class _StudentDetailScreenState extends State<EditForm> {
           ],
         ),
         const SizedBox(height: 12),
+
+        buildSectionHeader('Personal Details', Icons.person),
+        buildCard(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              buildInfoRow('Name', data['name'] ?? ''),
+              buildInfoRow('Phone', data['phone']?.toString() ?? ''),
+              buildInfoRow('Email', data['email'] ?? ''),
+              buildInfoRow('Address', data['address'] ?? ''),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget buildEducationSection(List<dynamic> educationList) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Edit button at the top right
 
         // Education section header without edit button
         buildSectionHeader('Education', Icons.school),
@@ -397,6 +418,7 @@ class _StudentDetailScreenState extends State<EditForm> {
                 ),
               ),
             ),
+            if (data != null) buildPersonalDetailsSection(data!),
             if (data?['education'] != null)
               buildEducationSection(data!['education']),
             if (data?['fellowships'] != null)

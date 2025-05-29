@@ -629,13 +629,14 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
               child: ElevatedButton(
                 onPressed: showExpressInterestDialog,
                 style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple.shade700,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
                 child: const Text(
                   'Express Interest',
-                  style: TextStyle(fontSize: 18),
+                  style: TextStyle(fontSize: 18, color: Colors.white),
                 ),
               ),
             ),

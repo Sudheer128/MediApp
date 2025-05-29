@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/url.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // Your shared primary color
 const Color kPrimaryColor = Color.fromARGB(255, 250, 110, 110);
@@ -147,6 +148,26 @@ class _StudentDetailScreenState extends State<CmStudentDetailScreen> {
     return isWideScreen(ctx)
         ? Wrap(spacing: 12, runSpacing: 12, children: cards)
         : Column(crossAxisAlignment: CrossAxisAlignment.start, children: cards);
+  }
+
+  Widget buildPersonalDetailsSection(Map<String, dynamic> data) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        buildSectionTitle('Personal Details', Icons.person),
+        buildCard(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              buildKeyValueRow('Name', data['name'] ?? ''),
+              buildKeyValueRow('Phone', data['phone']?.toString() ?? ''),
+              buildKeyValueRow('Email', data['email'] ?? ''),
+              buildKeyValueRow('Address', data['address'] ?? ''),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   Widget buildEducationSection(List<dynamic> educationList, BuildContext ctx) {
@@ -425,6 +446,73 @@ class _StudentDetailScreenState extends State<CmStudentDetailScreen> {
     }
   }
 
+  Future<void> _launchURL(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not open document')));
+    }
+  }
+
+  Widget buildSectionHeader(String title, IconData icon) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(4)),
+      child: Row(
+        children: [
+          Icon(icon, color: kPrimaryColor),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: kPrimaryColor,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildResumeSection(List<dynamic> documents) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        buildSectionHeader('Resume', Icons.description),
+        ...documents.map((doc) {
+          return buildCard(
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(child: Text(doc['name'] ?? 'Unnamed Document')),
+                TextButton(
+                  onPressed: () {
+                    final url = doc['url'] ?? '';
+                    if (url.isNotEmpty) {
+                      _launchURL(url);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('No URL provided')),
+                      );
+                    }
+                  },
+                  child: const Text('View'),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (loading) {
@@ -482,6 +570,8 @@ class _StudentDetailScreenState extends State<CmStudentDetailScreen> {
                 ),
               ),
             ),
+            if (data != null) buildPersonalDetailsSection(data!),
+
             if (data?['education'] != null)
               buildEducationSection(data!['education'], context),
             if (data?['fellowships'] != null)
@@ -492,6 +582,8 @@ class _StudentDetailScreenState extends State<CmStudentDetailScreen> {
               buildWorkExperienceSection(data!['workExperiences'], context),
             if (data?['certificate'] != null)
               buildCertificatesSection(data!['certificate']),
+            if (data?['documents'] != null)
+              buildResumeSection(data!['documents']),
             const SizedBox(height: 24),
           ],
         ),

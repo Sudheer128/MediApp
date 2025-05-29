@@ -156,6 +156,26 @@ class _StudentDetailScreenState extends State<AdminStudentDetailScreen> {
     }
   }
 
+  Widget buildPersonalDetailsSection(Map<String, dynamic> data) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        buildSectionTitle('Personal Details', Icons.person),
+        buildCard(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              buildKeyValueRow('Name', data['name'] ?? ''),
+              buildKeyValueRow('Phone', data['phone']?.toString() ?? ''),
+              buildKeyValueRow('Email', data['email'] ?? ''),
+              buildKeyValueRow('Address', data['address'] ?? ''),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget buildEducationSection(
     List<dynamic> educationList,
     BuildContext context,
@@ -580,6 +600,7 @@ class _StudentDetailScreenState extends State<AdminStudentDetailScreen> {
                 ),
               ),
             ),
+            if (data != null) buildPersonalDetailsSection(data!),
             if (data?['education'] != null)
               buildEducationSection(data!['education'], context),
             if (data?['fellowships'] != null)
