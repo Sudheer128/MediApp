@@ -14,6 +14,8 @@ import 'package:medicalapp/index.dart';
 import 'package:medicalapp/url.dart';
 
 class AdminCollegeDegreesScreen extends StatefulWidget {
+  const AdminCollegeDegreesScreen({super.key});
+
   @override
   _DegreesScreenState createState() => _DegreesScreenState();
 }

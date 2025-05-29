@@ -229,56 +229,58 @@ class _UserHomePageState extends State<UserHomePage> {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
-            _buildCard(
-              context,
-              title: 'Create New Student Form',
-              icon: Icons.analytics,
-              subtitle: 'Add new student application',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => UserApplicationForm(),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 20),
-            _buildCard(
-              context,
-              title: 'Search and Find Student Details',
-              icon: Icons.search,
-              subtitle: 'Locate student information',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => UserEditForm()),
-                );
-              },
-            ),
-            const SizedBox(height: 20),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              _buildCard(
+                context,
+                title: 'Create New Student Form',
+                icon: Icons.analytics,
+                subtitle: 'Add new student application',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UserApplicationForm(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+              _buildCard(
+                context,
+                title: 'Search and Find Student Details',
+                icon: Icons.search,
+                subtitle: 'Locate student information',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => UserEditForm()),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
 
-            _buildCard(
-              context,
-              title: 'Available Doctors',
-              icon: Icons.medical_services_outlined,
-              subtitle: 'List of Doctors in Particular Courses',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => UserCollegeDegreesScreen(),
-                  ),
-                );
-              },
-            ),
-          ],
+              _buildCard(
+                context,
+                title: 'Available Doctors',
+                icon: Icons.medical_services_outlined,
+                subtitle: 'List of Doctors in Particular Courses',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UserCollegeDegreesScreen(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

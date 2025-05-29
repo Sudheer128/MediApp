@@ -110,10 +110,10 @@ class UserService {
 // --- UI ---
 
 class CmManagementPage extends StatefulWidget {
-  const CmManagementPage({Key? key}) : super(key: key);
+  const CmManagementPage({super.key});
 
   @override
-  _UserManagementPageState createState() => _UserManagementPageState();
+  State<CmManagementPage> createState() => _UserManagementPageState();
 }
 
 class _UserManagementPageState extends State<CmManagementPage> {
@@ -331,8 +331,8 @@ class _UserManagementPageState extends State<CmManagementPage> {
               ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddUserDialog(context),
-        child: const Icon(Icons.person_add),
         backgroundColor: primaryBlue,
+        child: const Icon(Icons.person_add),
       ),
     );
   }
