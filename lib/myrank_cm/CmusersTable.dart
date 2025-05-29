@@ -55,16 +55,22 @@ class UserService {
     final response = await http.get(
       Uri.parse('$baseUrl/myrank-cm/users?cm_name=$savedName'),
     );
+
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = json.decode(response.body);
-      // top-level list of all CM names for dropdown
 
-      // list of users
-      final usersJson = data['users'] as List<dynamic>;
+      // Handle null or missing users key gracefully
+      final usersJson = data['users'];
+      if (usersJson == null) {
+        // Return empty list if 'users' is null
+        return UserResponse(users: []);
+      }
+
       final users =
-          usersJson
+          (usersJson as List<dynamic>)
               .map((j) => User.fromJson(j as Map<String, dynamic>))
               .toList();
+
       return UserResponse(users: users);
     } else {
       throw Exception('Failed to load users');
@@ -259,77 +265,86 @@ class _UserManagementPageState extends State<CmManagementPage> {
         title: const Text('Manage Users'),
         backgroundColor: primaryBlue,
       ),
-      body:
-          _allUsers.isEmpty
-              ? const Center(child: CircularProgressIndicator())
-              : _filteredUsers.isEmpty
-              ? const Center(child: Text('No users found'))
-              : Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    TextField(
-                      decoration: const InputDecoration(
-                        hintText: 'Search users...',
-                        prefixIcon: Icon(Icons.search),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
+      body: FutureBuilder<UserResponse>(
+        future: futureUserData,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.users.isEmpty) {
+            return const Center(child: Text('No data available'));
+          } else {
+            _allUsers = snapshot.data!.users;
+            _filteredUsers = List.from(_allUsers);
+            _dataSource = UserDataTableSource(users: _filteredUsers);
+
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  TextField(
+                    decoration: const InputDecoration(
+                      hintText: 'Search users...',
+                      prefixIcon: Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(8)),
+                      ),
+                    ),
+                    onChanged: _filterUsers,
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: PaginatedDataTable(
+                      header: const Text('Users'),
+                      rowsPerPage: _rowsPerPage,
+                      availableRowsPerPage: const [5, 10, 20],
+                      onRowsPerPageChanged: (rows) {
+                        setState(() {
+                          if (rows != null) _rowsPerPage = rows;
+                        });
+                      },
+                      sortColumnIndex: _sortColumnIndex,
+                      sortAscending: _sortAscending,
+                      columns: [
+                        DataColumn(
+                          label: const Text('User ID'),
+                          numeric: true,
+                          onSort:
+                              (i, asc) => _sort<num>((u) => u.userId, i, asc),
                         ),
-                      ),
-                      onChanged: _filterUsers,
+                        DataColumn(
+                          label: const Text('Name'),
+                          onSort:
+                              (i, asc) => _sort<String>((u) => u.name, i, asc),
+                        ),
+                        DataColumn(
+                          label: const Text('Email'),
+                          onSort:
+                              (i, asc) => _sort<String>((u) => u.email, i, asc),
+                        ),
+                        DataColumn(
+                          label: const Text('Role'),
+                          onSort:
+                              (i, asc) => _sort<String>((u) => u.role, i, asc),
+                        ),
+                        DataColumn(label: const Text('CM Name')),
+                        DataColumn(
+                          label: const Text('Created At'),
+                          onSort:
+                              (i, asc) =>
+                                  _sort<String>((u) => u.createdAt, i, asc),
+                        ),
+                      ],
+                      source: _dataSource,
                     ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: PaginatedDataTable(
-                        header: const Text('Users'),
-                        rowsPerPage: _rowsPerPage,
-                        availableRowsPerPage: const [5, 10, 20],
-                        onRowsPerPageChanged: (rows) {
-                          setState(() {
-                            if (rows != null) _rowsPerPage = rows;
-                          });
-                        },
-                        sortColumnIndex: _sortColumnIndex,
-                        sortAscending: _sortAscending,
-                        columns: [
-                          DataColumn(
-                            label: const Text('User ID'),
-                            numeric: true,
-                            onSort:
-                                (i, asc) => _sort<num>((u) => u.userId, i, asc),
-                          ),
-                          DataColumn(
-                            label: const Text('Name'),
-                            onSort:
-                                (i, asc) =>
-                                    _sort<String>((u) => u.name, i, asc),
-                          ),
-                          DataColumn(
-                            label: const Text('Email'),
-                            onSort:
-                                (i, asc) =>
-                                    _sort<String>((u) => u.email, i, asc),
-                          ),
-                          DataColumn(
-                            label: const Text('Role'),
-                            onSort:
-                                (i, asc) =>
-                                    _sort<String>((u) => u.role, i, asc),
-                          ),
-                          DataColumn(label: const Text('CM Name')),
-                          DataColumn(
-                            label: const Text('Created At'),
-                            onSort:
-                                (i, asc) =>
-                                    _sort<String>((u) => u.createdAt, i, asc),
-                          ),
-                        ],
-                        source: _dataSource,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+            );
+          }
+        },
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddUserDialog(context),
         backgroundColor: primaryBlue,

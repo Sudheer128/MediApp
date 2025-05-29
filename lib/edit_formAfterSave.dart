@@ -59,7 +59,8 @@ class _StudentDetailScreenState extends State<EditForm> {
     return MediaQuery.of(context).size.width >= 800 || kIsWeb;
   }
 
-  Widget buildSectionHeader(String title, IconData icon, VoidCallback onEdit) {
+  // Remove edit icon from section header; just show title and icon
+  Widget buildSectionHeader(String title, IconData icon) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
@@ -81,12 +82,7 @@ class _StudentDetailScreenState extends State<EditForm> {
               ),
             ),
           ),
-          const Spacer(),
-          IconButton(
-            icon: const Icon(Icons.edit, color: Colors.blueAccent),
-            onPressed: onEdit,
-            tooltip: 'Edit $title',
-          ),
+          // Removed IconButton here
         ],
       ),
     );
@@ -123,17 +119,35 @@ class _StudentDetailScreenState extends State<EditForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        buildSectionHeader('Education', Icons.school, () {
-          if (data != null) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => EditApplicationForm(existingData: data),
+        // Edit button at the top right
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red, // teal color
               ),
-            );
-          }
-        }),
+              onPressed: () {
+                if (data != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => EditApplicationForm(existingData: data),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Edit', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
 
+        // Education section header without edit button
+        buildSectionHeader('Education', Icons.school),
+
+        // Education cards
         ...educationList.map((edu) {
           return buildCard(
             Column(
@@ -158,12 +172,7 @@ class _StudentDetailScreenState extends State<EditForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        buildSectionHeader('Fellowships', Icons.workspace_premium, () {
-          // TODO: Implement edit action for Fellowships
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Edit Fellowships tapped')),
-          );
-        }),
+        buildSectionHeader('Fellowships', Icons.workspace_premium),
         ...fellowships.asMap().entries.map((entry) {
           int idx = entry.key + 1;
           var fellowship = entry.value;
@@ -194,12 +203,7 @@ class _StudentDetailScreenState extends State<EditForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        buildSectionHeader('Papers', Icons.menu_book, () {
-          // TODO: Implement edit action for Papers
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Edit Papers tapped')));
-        }),
+        buildSectionHeader('Papers', Icons.menu_book),
         ...papers.map((paper) {
           return buildCard(
             Column(
@@ -220,12 +224,7 @@ class _StudentDetailScreenState extends State<EditForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        buildSectionHeader('Work Experience', Icons.work, () {
-          // TODO: Implement edit action for Work Experience
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Edit Work Experience tapped')),
-          );
-        }),
+        buildSectionHeader('Work Experience', Icons.work),
         ...workExperiences.asMap().entries.map((entry) {
           int idx = entry.key + 1;
           var work = entry.value;
@@ -262,12 +261,6 @@ class _StudentDetailScreenState extends State<EditForm> {
         buildSectionHeader(
           'Currently Active Medical Council Certificate',
           Icons.verified,
-          () {
-            // TODO: Implement edit action for Certificate
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Edit Certificate tapped')),
-            );
-          },
         ),
         buildCard(
           Column(
@@ -297,7 +290,7 @@ class _StudentDetailScreenState extends State<EditForm> {
     } else {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Could not open document')));
+      ).showSnackBar(const SnackBar(content: Text('Could not open document')));
     }
   }
 
@@ -305,12 +298,7 @@ class _StudentDetailScreenState extends State<EditForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        buildSectionHeader('Resume', Icons.description, () {
-          // You can add edit functionality if needed
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Edit Resume tapped')));
-        }),
+        buildSectionHeader('Resume', Icons.description),
         ...documents.map((doc) {
           return buildCard(
             Row(
@@ -336,6 +324,17 @@ class _StudentDetailScreenState extends State<EditForm> {
         }).toList(),
       ],
     );
+  }
+
+  void _onEditPressed() {
+    if (data != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EditApplicationForm(existingData: data),
+        ),
+      );
+    }
   }
 
   @override
