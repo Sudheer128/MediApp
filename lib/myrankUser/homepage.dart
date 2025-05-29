@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:medicalapp/myrankUser/UserCollegeDocList.dart';
+import 'package:medicalapp/myrankUser/UsersTable.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // add this import
 import 'package:medicalapp/admin/adminintreststatus.dart';
 import 'package:medicalapp/admin/form_page.dart';
@@ -158,6 +159,17 @@ class _UserHomePageState extends State<UserHomePage> {
                     MaterialPageRoute(
                       builder: (context) => const UserHomePage(),
                     ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.school, color: UserHomePage.primaryBlue),
+                title: const Text('Manage Users'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ManagementPage()),
                   );
                 },
               ),

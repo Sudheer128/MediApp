@@ -71,12 +71,14 @@ class _StudentDetailScreenState extends State<EditForm> {
         children: [
           Icon(icon, color: Colors.blue.shade800),
           const SizedBox(width: 8),
-          Text(
-            title,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-              color: Colors.blue.shade800,
+          Expanded(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.blue.shade800,
+              ),
             ),
           ),
           const Spacer(),

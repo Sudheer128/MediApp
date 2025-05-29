@@ -163,18 +163,13 @@ class _ApplicationFormState extends State<CmApplicationForm> {
     });
   }
 
-  Future<void> _saveForm() async {
-    setState(() {
-      _isLoading = true;
-    });
-
+  void _saveForm() {
     final isValid = _formKey.currentState!.validate();
 
     // Check resume upload separately
     if (_resumeFile == null && _resumeBytes == null) {
       setState(() {
         _resumeError = true;
-        _isLoading = false;
       });
       _scrollToSection(_resumeKey);
       return;
@@ -230,25 +225,37 @@ class _ApplicationFormState extends State<CmApplicationForm> {
       return;
     }
 
-    setState(() {
-      _isLoading = true; // Start loading
-    });
-
-    // If all valid
     _formKey.currentState!.save();
-    // Submit to backend first, await completion
-    final success = await _submitToBackend();
 
     setState(() {
-      _isLoading = false; // Stop loading
+      _isLoading = true; // Start loading spinner
+      _isFormSubmitted = false; // Hide success message during loading
     });
 
-    if (success) {
-      setState(() {
-        _isFormSubmitted = true;
-        _isEditing = false;
-      });
-    }
+    _submitToBackend()
+        .then((success) {
+          if (success) {
+            setState(() {
+              _isLoading = false; // Stop loading spinner
+              _isFormSubmitted = true; // Show success message
+              _isEditing = false; // Disable editing after submit
+            });
+          } else {
+            setState(() {
+              _isLoading = false;
+              _isFormSubmitted = false;
+            });
+          }
+        })
+        .catchError((error) {
+          setState(() {
+            _isLoading = false;
+            _isFormSubmitted = false;
+          });
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error saving form: $error')));
+        });
   }
 
   bool _hasErrorInSection(GlobalKey key) {
@@ -332,6 +339,8 @@ class _ApplicationFormState extends State<CmApplicationForm> {
   Future<bool> _submitToBackend() async {
     final userIdText = _userIdController.text.trim();
     final userId = int.tryParse(userIdText) ?? 0;
+    final prefs = await SharedPreferences.getInstance();
+    final savedName = prefs.getString('name') ?? 'CM';
 
     final payload = {
       // Personal
@@ -415,6 +424,9 @@ class _ApplicationFormState extends State<CmApplicationForm> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Submitted successfully!')),
         );
+        setState(() {
+          _isLoading = false;
+        });
         return true;
       } else {
         // Show alert dialog when the email is already registered (non-200 response)
@@ -1270,10 +1282,22 @@ class _ApplicationFormState extends State<CmApplicationForm> {
                   Expanded(
                     child: TextFormField(
                       controller: education.toDateController,
-                      decoration: const InputDecoration(labelText: 'To Date'),
+                      decoration: InputDecoration(
+                        labelText: 'To Date',
+                        contentPadding: EdgeInsets.fromLTRB(12, 20, 12, 36),
+                        errorStyle: TextStyle(
+                          color: Colors.red.shade700,
+                          fontSize: 12,
+                          height: 1.2,
+                          // Allow error text to wrap to 2 or 3 lines
+                          // Unfortunately errorStyle doesn't have maxLines directly,
+                          // so you have to wrap TextFormField with Flexible or Expanded
+                        ),
+                      ),
                       readOnly: true,
                       onTap: () => _pickDate(education.toDateController),
                       validator: (value) {
+                        // your existing validator logic
                         if (value == null || value.isEmpty) {
                           return 'Please select to date';
                         }
@@ -1301,7 +1325,8 @@ class _ApplicationFormState extends State<CmApplicationForm> {
 
                           if (education.type == 'MBBS' &&
                               durationInYears < 5.5) {
-                            return 'Time period should be at least 5.5 years';
+                            // Use a shorter message or include line breaks if needed
+                            return 'Time period should be\nat least 5.5 years';
                           }
 
                           final requiredDuration = getSelectedCourseDuration(
@@ -1309,13 +1334,9 @@ class _ApplicationFormState extends State<CmApplicationForm> {
                           );
                           if (requiredDuration > 0 &&
                               durationInYears < requiredDuration) {
-                            return 'Time period should be at least $requiredDuration years';
+                            return 'Time period should be\nat least $requiredDuration years';
                           }
                         } catch (e) {
-                          print('Date parsing error in validator: $e');
-                          print(
-                            'fromDateText="$fromDateText", toDateText="$value"',
-                          );
                           return 'Invalid date format';
                         }
 

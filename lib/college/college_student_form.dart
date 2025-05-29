@@ -501,6 +501,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.white),
         title: const Text(
           'Student Details',
           style: TextStyle(color: Colors.white),

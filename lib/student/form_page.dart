@@ -30,6 +30,8 @@ class _ApplicationFormState extends State<ApplicationForm> {
   bool _isFormSubmitted = false;
   bool _isLoading = false; // Add this line
 
+  String? _username;
+
   final GlobalKey _educationKey = GlobalKey();
   final GlobalKey _fellowshipKey = GlobalKey();
   final GlobalKey _papersKey = GlobalKey();
@@ -107,6 +109,14 @@ class _ApplicationFormState extends State<ApplicationForm> {
   void initState() {
     super.initState();
     fetchCourses();
+    _loadUsername();
+  }
+
+  Future<void> _loadUsername() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _username = prefs.getString('name') ?? "Doctor";
+    });
   }
 
   Future<void> _pickDate(TextEditingController controller) async {
@@ -554,69 +564,111 @@ class _ApplicationFormState extends State<ApplicationForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
+        child: Column(
           children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue),
-              child: Text(
-                'Menu',
-                style: TextStyle(color: Colors.white, fontSize: 24),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.blue,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Colors.blue.shade700, Colors.blue.shade400],
+                ),
+              ),
+              padding: EdgeInsets.only(top: 40, left: 16, bottom: 16),
+              alignment: Alignment.bottomLeft,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor: Colors.white,
+                    child: Icon(Icons.person, size: 30, color: Colors.blue),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Doctor Dashboard',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    _username != null
+                        ? 'Hello, $_username'
+                        : 'Doctor Dashboard',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('Home'),
-              onTap: () {
-                Navigator.pop(context); // close drawer
-
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => DoctorDashboardApp()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('Profile'),
-              onTap: () async {
-                final prefs = await SharedPreferences.getInstance();
-                final userId = prefs.getInt('userid') ?? 0;
-                Navigator.pop(context); // close drawer
-
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EditForm(applicationId: userId),
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  ListTile(
+                    leading: Icon(Icons.home, color: Colors.blue),
+                    title: Text('Home'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DoctorDashboardApp(),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
-            SwitchListTile(
-              title: const Text('Active'),
-              value: _isActive,
-              onChanged: (bool value) {
-                _updateStatus(value);
-              },
-              secondary: const Icon(Icons.toggle_on),
-            ),
-
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('LogOut'),
-              onTap: () {
-                signOutGoogle();
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (BuildContext context) => Index(),
+                  ListTile(
+                    leading: Icon(Icons.person, color: Colors.blue),
+                    title: Text('Profile'),
+                    onTap: () async {
+                      final prefs = await SharedPreferences.getInstance();
+                      final userId = prefs.getInt('userid') ?? 0;
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EditForm(applicationId: userId),
+                        ),
+                      );
+                    },
                   ),
-                  (Route<dynamic> route) => false, // Remove all previous routes
-                );
-              },
+                  SwitchListTile(
+                    title: Text('Active Status'),
+                    value: _isActive,
+                    onChanged: (bool value) {
+                      _updateStatus(value);
+                    },
+                    secondary: Icon(
+                      Icons.toggle_on,
+                      color: _isActive ? Colors.green : Colors.grey,
+                    ),
+                    activeColor: Colors.green,
+                  ),
+                  Divider(height: 1, thickness: 1),
+                  ListTile(
+                    leading: Icon(Icons.logout, color: Colors.blue),
+                    title: Text('Log Out'),
+                    onTap: () {
+                      signOutGoogle();
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => Index()),
+                        (Route<dynamic> route) =>
+                            false, // Remove all previous routes
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
-
-            // You can add more menu items here...
           ],
         ),
       ),
@@ -825,9 +877,11 @@ class _ApplicationFormState extends State<ApplicationForm> {
       ),
       child: Row(
         children: [
-          Text(
-            title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
           ),
           const Spacer(),
           if (!_isEditing)
@@ -1234,10 +1288,22 @@ class _ApplicationFormState extends State<ApplicationForm> {
                   Expanded(
                     child: TextFormField(
                       controller: education.toDateController,
-                      decoration: const InputDecoration(labelText: 'To Date'),
+                      decoration: InputDecoration(
+                        labelText: 'To Date',
+                        contentPadding: EdgeInsets.fromLTRB(12, 20, 12, 36),
+                        errorStyle: TextStyle(
+                          color: Colors.red.shade700,
+                          fontSize: 12,
+                          height: 1.2,
+                          // Allow error text to wrap to 2 or 3 lines
+                          // Unfortunately errorStyle doesn't have maxLines directly,
+                          // so you have to wrap TextFormField with Flexible or Expanded
+                        ),
+                      ),
                       readOnly: true,
                       onTap: () => _pickDate(education.toDateController),
                       validator: (value) {
+                        // your existing validator logic
                         if (value == null || value.isEmpty) {
                           return 'Please select to date';
                         }
@@ -1265,7 +1331,8 @@ class _ApplicationFormState extends State<ApplicationForm> {
 
                           if (education.type == 'MBBS' &&
                               durationInYears < 5.5) {
-                            return 'Time period should be at least 5.5 years';
+                            // Use a shorter message or include line breaks if needed
+                            return 'Time period should be\nat least 5.5 years';
                           }
 
                           final requiredDuration = getSelectedCourseDuration(
@@ -1273,13 +1340,9 @@ class _ApplicationFormState extends State<ApplicationForm> {
                           );
                           if (requiredDuration > 0 &&
                               durationInYears < requiredDuration) {
-                            return 'Time period should be at least $requiredDuration years';
+                            return 'Time period should be\nat least $requiredDuration years';
                           }
                         } catch (e) {
-                          print('Date parsing error in validator: $e');
-                          print(
-                            'fromDateText="$fromDateText", toDateText="$value"',
-                          );
                           return 'Invalid date format';
                         }
 

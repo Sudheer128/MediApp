@@ -160,18 +160,13 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
     });
   }
 
-  Future<void> _saveForm() async {
-    setState(() {
-      _isLoading = true;
-    });
-
+  void _saveForm() {
     final isValid = _formKey.currentState!.validate();
 
     // Check resume upload separately
     if (_resumeFile == null && _resumeBytes == null) {
       setState(() {
         _resumeError = true;
-        _isLoading = false;
       });
       _scrollToSection(_resumeKey);
       return;
@@ -227,25 +222,37 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
       return;
     }
 
-    setState(() {
-      _isLoading = true; // Start loading
-    });
-
-    // If all valid
     _formKey.currentState!.save();
-    // Submit to backend first, await completion
-    final success = await _submitToBackend();
 
     setState(() {
-      _isLoading = false; // Stop loading
+      _isLoading = true; // Start loading spinner
+      _isFormSubmitted = false; // Hide success message during loading
     });
 
-    if (success) {
-      setState(() {
-        _isFormSubmitted = true;
-        _isEditing = false;
-      });
-    }
+    _submitToBackend()
+        .then((success) {
+          if (success) {
+            setState(() {
+              _isLoading = false; // Stop loading spinner
+              _isFormSubmitted = true; // Show success message
+              _isEditing = false; // Disable editing after submit
+            });
+          } else {
+            setState(() {
+              _isLoading = false;
+              _isFormSubmitted = false;
+            });
+          }
+        })
+        .catchError((error) {
+          setState(() {
+            _isLoading = false;
+            _isFormSubmitted = false;
+          });
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error saving form: $error')));
+        });
   }
 
   bool _hasErrorInSection(GlobalKey key) {
@@ -535,7 +542,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
     }
 
     final course = coursesList.firstWhere(
-      (c) => c.name == education.courseName,
+      (c) => c.name == education.courseNameController.text,
       orElse: () => Course(name: '', duration: 0),
     );
 
@@ -703,11 +710,11 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => AdminEditForm(),
+                                    builder: (context) => AdminHomePage(),
                                   ),
                                 );
                               },
-                              child: const Text('View Student Profile'),
+                              child: const Text('Go Home'),
                             ),
                           ],
                         )
@@ -1217,11 +1224,11 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
                     }
                     final selected = await _showSearchableCourseDialog(
                       courses,
-                      education.courseName,
+                      education.courseNameController.text,
                     );
                     if (selected != null) {
                       setState(() {
-                        education.courseName = selected;
+                        education.courseNameController.text = selected;
                       });
                     }
                   },
@@ -1232,7 +1239,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
                         suffixIcon: const Icon(Icons.arrow_drop_down),
                       ),
                       controller: TextEditingController(
-                        text: education.courseName,
+                        text: education.courseNameController.text,
                       ),
                       validator:
                           (value) =>
@@ -1245,9 +1252,10 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
               ],
               const SizedBox(height: 16),
               TextFormField(
-                initialValue: education.collegeName,
+                initialValue: education.collegeNameController.text,
                 decoration: const InputDecoration(labelText: 'College Name'),
-                onChanged: (value) => education.collegeName = value,
+                onChanged:
+                    (value) => education.collegeNameController.text = value,
                 validator:
                     (value) =>
                         (value == null || value.isEmpty)
@@ -1274,10 +1282,22 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
                   Expanded(
                     child: TextFormField(
                       controller: education.toDateController,
-                      decoration: const InputDecoration(labelText: 'To Date'),
+                      decoration: InputDecoration(
+                        labelText: 'To Date',
+                        contentPadding: EdgeInsets.fromLTRB(12, 20, 12, 36),
+                        errorStyle: TextStyle(
+                          color: Colors.red.shade700,
+                          fontSize: 12,
+                          height: 1.2,
+                          // Allow error text to wrap to 2 or 3 lines
+                          // Unfortunately errorStyle doesn't have maxLines directly,
+                          // so you have to wrap TextFormField with Flexible or Expanded
+                        ),
+                      ),
                       readOnly: true,
                       onTap: () => _pickDate(education.toDateController),
                       validator: (value) {
+                        // your existing validator logic
                         if (value == null || value.isEmpty) {
                           return 'Please select to date';
                         }
@@ -1305,7 +1325,8 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
 
                           if (education.type == 'MBBS' &&
                               durationInYears < 5.5) {
-                            return 'Time period should be at least 5.5 years';
+                            // Use a shorter message or include line breaks if needed
+                            return 'Time period should be\nat least 5.5 years';
                           }
 
                           final requiredDuration = getSelectedCourseDuration(
@@ -1313,13 +1334,9 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
                           );
                           if (requiredDuration > 0 &&
                               durationInYears < requiredDuration) {
-                            return 'Time period should be at least $requiredDuration years';
+                            return 'Time period should be\nat least $requiredDuration years';
                           }
                         } catch (e) {
-                          print('Date parsing error in validator: $e');
-                          print(
-                            'fromDateText="$fromDateText", toDateText="$value"',
-                          );
                           return 'Invalid date format';
                         }
 
@@ -1330,8 +1347,8 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
                 ],
               ),
             ] else ...[
-              _buildInfoRow('Course', education.courseName),
-              _buildInfoRow('College', education.collegeName),
+              _buildInfoRow('Course', education.courseNameController.text),
+              _buildInfoRow('College', education.collegeNameController.text),
               _buildInfoRow(
                 'Period',
                 '${education.fromDateController.text} to ${education.toDateController.text}',
@@ -2010,18 +2027,17 @@ String convertDateToBackendFormat(String dateStr) {
 // Models
 class EducationDetail {
   String type;
-  String courseName = '';
-  String collegeName = '';
+  final TextEditingController courseNameController = TextEditingController();
+  final TextEditingController collegeNameController = TextEditingController();
   final TextEditingController fromDateController = TextEditingController();
   final TextEditingController toDateController = TextEditingController();
-  String location = '';
 
   EducationDetail({required this.type});
 
   Map<String, dynamic> toJson() => {
     'type': type,
-    'courseName': courseName,
-    'collegeName': collegeName,
+    'courseName': courseNameController.text,
+    'collegeName': collegeNameController.text,
     'fromDate': convertDateToBackendFormat(fromDateController.text),
     'toDate': convertDateToBackendFormat(toDateController.text),
   };

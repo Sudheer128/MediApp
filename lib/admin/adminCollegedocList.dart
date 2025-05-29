@@ -228,194 +228,213 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
 
           // The list (or loader / error / empty state)
           Expanded(
-            child: FutureBuilder<List<dynamic>>(
-              future: degreesFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                    child: SizedBox(
-                      width: 48,
-                      height: 48,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 4.2,
-                        color: primaryBlue,
-                      ),
-                    ),
-                  );
-                } else if (snapshot.hasError) {
-                  return Center(
-                    child: Text(
-                      'Error: ${snapshot.error}',
-                      style: TextStyle(
-                        color: Colors.red.shade700,
-                        fontSize: 16,
-                      ),
-                    ),
-                  );
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(
-                    child: Text(
-                      'No data available',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  );
-                }
+            child: RefreshIndicator(
+              color: primaryBlue,
+              onRefresh: () async {
+                // Trigger a refresh by updating the future
+                setState(() {
+                  degreesFuture = fetchDegrees(status: _selectedStatus);
+                });
 
-                final data = snapshot.data!;
-                return FadeTransition(
-                  opacity: _fadeInAnimation,
-                  child: ListView.builder(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                    itemCount: data.length,
-                    itemBuilder: (context, index) {
-                      final degree = data[index]['degree'];
-                      final courses = data[index]['courses'] as List<dynamic>;
+                // Wait for the new data to load
+                await degreesFuture;
+              },
+              child: FutureBuilder<List<dynamic>>(
+                future: degreesFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(
+                      child: SizedBox(
+                        width: 48,
+                        height: 48,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 4.2,
+                          color: primaryBlue,
+                        ),
+                      ),
+                    );
+                  } else if (snapshot.hasError) {
+                    return Center(
+                      child: Text(
+                        'Error: ${snapshot.error}',
+                        style: TextStyle(
+                          color: Colors.red.shade700,
+                          fontSize: 16,
+                        ),
+                      ),
+                    );
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(
+                      child: Text(
+                        'No data available',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    );
+                  }
 
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 20, bottom: 28),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Degree heading with underline accent
-                            Container(
-                              padding: EdgeInsets.only(bottom: 6),
-                              decoration: BoxDecoration(
-                                border: Border(
-                                  bottom: BorderSide(
-                                    color: primaryBlue.withOpacity(0.5),
-                                    width: 3,
+                  final data = snapshot.data!;
+                  return FadeTransition(
+                    opacity: _fadeInAnimation,
+                    child: ListView.builder(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 0,
+                      ),
+                      itemCount: data.length,
+                      itemBuilder: (context, index) {
+                        final degree = data[index]['degree'];
+                        final courses = data[index]['courses'] as List<dynamic>;
+
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 20, bottom: 28),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Degree heading with underline accent
+                              Container(
+                                padding: EdgeInsets.only(bottom: 6),
+                                decoration: BoxDecoration(
+                                  border: Border(
+                                    bottom: BorderSide(
+                                      color: primaryBlue.withOpacity(0.5),
+                                      width: 3,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              child: Text(
-                                degree,
-                                style: TextStyle(
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF005BBB),
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 12),
-
-                            if (courses.isEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 12),
                                 child: Text(
-                                  "No Data available for $degree Degree",
+                                  degree,
                                   style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.grey.shade700,
-                                    fontStyle: FontStyle.italic,
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF005BBB),
                                   ),
                                 ),
-                              )
-                            else
-                              Wrap(
-                                spacing: 12,
-                                runSpacing: 12,
-                                children:
-                                    courses.map<Widget>((course) {
-                                      final courseName =
-                                          (course['course_name'] ?? '').trim();
-                                      final studentCount =
-                                          course['student_count'] ?? 0;
+                              ),
+                              SizedBox(height: 12),
 
-                                      return InkWell(
-                                        borderRadius: BorderRadius.circular(14),
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder:
-                                                  (_) =>
-                                                      AdminCourseDetailsScreen(
-                                                        degree: degree,
-                                                        courseName: courseName,
-                                                        status: _selectedStatus,
-                                                      ),
-                                            ),
-                                          );
-                                        },
-                                        child: Container(
-                                          constraints: BoxConstraints(
-                                            minWidth: 120,
-                                            maxWidth: 180,
+                              if (courses.isEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 12),
+                                  child: Text(
+                                    "No Data available for $degree Degree",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey.shade700,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                )
+                              else
+                                Wrap(
+                                  spacing: 12,
+                                  runSpacing: 12,
+                                  children:
+                                      courses.map<Widget>((course) {
+                                        final courseName =
+                                            (course['course_name'] ?? '')
+                                                .trim();
+                                        final studentCount =
+                                            course['student_count'] ?? 0;
+
+                                        return InkWell(
+                                          borderRadius: BorderRadius.circular(
+                                            14,
                                           ),
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                primaryBlue.withOpacity(0.7),
-                                                primaryBlue,
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (_) =>
+                                                        AdminCourseDetailsScreen(
+                                                          degree: degree,
+                                                          courseName:
+                                                              courseName,
+                                                          status:
+                                                              _selectedStatus,
+                                                        ),
+                                              ),
+                                            );
+                                          },
+                                          child: Container(
+                                            constraints: BoxConstraints(
+                                              minWidth: 120,
+                                              maxWidth: 180,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                colors: [
+                                                  primaryBlue.withOpacity(0.7),
+                                                  primaryBlue,
+                                                ],
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(14),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: primaryBlue
+                                                      .withOpacity(0.4),
+                                                  offset: Offset(0, 4),
+                                                  blurRadius: 8,
+                                                ),
                                               ],
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
                                             ),
-                                            borderRadius: BorderRadius.circular(
-                                              14,
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 14,
                                             ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: primaryBlue.withOpacity(
-                                                  0.4,
-                                                ),
-                                                offset: Offset(0, 4),
-                                                blurRadius: 8,
-                                              ),
-                                            ],
-                                          ),
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 14,
-                                          ),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                courseName,
-                                                style: TextStyle(
-                                                  fontSize: 17,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.white,
-                                                ),
-                                                maxLines: 2,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                              SizedBox(height: 6),
-                                              Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons.people,
-                                                    size: 18,
-                                                    color: Colors.white70,
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  courseName,
+                                                  style: TextStyle(
+                                                    fontSize: 17,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Colors.white,
                                                   ),
-                                                  SizedBox(width: 6),
-                                                  Text(
-                                                    '$studentCount students',
-                                                    style: TextStyle(
-                                                      fontSize: 14,
+                                                  maxLines: 2,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                                SizedBox(height: 6),
+                                                Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons.people,
+                                                      size: 18,
                                                       color: Colors.white70,
                                                     ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
+                                                    SizedBox(width: 6),
+                                                    Text(
+                                                      '$studentCount students',
+                                                      style: TextStyle(
+                                                        fontSize: 14,
+                                                        color: Colors.white70,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                      );
-                                    }).toList(),
-                              ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
+                                        );
+                                      }).toList(),
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         ],

@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/url.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 // --- Models ---
 
@@ -38,8 +37,9 @@ class User {
 
 class UserResponse {
   final List<User> users;
+  final List<String> cmNames;
 
-  UserResponse({required this.users});
+  UserResponse({required this.users, required this.cmNames});
 }
 
 // --- Service ---
@@ -50,22 +50,20 @@ class UserService {
   UserService({required this.baseUrl});
 
   Future<UserResponse> fetchUsers() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedName = prefs.getString('name') ?? 'Admin';
-    final response = await http.get(
-      Uri.parse('$baseUrl/myrank-cm/users?cm_name=$savedName'),
-    );
+    final response = await http.get(Uri.parse('$baseUrl/users'));
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = json.decode(response.body);
       // top-level list of all CM names for dropdown
-
+      final cmNames = List<String>.from(
+        data['myrank_cm_names'] as List<dynamic>,
+      );
       // list of users
       final usersJson = data['users'] as List<dynamic>;
       final users =
           usersJson
               .map((j) => User.fromJson(j as Map<String, dynamic>))
               .toList();
-      return UserResponse(users: users);
+      return UserResponse(users: users, cmNames: cmNames);
     } else {
       throw Exception('Failed to load users');
     }
@@ -93,15 +91,12 @@ class UserService {
     }
   }
 
-  Future<void> addUser(String email, String name) async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedName = prefs.getString('name') ?? 'Admin';
+  Future<void> addUser(String email, String name, String role) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/myrank-cm/adduser'),
+      Uri.parse('$baseUrl/admin/adduser'),
       headers: {'Content-Type': 'application/json'},
-      body: json.encode({'email': email, 'name': name, 'cmname': savedName}),
+      body: json.encode({'email': email, 'name': name, 'role': role}),
     );
-    print('email: $email, name: $name, cmname: $savedName');
     if (response.statusCode != 200) {
       throw Exception('Failed to add user');
     }
@@ -110,16 +105,18 @@ class UserService {
 
 // --- UI ---
 
-class CmManagementPage extends StatefulWidget {
-  const CmManagementPage({super.key});
+class ManagementPage extends StatefulWidget {
+  const ManagementPage({Key? key}) : super(key: key);
 
   @override
-  State<CmManagementPage> createState() => _UserManagementPageState();
+  _UserManagementPageState createState() => _UserManagementPageState();
 }
 
-class _UserManagementPageState extends State<CmManagementPage> {
+class _UserManagementPageState extends State<ManagementPage> {
   late Future<UserResponse> futureUserData;
   final UserService userService = UserService(baseUrl: baseurl);
+
+  static const Color primaryBlue = Color(0xFF00897B);
 
   List<User> _allUsers = [];
   List<User> _filteredUsers = [];
@@ -132,21 +129,48 @@ class _UserManagementPageState extends State<CmManagementPage> {
   String _searchQuery = '';
 
   late UserDataTableSource _dataSource;
-  static const Color primaryBlue = Color.fromARGB(255, 250, 110, 110);
 
   @override
   void initState() {
     super.initState();
-    futureUserData = userService.fetchUsers();
-    futureUserData.then((resp) {
+    _loadUsers();
+  }
+
+  Future<void> _loadUsers() async {
+    try {
+      final resp = await userService.fetchUsers();
       setState(() {
         _allUsers = resp.users;
         _filteredUsers = List.from(_allUsers);
+        _cmNames = resp.cmNames;
 
-        // No need to build _roles or _cmNames anymore
-        _dataSource = UserDataTableSource(users: _filteredUsers);
+        const knownRoles = [
+          'admin',
+          'college',
+          'doctor',
+          'not_assigned',
+          'myrank_user',
+          'myrank_cm',
+        ];
+        _roles = List<String>.from(knownRoles);
+        final extraRoles = _allUsers.map((u) => u.role).toSet();
+        for (var r in extraRoles) {
+          if (!_roles.contains(r)) _roles.add(r);
+        }
+
+        _dataSource = UserDataTableSource(
+          context: context,
+          users: _filteredUsers,
+          roles: _roles,
+          cmNames: _cmNames,
+          userService: userService,
+          onRoleUpdated: _loadUsers,
+          onCMNameUpdated: _loadUsers,
+        );
       });
-    });
+    } catch (e) {
+      // Handle error, maybe show SnackBar
+    }
   }
 
   void _sort<T>(
@@ -164,7 +188,15 @@ class _UserManagementPageState extends State<CmManagementPage> {
     setState(() {
       _sortColumnIndex = columnIndex;
       _sortAscending = ascending;
-      _dataSource = UserDataTableSource(users: _filteredUsers);
+      _dataSource = UserDataTableSource(
+        context: context,
+        users: _filteredUsers,
+        roles: _roles,
+        cmNames: _cmNames,
+        userService: userService,
+        onRoleUpdated: () => setState(() {}),
+        onCMNameUpdated: () => setState(() {}),
+      );
     });
   }
 
@@ -182,14 +214,22 @@ class _UserManagementPageState extends State<CmManagementPage> {
                 user.userId.toString().contains(query);
           }).toList();
 
-      _dataSource = UserDataTableSource(users: _filteredUsers);
+      _dataSource = UserDataTableSource(
+        context: context,
+        users: _filteredUsers,
+        roles: _roles,
+        cmNames: _cmNames,
+        userService: userService,
+        onRoleUpdated: () => setState(() {}),
+        onCMNameUpdated: () => setState(() {}),
+      );
     });
   }
 
   void _showAddUserDialog(BuildContext context) {
     final _emailController = TextEditingController();
     final _nameController = TextEditingController();
-    String _selectedRole = 'not_assigned';
+    String _selectedRole = 'doctor';
 
     showDialog(
       context: context,
@@ -207,6 +247,18 @@ class _UserManagementPageState extends State<CmManagementPage> {
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: 'Name'),
               ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Row(
+                  children: [
+                    const Text(
+                      'Role: ',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Text(_selectedRole),
+                  ],
+                ),
+              ),
             ],
           ),
           actions: [
@@ -216,18 +268,27 @@ class _UserManagementPageState extends State<CmManagementPage> {
                 final name = _nameController.text.trim();
                 if (email.isNotEmpty && name.isNotEmpty) {
                   try {
-                    await userService.addUser(email, name);
+                    await userService.addUser(email, name, _selectedRole);
                     final resp = await userService.fetchUsers();
                     setState(() {
                       _allUsers = resp.users;
                       _filteredUsers = List.from(resp.users);
+                      _cmNames = resp.cmNames;
 
                       final extraRoles = resp.users.map((u) => u.role).toSet();
                       for (var r in extraRoles) {
                         if (!_roles.contains(r)) _roles.add(r);
                       }
 
-                      _dataSource = UserDataTableSource(users: _filteredUsers);
+                      _dataSource = UserDataTableSource(
+                        context: context,
+                        users: _filteredUsers,
+                        roles: _roles,
+                        cmNames: _cmNames,
+                        userService: userService,
+                        onRoleUpdated: () => setState(() {}),
+                        onCMNameUpdated: () => setState(() {}),
+                      );
                     });
                     Navigator.of(context).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -280,51 +341,57 @@ class _UserManagementPageState extends State<CmManagementPage> {
                     ),
                     const SizedBox(height: 16),
                     Expanded(
-                      child: PaginatedDataTable(
-                        header: const Text('Users'),
-                        rowsPerPage: _rowsPerPage,
-                        availableRowsPerPage: const [5, 10, 20],
-                        onRowsPerPageChanged: (rows) {
-                          setState(() {
-                            if (rows != null) _rowsPerPage = rows;
-                          });
-                        },
-                        sortColumnIndex: _sortColumnIndex,
-                        sortAscending: _sortAscending,
-                        columns: [
-                          DataColumn(
-                            label: const Text('User ID'),
-                            numeric: true,
-                            onSort:
-                                (i, asc) => _sort<num>((u) => u.userId, i, asc),
-                          ),
-                          DataColumn(
-                            label: const Text('Name'),
-                            onSort:
-                                (i, asc) =>
-                                    _sort<String>((u) => u.name, i, asc),
-                          ),
-                          DataColumn(
-                            label: const Text('Email'),
-                            onSort:
-                                (i, asc) =>
-                                    _sort<String>((u) => u.email, i, asc),
-                          ),
-                          DataColumn(
-                            label: const Text('Role'),
-                            onSort:
-                                (i, asc) =>
-                                    _sort<String>((u) => u.role, i, asc),
-                          ),
-                          DataColumn(label: const Text('CM Name')),
-                          DataColumn(
-                            label: const Text('Created At'),
-                            onSort:
-                                (i, asc) =>
-                                    _sort<String>((u) => u.createdAt, i, asc),
-                          ),
-                        ],
-                        source: _dataSource,
+                      child: SingleChildScrollView(
+                        child: PaginatedDataTable(
+                          header: const Text('Users'),
+                          rowsPerPage: _rowsPerPage,
+                          availableRowsPerPage: const [5, 10, 20],
+                          onRowsPerPageChanged: (rows) {
+                            setState(() {
+                              if (rows != null) _rowsPerPage = rows;
+                            });
+                          },
+                          sortColumnIndex: _sortColumnIndex,
+                          sortAscending: _sortAscending,
+                          columns: [
+                            DataColumn(
+                              label: const Text('User ID'),
+                              numeric: true,
+                              onSort:
+                                  (i, asc) =>
+                                      _sort<num>((u) => u.userId, i, asc),
+                            ),
+                            DataColumn(
+                              label: const Text('Name'),
+                              onSort:
+                                  (i, asc) =>
+                                      _sort<String>((u) => u.name, i, asc),
+                            ),
+                            DataColumn(
+                              label: const Text('Email'),
+                              onSort:
+                                  (i, asc) =>
+                                      _sort<String>((u) => u.email, i, asc),
+                            ),
+                            DataColumn(
+                              label: const Text('Role'),
+                              onSort:
+                                  (i, asc) =>
+                                      _sort<String>((u) => u.role, i, asc),
+                            ),
+                            DataColumn(
+                              label: const Text('CM Name'),
+                              // no sort on this one
+                            ),
+                            DataColumn(
+                              label: const Text('Created At'),
+                              onSort:
+                                  (i, asc) =>
+                                      _sort<String>((u) => u.createdAt, i, asc),
+                            ),
+                          ],
+                          source: _dataSource,
+                        ),
                       ),
                     ),
                   ],
@@ -332,17 +399,31 @@ class _UserManagementPageState extends State<CmManagementPage> {
               ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddUserDialog(context),
-        backgroundColor: primaryBlue,
         child: const Icon(Icons.person_add),
+        backgroundColor: primaryBlue,
       ),
     );
   }
 }
 
 class UserDataTableSource extends DataTableSource {
+  final BuildContext context;
   final List<User> users;
+  final List<String> roles;
+  final List<String> cmNames;
+  final UserService userService;
+  final VoidCallback onRoleUpdated;
+  final VoidCallback onCMNameUpdated;
 
-  UserDataTableSource({required this.users});
+  UserDataTableSource({
+    required this.context,
+    required this.users,
+    required this.roles,
+    required this.cmNames,
+    required this.userService,
+    required this.onRoleUpdated,
+    required this.onCMNameUpdated,
+  });
 
   @override
   DataRow? getRow(int index) {
@@ -355,10 +436,8 @@ class UserDataTableSource extends DataTableSource {
         DataCell(Text(user.userId.toString())),
         DataCell(Text(user.name)),
         DataCell(Text(user.email)),
-        // 1) Show role as plain text:
         DataCell(Text(user.role)),
-        // 2) Show cmName as plain text (or empty string if null):
-        DataCell(Text(user.cmName.isNotEmpty ? user.cmName : '-')),
+        DataCell(Text(user.cmName)),
         DataCell(Text(user.createdAt)),
       ],
     );
@@ -366,8 +445,10 @@ class UserDataTableSource extends DataTableSource {
 
   @override
   bool get isRowCountApproximate => false;
+
   @override
   int get rowCount => users.length;
+
   @override
   int get selectedRowCount => 0;
 }

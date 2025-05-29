@@ -131,14 +131,17 @@ class _UserManagementPageState extends State<UserManagementPage> {
   @override
   void initState() {
     super.initState();
-    futureUserData = userService.fetchUsers();
-    futureUserData.then((resp) {
+    _loadUsers();
+  }
+
+  Future<void> _loadUsers() async {
+    try {
+      final resp = await userService.fetchUsers();
       setState(() {
         _allUsers = resp.users;
         _filteredUsers = List.from(_allUsers);
         _cmNames = resp.cmNames;
 
-        // build roles list (known + any extra)
         const knownRoles = [
           'admin',
           'college',
@@ -159,11 +162,13 @@ class _UserManagementPageState extends State<UserManagementPage> {
           roles: _roles,
           cmNames: _cmNames,
           userService: userService,
-          onRoleUpdated: () => setState(() {}),
-          onCMNameUpdated: () => setState(() {}),
+          onRoleUpdated: _loadUsers,
+          onCMNameUpdated: _loadUsers,
         );
       });
-    });
+    } catch (e) {
+      // Handle error, maybe show SnackBar
+    }
   }
 
   void _sort<T>(
