@@ -91,63 +91,129 @@ class AdminHomePage extends StatelessWidget {
       ),
       drawer: Drawer(
         child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              DrawerHeader(
-                decoration: const BoxDecoration(color: primaryBlue),
-                child: const Center(
-                  child: Text(
-                    'Admin Menu',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                DrawerHeader(
+                  decoration: const BoxDecoration(color: primaryBlue),
+                  child: const Center(
+                    child: Text(
+                      'Admin Menu',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              ListTile(
-                leading: Icon(Icons.home_filled, color: primaryBlue),
-                title: const Text('Home'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => AdminHomePage()),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.group, color: primaryBlue),
-                title: const Text('Manage Users'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => UserManagementPage(),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.school, color: primaryBlue),
-                title: const Text('College Interests'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => InterestsPage()),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(
-                  Icons.format_align_left_sharp,
-                  color: primaryBlue,
+                ListTile(
+                  leading: Icon(Icons.home_filled, color: primaryBlue),
+                  title: const Text('Home'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AdminHomePage()),
+                    );
+                  },
                 ),
-                title: const Text('New Student Form'),
+                ListTile(
+                  leading: Icon(Icons.group, color: primaryBlue),
+                  title: const Text('Manage Users'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UserManagementPage(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.school, color: primaryBlue),
+                  title: const Text('College Interests'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => InterestsPage()),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(
+                    Icons.format_align_left_sharp,
+                    color: primaryBlue,
+                  ),
+                  title: const Text('New Student Form'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AdminApplicationForm(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.person, color: primaryBlue),
+                  title: const Text('Search Student'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AdminEditForm()),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
+                  title: const Text('Available Doctors'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AdminCollegeDegreesScreen(),
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(height: 24), // or whatever spacing you want
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.logout, color: Colors.red),
+                  title: const Text(
+                    'Logout',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  onTap: () {
+                    _logout(context);
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Welcome, Admin!',
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 30),
+              _buildCard(
+                context,
+                title: 'Create New Student Form',
+                icon: Icons.analytics,
+                subtitle: 'Add new student application',
                 onTap: () {
                   Navigator.push(
                     context,
@@ -157,9 +223,12 @@ class AdminHomePage extends StatelessWidget {
                   );
                 },
               ),
-              ListTile(
-                leading: Icon(Icons.person, color: primaryBlue),
-                title: const Text('Search Student'),
+              const SizedBox(height: 20),
+              _buildCard(
+                context,
+                title: 'Search and Find Student Details',
+                icon: Icons.search,
+                subtitle: 'Locate student information',
                 onTap: () {
                   Navigator.push(
                     context,
@@ -167,9 +236,12 @@ class AdminHomePage extends StatelessWidget {
                   );
                 },
               ),
-              ListTile(
-                leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
-                title: const Text('Available Doctors'),
+              const SizedBox(height: 20),
+              _buildCard(
+                context,
+                title: 'Available Doctors',
+                icon: Icons.medical_services_outlined,
+                subtitle: 'List of Doctors in Particular Courses',
                 onTap: () {
                   Navigator.push(
                     context,
@@ -179,75 +251,8 @@ class AdminHomePage extends StatelessWidget {
                   );
                 },
               ),
-              const Spacer(),
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text(
-                  'Logout',
-                  style: TextStyle(color: Colors.red),
-                ),
-                onTap: () {
-                  _logout(context);
-                },
-              ),
             ],
           ),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Welcome, Admin!',
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 30),
-            _buildCard(
-              context,
-              title: 'Create New Student Form',
-              icon: Icons.analytics,
-              subtitle: 'Add new student application',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AdminApplicationForm(),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 20),
-            _buildCard(
-              context,
-              title: 'Search and Find Student Details',
-              icon: Icons.search,
-              subtitle: 'Locate student information',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AdminEditForm()),
-                );
-              },
-            ),
-            const SizedBox(height: 20),
-            _buildCard(
-              context,
-              title: 'Available Doctors',
-              icon: Icons.medical_services_outlined,
-              subtitle: 'List of Doctors in Particular Courses',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AdminCollegeDegreesScreen(),
-                  ),
-                );
-              },
-            ),
-          ],
         ),
       ),
     );

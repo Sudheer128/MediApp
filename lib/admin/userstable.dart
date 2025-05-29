@@ -339,54 +339,57 @@ class _UserManagementPageState extends State<UserManagementPage> {
                     ),
                     const SizedBox(height: 16),
                     Expanded(
-                      child: PaginatedDataTable(
-                        header: const Text('Users'),
-                        rowsPerPage: _rowsPerPage,
-                        availableRowsPerPage: const [5, 10, 20],
-                        onRowsPerPageChanged: (rows) {
-                          setState(() {
-                            if (rows != null) _rowsPerPage = rows;
-                          });
-                        },
-                        sortColumnIndex: _sortColumnIndex,
-                        sortAscending: _sortAscending,
-                        columns: [
-                          DataColumn(
-                            label: const Text('User ID'),
-                            numeric: true,
-                            onSort:
-                                (i, asc) => _sort<num>((u) => u.userId, i, asc),
-                          ),
-                          DataColumn(
-                            label: const Text('Name'),
-                            onSort:
-                                (i, asc) =>
-                                    _sort<String>((u) => u.name, i, asc),
-                          ),
-                          DataColumn(
-                            label: const Text('Email'),
-                            onSort:
-                                (i, asc) =>
-                                    _sort<String>((u) => u.email, i, asc),
-                          ),
-                          DataColumn(
-                            label: const Text('Role'),
-                            onSort:
-                                (i, asc) =>
-                                    _sort<String>((u) => u.role, i, asc),
-                          ),
-                          DataColumn(
-                            label: const Text('CM Name'),
-                            // no sort on this one
-                          ),
-                          DataColumn(
-                            label: const Text('Created At'),
-                            onSort:
-                                (i, asc) =>
-                                    _sort<String>((u) => u.createdAt, i, asc),
-                          ),
-                        ],
-                        source: _dataSource,
+                      child: SingleChildScrollView(
+                        child: PaginatedDataTable(
+                          header: const Text('Users'),
+                          rowsPerPage: _rowsPerPage,
+                          availableRowsPerPage: const [5, 10, 20],
+                          onRowsPerPageChanged: (rows) {
+                            setState(() {
+                              if (rows != null) _rowsPerPage = rows;
+                            });
+                          },
+                          sortColumnIndex: _sortColumnIndex,
+                          sortAscending: _sortAscending,
+                          columns: [
+                            DataColumn(
+                              label: const Text('User ID'),
+                              numeric: true,
+                              onSort:
+                                  (i, asc) =>
+                                      _sort<num>((u) => u.userId, i, asc),
+                            ),
+                            DataColumn(
+                              label: const Text('Name'),
+                              onSort:
+                                  (i, asc) =>
+                                      _sort<String>((u) => u.name, i, asc),
+                            ),
+                            DataColumn(
+                              label: const Text('Email'),
+                              onSort:
+                                  (i, asc) =>
+                                      _sort<String>((u) => u.email, i, asc),
+                            ),
+                            DataColumn(
+                              label: const Text('Role'),
+                              onSort:
+                                  (i, asc) =>
+                                      _sort<String>((u) => u.role, i, asc),
+                            ),
+                            DataColumn(
+                              label: const Text('CM Name'),
+                              // no sort on this one
+                            ),
+                            DataColumn(
+                              label: const Text('Created At'),
+                              onSort:
+                                  (i, asc) =>
+                                      _sort<String>((u) => u.createdAt, i, asc),
+                            ),
+                          ],
+                          source: _dataSource,
+                        ),
                       ),
                     ),
                   ],

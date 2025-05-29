@@ -1,20 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:medicalapp/admin/adminCollegedocList.dart';
 import 'package:medicalapp/myrank_cm/CmusersTable.dart';
 import 'package:medicalapp/myrank_cm/cmCollegeDocList.dart';
 import 'package:medicalapp/myrank_cm/cmForm.dart';
 import 'package:medicalapp/myrank_cm/collegeInterests.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // add this import
-import 'package:medicalapp/admin/adminintreststatus.dart';
-import 'package:medicalapp/admin/form_page.dart';
-import 'package:medicalapp/admin/searchstudent.dart';
-import 'package:medicalapp/admin/userstable.dart';
-
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
-import 'package:medicalapp/myrankUser/userSearchStudent.dart';
-import 'package:medicalapp/myrankUser/useredit_form.dart';
-import 'package:medicalapp/myrankUser/userform_page.dart';
 
 class CmHomePage extends StatefulWidget {
   const CmHomePage({super.key});
@@ -114,62 +105,120 @@ class _UserHomePageState extends State<CmHomePage> {
       ),
       drawer: Drawer(
         child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              DrawerHeader(
-                decoration: const BoxDecoration(color: primaryBlue),
-                child: const Center(
-                  child: Text(
-                    'Admin Menu',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                DrawerHeader(
+                  decoration: const BoxDecoration(color: primaryBlue),
+                  child: const Center(
+                    child: Text(
+                      'Admin Menu',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              ListTile(
-                leading: Icon(Icons.home_filled, color: primaryBlue),
-                title: const Text('Home'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => CmHomePage()),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.school, color: primaryBlue),
-                title: const Text('Manage Users'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => CmManagementPage()),
-                  );
-                },
-              ),
-
-              ListTile(
-                leading: Icon(Icons.school, color: primaryBlue),
-                title: const Text('College Interests'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => CmInterestsPage()),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(
-                  Icons.format_align_left_sharp,
-                  color: primaryBlue,
+                ListTile(
+                  leading: Icon(Icons.home_filled, color: primaryBlue),
+                  title: const Text('Home'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => CmHomePage()),
+                    );
+                  },
                 ),
-                title: const Text('New Student Form'),
+                ListTile(
+                  leading: Icon(Icons.school, color: primaryBlue),
+                  title: const Text('Manage Users'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CmManagementPage(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.school, color: primaryBlue),
+                  title: const Text('College Interests'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CmInterestsPage(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(
+                    Icons.format_align_left_sharp,
+                    color: primaryBlue,
+                  ),
+                  title: const Text('New Student Form'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CmApplicationForm(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
+                  title: const Text('Available Doctors'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CmCollegeDegreesScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.logout, color: Colors.red),
+                  title: const Text(
+                    'Logout',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  onTap: () {
+                    _logout(context);
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Welcome, Admin!',
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 30),
+              _buildCard(
+                context,
+                title: 'Create New Student Form',
+                icon: Icons.analytics,
+                subtitle: 'Add new student application',
                 onTap: () {
                   Navigator.push(
                     context,
@@ -180,9 +229,12 @@ class _UserHomePageState extends State<CmHomePage> {
                 },
               ),
 
-              ListTile(
-                leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
-                title: const Text('Available Doctors'),
+              const SizedBox(height: 20),
+              _buildCard(
+                context,
+                title: 'Available Doctors',
+                icon: Icons.medical_services_outlined,
+                subtitle: 'List of Doctors in Particular Courses',
                 onTap: () {
                   Navigator.push(
                     context,
@@ -192,61 +244,8 @@ class _UserHomePageState extends State<CmHomePage> {
                   );
                 },
               ),
-              const Spacer(),
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text(
-                  'Logout',
-                  style: TextStyle(color: Colors.red),
-                ),
-                onTap: () {
-                  _logout(context);
-                },
-              ),
             ],
           ),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Welcome, Admin!',
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 30),
-            _buildCard(
-              context,
-              title: 'Create New Student Form',
-              icon: Icons.analytics,
-              subtitle: 'Add new student application',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => CmApplicationForm()),
-                );
-              },
-            ),
-
-            const SizedBox(height: 20),
-            _buildCard(
-              context,
-              title: 'Available Doctors',
-              icon: Icons.medical_services_outlined,
-              subtitle: 'List of Doctors in Particular Courses',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CmCollegeDegreesScreen(),
-                  ),
-                );
-              },
-            ),
-          ],
         ),
       ),
     );
