@@ -617,7 +617,7 @@ class _ApplicationFormState extends State<ApplicationForm> {
                     title: Text('Home'),
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.push(
+                      Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
                           builder: (context) => DoctorDashboardApp(),

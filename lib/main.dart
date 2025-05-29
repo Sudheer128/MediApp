@@ -12,11 +12,11 @@ void main() async {
     // Ensure Firebase Authentication persistence is set
     await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
   }
-  runApp(MyApp());
+  runApp(MedApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MedApp extends StatelessWidget {
+  const MedApp({super.key});
 
   @override
   Widget build(BuildContext context) {

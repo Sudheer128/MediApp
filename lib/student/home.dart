@@ -14,6 +14,7 @@ class DoctorDashboardApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Doctor Dashboard',
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -121,7 +122,9 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to update status: ${response.statusCode}'),
+            content: Text(
+              'Failed to update status: ${response.statusCode}, Create your profile first',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -335,7 +338,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
                     title: Text('Home'),
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.push(
+                      Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
                           builder: (context) => DoctorDashboardApp(),
