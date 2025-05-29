@@ -1282,10 +1282,22 @@ class _ApplicationFormState extends State<CmApplicationForm> {
                   Expanded(
                     child: TextFormField(
                       controller: education.toDateController,
-                      decoration: const InputDecoration(labelText: 'To Date'),
+                      decoration: InputDecoration(
+                        labelText: 'To Date',
+                        contentPadding: EdgeInsets.fromLTRB(12, 20, 12, 36),
+                        errorStyle: TextStyle(
+                          color: Colors.red.shade700,
+                          fontSize: 12,
+                          height: 1.2,
+                          // Allow error text to wrap to 2 or 3 lines
+                          // Unfortunately errorStyle doesn't have maxLines directly,
+                          // so you have to wrap TextFormField with Flexible or Expanded
+                        ),
+                      ),
                       readOnly: true,
                       onTap: () => _pickDate(education.toDateController),
                       validator: (value) {
+                        // your existing validator logic
                         if (value == null || value.isEmpty) {
                           return 'Please select to date';
                         }
@@ -1313,7 +1325,8 @@ class _ApplicationFormState extends State<CmApplicationForm> {
 
                           if (education.type == 'MBBS' &&
                               durationInYears < 5.5) {
-                            return 'Time period should be at least 5.5 years';
+                            // Use a shorter message or include line breaks if needed
+                            return 'Time period should be\nat least 5.5 years';
                           }
 
                           final requiredDuration = getSelectedCourseDuration(
@@ -1321,13 +1334,9 @@ class _ApplicationFormState extends State<CmApplicationForm> {
                           );
                           if (requiredDuration > 0 &&
                               durationInYears < requiredDuration) {
-                            return 'Time period should be at least $requiredDuration years';
+                            return 'Time period should be\nat least $requiredDuration years';
                           }
                         } catch (e) {
-                          print('Date parsing error in validator: $e');
-                          print(
-                            'fromDateText="$fromDateText", toDateText="$value"',
-                          );
                           return 'Invalid date format';
                         }
 

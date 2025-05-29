@@ -4,8 +4,10 @@ import 'package:http/http.dart' as http;
 import 'package:medicalapp/admin/adminintreststatus.dart';
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
+import 'package:medicalapp/myrankUser/UsersTable.dart';
 import 'package:medicalapp/myrankUser/homepage.dart';
 import 'package:medicalapp/myrankUser/studentList.dart';
+import 'package:medicalapp/myrankUser/userSearchStudent.dart';
 import 'package:medicalapp/myrankUser/userform_page.dart';
 import 'package:medicalapp/myrank_cm/cmForm.dart';
 import 'package:medicalapp/myrank_cm/home_page.dart';
@@ -119,6 +121,17 @@ class _DegreesScreenState extends State<UserCollegeDegreesScreen>
                 },
               ),
               ListTile(
+                leading: Icon(Icons.school, color: UserHomePage.primaryBlue),
+                title: const Text('Manage Users'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ManagementPage()),
+                  );
+                },
+              ),
+              ListTile(
                 leading: Icon(Icons.school, color: primaryBlue),
                 title: const Text('College Interests'),
                 onTap: () {
@@ -139,6 +152,16 @@ class _DegreesScreenState extends State<UserCollegeDegreesScreen>
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => UserApplicationForm()),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.person, color: UserHomePage.primaryBlue),
+                title: const Text('Search Student'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => UserEditForm()),
                   );
                 },
               ),

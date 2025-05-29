@@ -13,7 +13,7 @@ class PdfViewerPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(title)),
       body: SfPdfViewer.network(
-        'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+        url,
         onDocumentLoaded: (details) {
           print('PDF loaded with ${details} pages');
         },
