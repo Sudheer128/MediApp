@@ -29,9 +29,12 @@ class _DegreesScreenState extends State<CmCollegeDegreesScreen>
   // Track selected status: 1 = Active, 0 = Inactive
   int _selectedStatus = 1;
 
+  String? userName;
+
   @override
   void initState() {
     super.initState();
+    _loadUserName();
     degreesFuture = fetchDegrees(status: _selectedStatus);
     _animationController = AnimationController(
       vsync: this,
@@ -41,6 +44,14 @@ class _DegreesScreenState extends State<CmCollegeDegreesScreen>
       parent: _animationController,
       curve: Curves.easeIn,
     );
+  }
+
+  Future<void> _loadUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedName = prefs.getString('name') ?? 'Admin'; // key matches here
+    setState(() {
+      userName = savedName;
+    });
   }
 
   @override
@@ -100,15 +111,26 @@ class _DegreesScreenState extends State<CmCollegeDegreesScreen>
             children: [
               DrawerHeader(
                 decoration: const BoxDecoration(color: primaryBlue),
-                child: const Center(
-                  child: Text(
-                    'Admin Menu',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'MyRank CM',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Welcome, $userName',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               ListTile(

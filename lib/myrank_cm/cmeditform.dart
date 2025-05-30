@@ -17,6 +17,7 @@ import 'package:medicalapp/myrank_cm/collegeInterests.dart';
 import 'package:medicalapp/myrank_cm/home_page.dart';
 import 'package:medicalapp/myrank_cm/search.dart';
 import 'package:medicalapp/url.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CmEditApplicationForm extends StatefulWidget {
   final Map<String, dynamic>? existingData;
@@ -94,6 +95,8 @@ class _EditApplicationFormState extends State<CmEditApplicationForm> {
   File? _resumeFile;
   String? _resumeFileName;
 
+  String? userName;
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -112,10 +115,19 @@ class _EditApplicationFormState extends State<CmEditApplicationForm> {
   @override
   void initState() {
     super.initState();
+    _loadUserName();
     fetchCourses().then((_) {
       if (widget.existingData != null) {
         _populateFormWithExistingData(widget.existingData!);
       }
+    });
+  }
+
+  Future<void> _loadUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedName = prefs.getString('name') ?? 'Admin'; // key matches here
+    setState(() {
+      userName = savedName;
     });
   }
 
@@ -642,15 +654,26 @@ class _EditApplicationFormState extends State<CmEditApplicationForm> {
                   children: [
                     DrawerHeader(
                       decoration: const BoxDecoration(color: primaryBlue),
-                      child: const Center(
-                        child: Text(
-                          'Admin Menu',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'MyRank CM',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Welcome, $userName',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     ListTile(

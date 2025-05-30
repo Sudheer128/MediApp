@@ -96,6 +96,8 @@ class _ApplicationFormState extends State<CmApplicationForm> {
   File? _resumeFile;
   String? _resumeFileName;
 
+  String? userName;
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -117,6 +119,15 @@ class _ApplicationFormState extends State<CmApplicationForm> {
   void initState() {
     super.initState();
     fetchCourses();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedName = prefs.getString('name') ?? 'Admin'; // key matches here
+    setState(() {
+      userName = savedName;
+    });
   }
 
   Future<void> _pickDate(TextEditingController controller) async {
@@ -581,15 +592,26 @@ class _ApplicationFormState extends State<CmApplicationForm> {
             children: [
               DrawerHeader(
                 decoration: const BoxDecoration(color: primaryBlue),
-                child: const Center(
-                  child: Text(
-                    'Admin Menu',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'MyRank CM',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Welcome, $userName',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               ListTile(

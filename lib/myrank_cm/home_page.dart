@@ -112,15 +112,26 @@ class _UserHomePageState extends State<CmHomePage> {
               children: [
                 DrawerHeader(
                   decoration: const BoxDecoration(color: primaryBlue),
-                  child: const Center(
-                    child: Text(
-                      'Admin Menu',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'MyRank CM',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Welcome, $userName',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 ListTile(
