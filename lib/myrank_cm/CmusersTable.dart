@@ -59,17 +59,13 @@ class UserService {
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = json.decode(response.body);
 
-      // Handle null or missing users key gracefully
       final usersJson = data['users'];
       if (usersJson == null) {
-        // Return empty list if 'users' is null
         return UserResponse(users: []);
       }
 
       final users =
-          (usersJson as List<dynamic>)
-              .map((j) => User.fromJson(j as Map<String, dynamic>))
-              .toList();
+          (usersJson as List<dynamic>).map((j) => User.fromJson(j)).toList();
 
       return UserResponse(users: users);
     } else {
@@ -107,7 +103,6 @@ class UserService {
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'email': email, 'name': name, 'cmname': savedName}),
     );
-    print('email: $email, name: $name, cmname: $savedName');
     if (response.statusCode != 200) {
       throw Exception('Failed to add user');
     }
@@ -120,38 +115,42 @@ class CmManagementPage extends StatefulWidget {
   const CmManagementPage({super.key});
 
   @override
-  State<CmManagementPage> createState() => _UserManagementPageState();
+  State<CmManagementPage> createState() => _CmManagementPageState();
 }
 
-class _UserManagementPageState extends State<CmManagementPage> {
+class _CmManagementPageState extends State<CmManagementPage> {
   late Future<UserResponse> futureUserData;
   final UserService userService = UserService(baseUrl: baseurl);
 
   List<User> _allUsers = [];
   List<User> _filteredUsers = [];
-  List<String> _roles = [];
-  List<String> _cmNames = [];
 
-  int _rowsPerPage = PaginatedDataTable.defaultRowsPerPage;
-  int _sortColumnIndex = 0;
+  int _rowsPerPage = 10;
+  int _currentPage = 0;
+
+  int? _sortColumnIndex;
   bool _sortAscending = true;
+
   String _searchQuery = '';
 
-  late UserDataTableSource _dataSource;
+  late ScrollController _scrollController;
+
   static const Color primaryBlue = Color.fromARGB(255, 250, 110, 110);
 
   @override
   void initState() {
     super.initState();
-    futureUserData = userService.fetchUsers();
-    futureUserData.then((resp) {
-      setState(() {
-        _allUsers = resp.users;
-        _filteredUsers = List.from(_allUsers);
+    _scrollController = ScrollController();
+    _loadUsers();
+  }
 
-        // No need to build _roles or _cmNames anymore
-        _dataSource = UserDataTableSource(users: _filteredUsers);
-      });
+  Future<void> _loadUsers() async {
+    futureUserData = userService.fetchUsers();
+    final resp = await futureUserData;
+    setState(() {
+      _allUsers = resp.users;
+      _filteredUsers = List.from(_allUsers);
+      _currentPage = 0;
     });
   }
 
@@ -170,7 +169,7 @@ class _UserManagementPageState extends State<CmManagementPage> {
     setState(() {
       _sortColumnIndex = columnIndex;
       _sortAscending = ascending;
-      _dataSource = UserDataTableSource(users: _filteredUsers);
+      _currentPage = 0; // Reset page on sort
     });
   }
 
@@ -187,15 +186,56 @@ class _UserManagementPageState extends State<CmManagementPage> {
                 user.createdAt.toLowerCase().contains(query) ||
                 user.userId.toString().contains(query);
           }).toList();
-
-      _dataSource = UserDataTableSource(users: _filteredUsers);
+      _currentPage = 0; // Reset page on filter
     });
+  }
+
+  int get _totalPages => (_filteredUsers.length / _rowsPerPage).ceil();
+
+  List<User> get _currentPageItems {
+    final start = _currentPage * _rowsPerPage;
+    final end = start + _rowsPerPage;
+    return _filteredUsers.sublist(
+      start,
+      end > _filteredUsers.length ? _filteredUsers.length : end,
+    );
+  }
+
+  void _goToFirstPage() {
+    if (_currentPage != 0) {
+      setState(() {
+        _currentPage = 0;
+      });
+    }
+  }
+
+  void _goToPreviousPage() {
+    if (_currentPage > 0) {
+      setState(() {
+        _currentPage--;
+      });
+    }
+  }
+
+  void _goToNextPage() {
+    if (_currentPage < _totalPages - 1) {
+      setState(() {
+        _currentPage++;
+      });
+    }
+  }
+
+  void _goToLastPage() {
+    if (_currentPage != _totalPages - 1) {
+      setState(() {
+        _currentPage = _totalPages - 1;
+      });
+    }
   }
 
   void _showAddUserDialog(BuildContext context) {
     final _emailController = TextEditingController();
     final _nameController = TextEditingController();
-    String _selectedRole = 'not_assigned';
 
     showDialog(
       context: context,
@@ -223,18 +263,7 @@ class _UserManagementPageState extends State<CmManagementPage> {
                 if (email.isNotEmpty && name.isNotEmpty) {
                   try {
                     await userService.addUser(email, name);
-                    final resp = await userService.fetchUsers();
-                    setState(() {
-                      _allUsers = resp.users;
-                      _filteredUsers = List.from(resp.users);
-
-                      final extraRoles = resp.users.map((u) => u.role).toSet();
-                      for (var r in extraRoles) {
-                        if (!_roles.contains(r)) _roles.add(r);
-                      }
-
-                      _dataSource = UserDataTableSource(users: _filteredUsers);
-                    });
+                    await _loadUsers();
                     Navigator.of(context).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('User added successfully')),
@@ -259,6 +288,12 @@ class _UserManagementPageState extends State<CmManagementPage> {
   }
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -275,10 +310,6 @@ class _UserManagementPageState extends State<CmManagementPage> {
           } else if (!snapshot.hasData || snapshot.data!.users.isEmpty) {
             return const Center(child: Text('No data available'));
           } else {
-            _allUsers = snapshot.data!.users;
-            _filteredUsers = List.from(_allUsers);
-            _dataSource = UserDataTableSource(users: _filteredUsers);
-
             return Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -295,49 +326,121 @@ class _UserManagementPageState extends State<CmManagementPage> {
                   ),
                   const SizedBox(height: 16),
                   Expanded(
-                    child: PaginatedDataTable(
-                      header: const Text('Users'),
-                      rowsPerPage: _rowsPerPage,
-                      availableRowsPerPage: const [5, 10, 20],
-                      onRowsPerPageChanged: (rows) {
-                        setState(() {
-                          if (rows != null) _rowsPerPage = rows;
-                        });
-                      },
-                      sortColumnIndex: _sortColumnIndex,
-                      sortAscending: _sortAscending,
-                      columns: [
-                        DataColumn(
-                          label: const Text('User ID'),
-                          numeric: true,
-                          onSort:
-                              (i, asc) => _sort<num>((u) => u.userId, i, asc),
+                    child: Scrollbar(
+                      thumbVisibility: true,
+                      controller: _scrollController,
+                      child: SingleChildScrollView(
+                        controller: _scrollController,
+                        scrollDirection: Axis.horizontal,
+                        child: DataTable(
+                          sortColumnIndex: _sortColumnIndex,
+                          sortAscending: _sortAscending,
+                          columns: [
+                            DataColumn(
+                              label: const Text('User ID'),
+                              numeric: true,
+                              onSort:
+                                  (i, asc) =>
+                                      _sort<num>((u) => u.userId, i, asc),
+                            ),
+                            DataColumn(
+                              label: const Text('Name'),
+                              onSort:
+                                  (i, asc) =>
+                                      _sort<String>((u) => u.name, i, asc),
+                            ),
+                            DataColumn(
+                              label: const Text('Email'),
+                              onSort:
+                                  (i, asc) =>
+                                      _sort<String>((u) => u.email, i, asc),
+                            ),
+                            DataColumn(
+                              label: const Text('Role'),
+                              onSort:
+                                  (i, asc) =>
+                                      _sort<String>((u) => u.role, i, asc),
+                            ),
+                            DataColumn(label: const Text('CM Name')),
+                            DataColumn(
+                              label: const Text('Created At'),
+                              onSort:
+                                  (i, asc) =>
+                                      _sort<String>((u) => u.createdAt, i, asc),
+                            ),
+                          ],
+                          rows:
+                              _currentPageItems.map((user) {
+                                return DataRow(
+                                  cells: [
+                                    DataCell(Text(user.userId.toString())),
+                                    DataCell(Text(user.name)),
+                                    DataCell(Text(user.email)),
+                                    DataCell(Text(user.role)),
+                                    DataCell(
+                                      Text(
+                                        user.cmName.isNotEmpty
+                                            ? user.cmName
+                                            : '-',
+                                      ),
+                                    ),
+                                    DataCell(Text(user.createdAt)),
+                                  ],
+                                );
+                              }).toList(),
                         ),
-                        DataColumn(
-                          label: const Text('Name'),
-                          onSort:
-                              (i, asc) => _sort<String>((u) => u.name, i, asc),
-                        ),
-                        DataColumn(
-                          label: const Text('Email'),
-                          onSort:
-                              (i, asc) => _sort<String>((u) => u.email, i, asc),
-                        ),
-                        DataColumn(
-                          label: const Text('Role'),
-                          onSort:
-                              (i, asc) => _sort<String>((u) => u.role, i, asc),
-                        ),
-                        DataColumn(label: const Text('CM Name')),
-                        DataColumn(
-                          label: const Text('Created At'),
-                          onSort:
-                              (i, asc) =>
-                                  _sort<String>((u) => u.createdAt, i, asc),
-                        ),
-                      ],
-                      source: _dataSource,
+                      ),
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: const Text('<|', style: TextStyle(fontSize: 18)),
+                        onPressed: _currentPage == 0 ? null : _goToFirstPage,
+                      ),
+                      IconButton(
+                        icon: const Text('<', style: TextStyle(fontSize: 18)),
+                        onPressed: _currentPage == 0 ? null : _goToPreviousPage,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Text('Page ${_currentPage + 1} of $_totalPages'),
+                      ),
+                      IconButton(
+                        icon: const Text('>', style: TextStyle(fontSize: 18)),
+                        onPressed:
+                            _currentPage >= _totalPages - 1
+                                ? null
+                                : _goToNextPage,
+                      ),
+                      IconButton(
+                        icon: const Text('>|', style: TextStyle(fontSize: 18)),
+                        onPressed:
+                            _currentPage >= _totalPages - 1
+                                ? null
+                                : _goToLastPage,
+                      ),
+                      const SizedBox(width: 20),
+                      DropdownButton<int>(
+                        value: _rowsPerPage,
+                        items: const [
+                          DropdownMenuItem(value: 5, child: Text('5 rows')),
+                          DropdownMenuItem(value: 10, child: Text('10 rows')),
+                          DropdownMenuItem(value: 20, child: Text('20 rows')),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _rowsPerPage = value;
+                              _currentPage =
+                                  0; // Reset page when rows per page changes
+                            });
+                          }
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -352,37 +455,4 @@ class _UserManagementPageState extends State<CmManagementPage> {
       ),
     );
   }
-}
-
-class UserDataTableSource extends DataTableSource {
-  final List<User> users;
-
-  UserDataTableSource({required this.users});
-
-  @override
-  DataRow? getRow(int index) {
-    if (index >= users.length) return null;
-    final user = users[index];
-
-    return DataRow.byIndex(
-      index: index,
-      cells: [
-        DataCell(Text(user.userId.toString())),
-        DataCell(Text(user.name)),
-        DataCell(Text(user.email)),
-        // 1) Show role as plain text:
-        DataCell(Text(user.role)),
-        // 2) Show cmName as plain text (or empty string if null):
-        DataCell(Text(user.cmName.isNotEmpty ? user.cmName : '-')),
-        DataCell(Text(user.createdAt)),
-      ],
-    );
-  }
-
-  @override
-  bool get isRowCountApproximate => false;
-  @override
-  int get rowCount => users.length;
-  @override
-  int get selectedRowCount => 0;
 }
