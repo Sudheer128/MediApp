@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:medicalapp/myrank_cm/studentdetails.dart';
 import 'package:medicalapp/url.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -392,6 +393,20 @@ class _CmManagementPageState extends State<CmManagementPage> {
                       ),
                     ),
                   ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: SizedBox(
+                      width: 56, // default FAB width is 56
+                      height: 56, // default FAB height is 56
+                      child: FloatingActionButton(
+                        onPressed: () => _showAddUserDialog(context),
+                        child: const Icon(Icons.person_add),
+                        backgroundColor: kPrimaryColor,
+                        heroTag: 'addUserButton',
+                        elevation: 4,
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -422,24 +437,6 @@ class _CmManagementPageState extends State<CmManagementPage> {
                                 ? null
                                 : _goToLastPage,
                       ),
-                      const SizedBox(width: 20),
-                      DropdownButton<int>(
-                        value: _rowsPerPage,
-                        items: const [
-                          DropdownMenuItem(value: 5, child: Text('5 rows')),
-                          DropdownMenuItem(value: 10, child: Text('10 rows')),
-                          DropdownMenuItem(value: 20, child: Text('20 rows')),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _rowsPerPage = value;
-                              _currentPage =
-                                  0; // Reset page when rows per page changes
-                            });
-                          }
-                        },
-                      ),
                     ],
                   ),
                 ],
@@ -447,11 +444,6 @@ class _CmManagementPageState extends State<CmManagementPage> {
             );
           }
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddUserDialog(context),
-        backgroundColor: primaryBlue,
-        child: const Icon(Icons.person_add),
       ),
     );
   }

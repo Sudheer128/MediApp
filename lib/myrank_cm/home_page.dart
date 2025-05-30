@@ -3,6 +3,7 @@ import 'package:medicalapp/myrank_cm/CmusersTable.dart';
 import 'package:medicalapp/myrank_cm/cmCollegeDocList.dart';
 import 'package:medicalapp/myrank_cm/cmForm.dart';
 import 'package:medicalapp/myrank_cm/collegeInterests.dart';
+import 'package:medicalapp/myrank_cm/search.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // add this import
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
@@ -134,7 +135,10 @@ class _UserHomePageState extends State<CmHomePage> {
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.school, color: primaryBlue),
+                  leading: Icon(
+                    Icons.manage_accounts_outlined,
+                    color: primaryBlue,
+                  ),
                   title: const Text('Manage Users'),
                   onTap: () {
                     Navigator.pop(context);
@@ -147,7 +151,7 @@ class _UserHomePageState extends State<CmHomePage> {
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.school, color: primaryBlue),
+                  leading: Icon(Icons.group, color: primaryBlue),
                   title: const Text('College Interests'),
                   onTap: () {
                     Navigator.pop(context);
@@ -156,6 +160,17 @@ class _UserHomePageState extends State<CmHomePage> {
                       MaterialPageRoute(
                         builder: (context) => CmInterestsPage(),
                       ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.person, color: primaryBlue),
+                  title: const Text('Search Students'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => CmSearchPage()),
                     );
                   },
                 ),
@@ -225,6 +240,19 @@ class _UserHomePageState extends State<CmHomePage> {
                     MaterialPageRoute(
                       builder: (context) => CmApplicationForm(),
                     ),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+              _buildCard(
+                context,
+                title: 'Search and Find Student Details',
+                icon: Icons.search,
+                subtitle: 'Locate student information',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => CmSearchPage()),
                   );
                 },
               ),

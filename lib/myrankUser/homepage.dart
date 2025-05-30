@@ -225,7 +225,7 @@ class _UserHomePageState extends State<UserHomePage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => UserEditForm(),
+                                  builder: (context) => UserSearchPage(),
                                 ),
                               );
                             },

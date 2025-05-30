@@ -19,7 +19,9 @@ import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
 import 'package:medicalapp/myrank_cm/CmusersTable.dart';
 import 'package:medicalapp/myrank_cm/cmCollegeDocList.dart';
+import 'package:medicalapp/myrank_cm/collegeInterests.dart';
 import 'package:medicalapp/myrank_cm/home_page.dart';
+import 'package:medicalapp/myrank_cm/search.dart';
 import 'package:medicalapp/url.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -602,7 +604,10 @@ class _ApplicationFormState extends State<CmApplicationForm> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.school, color: primaryBlue),
+                leading: Icon(
+                  Icons.manage_accounts_outlined,
+                  color: primaryBlue,
+                ),
                 title: const Text('Manage Users'),
                 onTap: () {
                   Navigator.pop(context);
@@ -613,13 +618,24 @@ class _ApplicationFormState extends State<CmApplicationForm> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.school, color: primaryBlue),
+                leading: Icon(Icons.group, color: primaryBlue),
                 title: const Text('College Interests'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => InterestsPage()),
+                    MaterialPageRoute(builder: (context) => CmInterestsPage()),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.person, color: primaryBlue),
+                title: const Text('Search Students'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => CmSearchPage()),
                   );
                 },
               ),

@@ -2,20 +2,23 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/myrankUser/userSearchStudent.dart';
+import 'package:medicalapp/myrank_cm/cmsearchStudent.dart';
 import 'package:medicalapp/url.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class UserSearchPage extends StatefulWidget {
+class CmSearchPage extends StatefulWidget {
   @override
   _SearchPageState createState() => _SearchPageState();
 }
 
-class _SearchPageState extends State<UserSearchPage>
+class _SearchPageState extends State<CmSearchPage>
     with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   List<dynamic>? students;
   bool isLoading = false;
   bool hasSearched = false;
-  static const Color primaryBlue = Color(0xFF00897B);
+  static const Color primaryBlue = Color.fromARGB(255, 250, 110, 110);
+
   late AnimationController _animationController;
 
   @override
@@ -35,6 +38,8 @@ class _SearchPageState extends State<UserSearchPage>
   }
 
   Future<void> fetchStudents(String query) async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedName = prefs.getString('name') ?? 'Admin';
     if (query.isEmpty) return;
 
     setState(() {
@@ -42,7 +47,9 @@ class _SearchPageState extends State<UserSearchPage>
       hasSearched = true;
     });
 
-    final response = await http.get(Uri.parse('$baseurl/search?query=$query'));
+    final response = await http.get(
+      Uri.parse('$baseurl/cmsearch?query=$query&cmname=$savedName'),
+    );
     if (response.statusCode == 200) {
       final jsonResponse = json.decode(response.body);
       setState(() {
@@ -101,7 +108,7 @@ class _SearchPageState extends State<UserSearchPage>
                           : null,
                 ),
                 cursorColor: primaryBlue,
-                style: TextStyle(fontSize: 16, color: primaryBlue),
+                style: TextStyle(fontSize: 16),
                 onChanged: (value) {
                   setState(() {}); // update clear icon visibility
                 },
@@ -145,7 +152,7 @@ class _SearchPageState extends State<UserSearchPage>
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => UserEditForm(userId: student['user_id']),
+              builder: (context) => CmEditForm(userId: student['user_id']),
             ),
           );
         },

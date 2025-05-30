@@ -21,7 +21,9 @@ import 'package:medicalapp/index.dart';
 import 'package:medicalapp/myrank_cm/CmusersTable.dart';
 import 'package:medicalapp/myrank_cm/cmCollegeDocList.dart';
 import 'package:medicalapp/myrank_cm/cmForm.dart';
+import 'package:medicalapp/myrank_cm/collegeInterests.dart';
 import 'package:medicalapp/myrank_cm/home_page.dart';
+import 'package:medicalapp/myrank_cm/search.dart';
 import 'package:medicalapp/url.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -633,111 +635,127 @@ class _EditApplicationFormState extends State<CmEditApplicationForm> {
 
   @override
   Widget build(BuildContext context) {
-    const Color primaryBlue = Color(0xFF007FFF);
+    const Color primaryBlue = Color.fromARGB(255, 250, 110, 110);
 
     return Stack(
       children: [
         Scaffold(
           drawer: Drawer(
             child: SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  DrawerHeader(
-                    decoration: const BoxDecoration(color: primaryBlue),
-                    child: const Center(
-                      child: Text(
-                        'Admin Menu',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    DrawerHeader(
+                      decoration: const BoxDecoration(color: primaryBlue),
+                      child: const Center(
+                        child: Text(
+                          'Admin Menu',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.home_filled, color: primaryBlue),
-                    title: const Text('Home'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => CmHomePage()),
-                      );
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.school, color: primaryBlue),
-                    title: const Text('Manage Users'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CmManagementPage(),
-                        ),
-                      );
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.school, color: primaryBlue),
-                    title: const Text('College Interests'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => InterestsPage(),
-                        ),
-                      );
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(
-                      Icons.format_align_left_sharp,
-                      color: primaryBlue,
+                    ListTile(
+                      leading: Icon(Icons.home_filled, color: primaryBlue),
+                      title: const Text('Home'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => CmHomePage()),
+                        );
+                      },
                     ),
-                    title: const Text('New Student Form'),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CmApplicationForm(),
-                        ),
-                      );
-                    },
-                  ),
-
-                  ListTile(
-                    leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
-                    title: const Text('Available Doctors'),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CmCollegeDegreesScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  const Spacer(),
-                  const Divider(),
-                  ListTile(
-                    leading: const Icon(Icons.logout, color: Colors.red),
-                    title: const Text(
-                      'Logout',
-                      style: TextStyle(color: Colors.red),
+                    ListTile(
+                      leading: Icon(
+                        Icons.manage_accounts_outlined,
+                        color: primaryBlue,
+                      ),
+                      title: const Text('Manage Users'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CmManagementPage(),
+                          ),
+                        );
+                      },
                     ),
-                    onTap: () {
-                      Navigator.pop(context);
-                      _logout(context);
-                    },
-                  ),
-                ],
+                    ListTile(
+                      leading: Icon(Icons.group, color: primaryBlue),
+                      title: const Text('College Interests'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CmInterestsPage(),
+                          ),
+                        );
+                      },
+                    ),
+                    ListTile(
+                      leading: Icon(Icons.person, color: primaryBlue),
+                      title: const Text('Search Students'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CmSearchPage(),
+                          ),
+                        );
+                      },
+                    ),
+                    ListTile(
+                      leading: Icon(
+                        Icons.format_align_left_sharp,
+                        color: primaryBlue,
+                      ),
+                      title: const Text('New Student Form'),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CmApplicationForm(),
+                          ),
+                        );
+                      },
+                    ),
+                    ListTile(
+                      leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
+                      title: const Text('Available Doctors'),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CmCollegeDegreesScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    const Divider(),
+                    ListTile(
+                      leading: const Icon(Icons.logout, color: Colors.red),
+                      title: const Text(
+                        'Logout',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                      onTap: () {
+                        _logout(context);
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
+
           appBar: AppBar(
             title: const Text('Medical Professional Application Form'),
             backgroundColor: primaryBlue,
