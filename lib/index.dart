@@ -38,40 +38,75 @@ class _IndexState extends State<Index> {
   Future<void> _checkIfLoggedIn() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      // Fetch role and user ID from SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      final role = prefs.getString('role');
-      final userId = prefs.getInt('userid');
-
-      Widget destinationPage;
-
-      switch (role) {
-        case 'admin':
-          destinationPage = AdminHomePage();
-          break;
-        case 'college':
-          destinationPage = CollegeDegreesScreen();
-          break;
-        case 'doctor':
-          destinationPage = DoctorDashboardApp();
-          break;
-        case 'myrank_user':
-          destinationPage = UserHomePage();
-          break;
-        case 'myrank_cm':
-          destinationPage = CmHomePage();
-          break;
-        default:
-          destinationPage = ApprovalScreen();
+      // User logged in, fetch role from backend to verify/refresh it
+      try {
+        await _fetchAndStoreUserRole(user.email ?? '');
+      } catch (e) {
+        debugPrint('Error fetching role: $e');
+        // fallback to showing login page
+        setState(() => _isCheckingAuth = false);
       }
-
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => destinationPage));
     } else {
-      // No user is logged in
+      // No user logged in, show login screen
       setState(() => _isCheckingAuth = false);
     }
+  }
+
+  Future<void> _fetchAndStoreUserRole(String email) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Call your API to get user info including role by email
+    final response = await http.post(
+      Uri.parse('$baseurl/api/user/get-role-by-email'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+
+      final userId = data['userid'];
+      final userName = data['name'];
+      final role = data['role'];
+
+      // Save info in SharedPreferences
+      await prefs.setInt('userid', userId ?? 0);
+      await prefs.setString('name', userName ?? '');
+      await prefs.setString('role', role ?? '');
+
+      // Navigate to role-appropriate page
+      _navigateByRole(role);
+    } else {
+      throw Exception('Failed to fetch user role');
+    }
+  }
+
+  void _navigateByRole(String? role) {
+    Widget destinationPage;
+
+    switch (role) {
+      case 'admin':
+        destinationPage = AdminHomePage();
+        break;
+      case 'college':
+        destinationPage = CollegeDegreesScreen();
+        break;
+      case 'doctor':
+        destinationPage = DoctorDashboardApp();
+        break;
+      case 'myrank_user':
+        destinationPage = UserHomePage();
+        break;
+      case 'myrank_cm':
+        destinationPage = CmHomePage();
+        break;
+      default:
+        destinationPage = ApprovalScreen();
+    }
+
+    Navigator.of(
+      context,
+    ).pushReplacement(MaterialPageRoute(builder: (_) => destinationPage));
   }
 
   @override
