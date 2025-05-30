@@ -38,38 +38,71 @@ class _IndexState extends State<Index> {
   Future<void> _checkIfLoggedIn() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      // Fetch role and user ID from SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      final role = prefs.getString('role');
-      final userId = prefs.getInt('userid');
-
-      Widget destinationPage;
-
-      switch (role) {
-        case 'admin':
-          destinationPage = AdminHomePage();
-          break;
-        case 'college':
-          destinationPage = CollegeDegreesScreen();
-          break;
-        case 'doctor':
-          destinationPage = DoctorDashboardApp();
-          break;
-        case 'myrank_user':
-          destinationPage = UserHomePage();
-          break;
-        case 'myrank_cm':
-          destinationPage = CmHomePage();
-          break;
-        default:
-          destinationPage = ApprovalScreen();
+      final email = user.email ?? '';
+      if (email.isEmpty) {
+        setState(() => _isCheckingAuth = false);
+        return;
       }
 
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => destinationPage));
+      try {
+        // Fetch role and user info from backend
+        final response = await http.post(
+          Uri.parse(
+            '$baseurl/api/user/check-or-insert',
+          ), // or your role endpoint
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'email': email, 'name': user.displayName ?? ''}),
+        );
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+
+          final prefs = await SharedPreferences.getInstance();
+          final userId = data['userid'];
+          final userName = data['name'];
+          final role = data['role'];
+
+          await prefs.setString('name', userName ?? '');
+          await prefs.setString('role', role ?? '');
+          if (userId != null) {
+            await prefs.setInt('userid', userId);
+          }
+
+          Widget destinationPage;
+          switch (role) {
+            case 'admin':
+              destinationPage = AdminHomePage();
+              break;
+            case 'college':
+              destinationPage = CollegeDegreesScreen();
+              break;
+            case 'doctor':
+              destinationPage = DoctorDashboardApp();
+              break;
+            case 'myrank_user':
+              destinationPage = UserHomePage();
+              break;
+            case 'myrank_cm':
+              destinationPage = CmHomePage();
+              break;
+            default:
+              destinationPage = ApprovalScreen();
+          }
+
+          if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => destinationPage),
+            );
+          }
+        } else {
+          setState(() => _isCheckingAuth = false);
+        }
+      } catch (e) {
+        print('Error fetching user role: $e');
+        setState(() => _isCheckingAuth = false);
+      }
     } else {
-      // No user is logged in
+      // No user logged in, show login screen
       setState(() => _isCheckingAuth = false);
     }
   }
