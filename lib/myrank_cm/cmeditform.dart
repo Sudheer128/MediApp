@@ -7,15 +7,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:medicalapp/admin/adminCollegedocList.dart';
-import 'package:medicalapp/admin/adminintreststatus.dart';
-import 'package:medicalapp/admin/form_page.dart';
-import 'package:medicalapp/admin/mainscreen.dart';
-import 'package:medicalapp/admin/searchstudent.dart';
-import 'package:medicalapp/admin/userstable.dart';
 
-import 'package:medicalapp/college_view.dart';
-import 'package:medicalapp/edit_formAfterSave.dart';
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
 import 'package:medicalapp/myrank_cm/CmusersTable.dart';
@@ -25,17 +17,16 @@ import 'package:medicalapp/myrank_cm/collegeInterests.dart';
 import 'package:medicalapp/myrank_cm/home_page.dart';
 import 'package:medicalapp/myrank_cm/search.dart';
 import 'package:medicalapp/url.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class CmEditApplicationForm extends StatefulWidget {
   final Map<String, dynamic>? existingData;
   final int? userId;
 
   const CmEditApplicationForm({
-    Key? key,
+    super.key,
     this.existingData,
     required this.userId,
-  }) : super(key: key);
+  });
 
   @override
   State<CmEditApplicationForm> createState() => _EditApplicationFormState();
@@ -144,11 +135,14 @@ class _EditApplicationFormState extends State<CmEditApplicationForm> {
 
     for (var edu in educations) {
       final type = edu['type'] ?? 'MBBS';
-      final ed = EducationDetail(type: type);
-      ed.courseName = edu['courseName'] ?? '';
-      ed.collegeName = edu['collegeName'] ?? '';
+      final ed = EducationDetail(
+        type: type,
+        courseName: edu['courseName'] ?? '',
+        collegeName: edu['collegeName'] ?? '',
+      );
       ed.fromDateController.text = _formatDateForController(edu['fromDate']);
       ed.toDateController.text = _formatDateForController(edu['toDate']);
+      ed.collegeNameController.text = ed.collegeName; // sync controller
 
       if (type == 'MBBS') {
         educationDetails.add(ed);
@@ -1304,15 +1298,16 @@ class _EditApplicationFormState extends State<CmEditApplicationForm> {
               ],
               const SizedBox(height: 16),
               TextFormField(
-                initialValue: education.collegeName,
+                controller: education.collegeNameController,
                 decoration: const InputDecoration(labelText: 'College Name'),
-                onChanged: (value) => education.collegeName = value,
                 validator:
                     (value) =>
                         (value == null || value.isEmpty)
                             ? 'Please enter college name'
                             : null,
+                onChanged: (value) => education.collegeName = value,
               ),
+
               const SizedBox(height: 16),
               Row(
                 children: [
@@ -2082,14 +2077,24 @@ class EducationDetail {
   String collegeName = '';
   final TextEditingController fromDateController = TextEditingController();
   final TextEditingController toDateController = TextEditingController();
-  String location = '';
 
-  EducationDetail({required this.type});
+  // Add controller for collegeName
+  final TextEditingController collegeNameController = TextEditingController();
+
+  EducationDetail({
+    required this.type,
+    String? courseName,
+    String? collegeName,
+  }) {
+    this.courseName = courseName ?? '';
+    this.collegeName = collegeName ?? '';
+    collegeNameController.text = this.collegeName;
+  }
 
   Map<String, dynamic> toJson() => {
     'type': type,
     'courseName': courseName,
-    'collegeName': collegeName,
+    'collegeName': collegeNameController.text,
     'fromDate': convertDateToBackendFormat(fromDateController.text),
     'toDate': convertDateToBackendFormat(toDateController.text),
   };

@@ -2048,14 +2048,24 @@ class EducationDetail {
   String collegeName = '';
   final TextEditingController fromDateController = TextEditingController();
   final TextEditingController toDateController = TextEditingController();
-  String location = '';
 
-  EducationDetail({required this.type});
+  // Add controller for collegeName
+  final TextEditingController collegeNameController = TextEditingController();
+
+  EducationDetail({
+    required this.type,
+    String? courseName,
+    String? collegeName,
+  }) {
+    this.courseName = courseName ?? '';
+    this.collegeName = collegeName ?? '';
+    collegeNameController.text = this.collegeName;
+  }
 
   Map<String, dynamic> toJson() => {
     'type': type,
     'courseName': courseName,
-    'collegeName': collegeName,
+    'collegeName': collegeNameController.text,
     'fromDate': convertDateToBackendFormat(fromDateController.text),
     'toDate': convertDateToBackendFormat(toDateController.text),
   };
