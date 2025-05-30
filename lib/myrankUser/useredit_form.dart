@@ -48,6 +48,7 @@ class _EditApplicationFormState extends State<UserEditApplicationForm> {
   final GlobalKey _certificateKey = GlobalKey();
   final GlobalKey _resumeKey = GlobalKey();
   bool _resumeError = false;
+  String? _username;
 
   bool _hasPG = false;
   bool _hasSS = false;
@@ -106,11 +107,10 @@ class _EditApplicationFormState extends State<UserEditApplicationForm> {
     );
   }
 
-  Future<void> _loadUserName() async {
+  Future<void> _loadUsername() async {
     final prefs = await SharedPreferences.getInstance();
-    final savedName = prefs.getString('name') ?? 'Admin'; // key matches here
     setState(() {
-      userName = savedName;
+      _username = prefs.getString('name') ?? "Doctor";
     });
   }
 
@@ -141,6 +141,7 @@ class _EditApplicationFormState extends State<UserEditApplicationForm> {
         _populateFormWithExistingData(widget.existingData!);
       }
     });
+    _loadUsername();
   }
 
   void _populateFormWithExistingData(Map<String, dynamic> data) {
@@ -638,32 +639,44 @@ class _EditApplicationFormState extends State<UserEditApplicationForm> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Container(
-                            color: UserHomePage.primaryBlue,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 40,
-                              horizontal: 20,
+                            decoration: BoxDecoration(
+                              color: Colors.blue,
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  UserHomePage.primaryBlue,
+                                  UserHomePage.primaryBlue,
+                                ],
+                              ),
                             ),
-                            child: Row(
+                            padding: EdgeInsets.only(
+                              top: 40,
+                              left: 16,
+                              bottom: 16,
+                            ),
+                            alignment: Alignment.bottomLeft,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                CircleAvatar(
-                                  radius: 30,
-                                  backgroundColor: Colors.white,
-                                  child: Icon(
-                                    Icons.person,
-                                    size: 40,
-                                    color: UserHomePage.primaryBlue,
+                                SizedBox(height: 2),
+                                Text(
+                                  'Admin User',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Text(
-                                    userName ?? 'Admin',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
+                                Text(
+                                  _username != null
+                                      ? '$_username'
+                                      : 'Admin User',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ],

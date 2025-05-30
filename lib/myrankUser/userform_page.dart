@@ -18,6 +18,7 @@ import 'package:medicalapp/index.dart';
 import 'package:medicalapp/myrankUser/UserCollegeDocList.dart';
 import 'package:medicalapp/myrankUser/UsersTable.dart';
 import 'package:medicalapp/myrankUser/homepage.dart';
+import 'package:medicalapp/myrankUser/search.dart';
 import 'package:medicalapp/myrankUser/userSearchStudent.dart';
 import 'package:medicalapp/url.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -90,7 +91,7 @@ class _ApplicationFormState extends State<UserApplicationForm> {
   final _registrationNumberController = TextEditingController();
 
   static const Color primaryBlue = Color(0xFF00897B);
-  String? userName;
+  String? _username;
 
   void _logout(BuildContext context) {
     signOutGoogle();
@@ -99,14 +100,6 @@ class _ApplicationFormState extends State<UserApplicationForm> {
       MaterialPageRoute(builder: (context) => Index()),
       (Route<dynamic> route) => false, // Remove all previous routes
     );
-  }
-
-  Future<void> _loadUserName() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedName = prefs.getString('name') ?? 'Admin'; // key matches here
-    setState(() {
-      userName = savedName;
-    });
   }
 
   // Resume Upload
@@ -134,6 +127,14 @@ class _ApplicationFormState extends State<UserApplicationForm> {
   void initState() {
     super.initState();
     fetchCourses();
+    _loadUsername();
+  }
+
+  Future<void> _loadUsername() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _username = prefs.getString('name') ?? "Doctor";
+    });
   }
 
   Future<void> _pickDate(TextEditingController controller) async {
@@ -556,32 +557,44 @@ class _ApplicationFormState extends State<UserApplicationForm> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               Container(
-                                color: UserHomePage.primaryBlue,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 40,
-                                  horizontal: 20,
+                                decoration: BoxDecoration(
+                                  color: Colors.blue,
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      UserHomePage.primaryBlue,
+                                      UserHomePage.primaryBlue,
+                                    ],
+                                  ),
                                 ),
-                                child: Row(
+                                padding: EdgeInsets.only(
+                                  top: 40,
+                                  left: 16,
+                                  bottom: 16,
+                                ),
+                                alignment: Alignment.bottomLeft,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    CircleAvatar(
-                                      radius: 30,
-                                      backgroundColor: Colors.white,
-                                      child: Icon(
-                                        Icons.person,
-                                        size: 40,
-                                        color: UserHomePage.primaryBlue,
+                                    SizedBox(height: 2),
+                                    Text(
+                                      'Admin User',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Text(
-                                        userName ?? 'Admin',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
+                                    Text(
+                                      _username != null
+                                          ? '$_username'
+                                          : 'Admin User',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ],
@@ -662,7 +675,7 @@ class _ApplicationFormState extends State<UserApplicationForm> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => UserEditForm(),
+                                      builder: (context) => UserSearchPage(),
                                     ),
                                   );
                                 },

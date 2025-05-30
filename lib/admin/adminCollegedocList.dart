@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/admin/adminintreststatus.dart';
+import 'package:medicalapp/admin/adminloginlogs.dart';
 import 'package:medicalapp/admin/form_page.dart';
 import 'package:medicalapp/admin/mainscreen.dart';
 import 'package:medicalapp/admin/search.dart';
@@ -181,6 +182,16 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
                       MaterialPageRoute(
                         builder: (context) => AdminCollegeDegreesScreen(),
                       ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.track_changes, color: primaryBlue),
+                  title: const Text('Login Tracks'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginLogsPage()),
                     );
                   },
                 ),

@@ -186,7 +186,7 @@ class AdminHomePage extends StatelessWidget {
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
+                  leading: Icon(Icons.track_changes, color: primaryBlue),
                   title: const Text('Login Tracks'),
                   onTap: () {
                     Navigator.push(
