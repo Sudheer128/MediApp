@@ -22,7 +22,7 @@ class LoginLog {
 
   factory LoginLog.fromJson(Map<String, dynamic> json) {
     return LoginLog(
-      userId: json['user_id'],
+      userId: json['user_id'].toString(), // Convert to string if needed
       email: json['email'],
       role: json['role'],
       ipAddress: json['ip_address'],
@@ -69,7 +69,8 @@ class _LoginLogsPageState extends State<LoginLogsPage> {
     try {
       final response = await http.get(Uri.parse('$baseurl/get-login-logs'));
       if (response.statusCode == 200) {
-        final List<dynamic> logs = json.decode(response.body)['logs'];
+        // Direct array response, no need to access ['logs']
+        final List<dynamic> logs = json.decode(response.body);
         setState(() {
           _allLogs = logs.map((e) => LoginLog.fromJson(e)).toList();
           _filteredLogs = List.from(_allLogs);
@@ -141,7 +142,10 @@ class _LoginLogsPageState extends State<LoginLogsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login Logs')),
+      appBar: AppBar(
+        title: const Text('Login Logs'),
+        backgroundColor: Colors.blue,
+      ),
       body:
           _isLoading
               ? const Center(child: CircularProgressIndicator())
