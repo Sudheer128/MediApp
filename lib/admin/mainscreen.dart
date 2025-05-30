@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:medicalapp/admin/adminCollegedocList.dart';
 import 'package:medicalapp/admin/adminintreststatus.dart';
+import 'package:medicalapp/admin/adminloginlogs.dart';
 import 'package:medicalapp/admin/form_page.dart';
 import 'package:medicalapp/admin/search.dart';
 import 'package:medicalapp/admin/searchstudent.dart';
@@ -181,6 +182,16 @@ class AdminHomePage extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (context) => AdminCollegeDegreesScreen(),
                       ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
+                  title: const Text('Login Tracks'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginLogsPage()),
                     );
                   },
                 ),
