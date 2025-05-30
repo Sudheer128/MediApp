@@ -687,7 +687,7 @@ class _EditApplicationFormState extends State<UserEditApplicationForm> {
                           ),
                           ListTile(
                             leading: Icon(
-                              Icons.school,
+                              Icons.manage_accounts_outlined,
                               color: UserHomePage.primaryBlue,
                             ),
                             title: const Text('Manage Users'),
@@ -703,7 +703,7 @@ class _EditApplicationFormState extends State<UserEditApplicationForm> {
                           ),
                           ListTile(
                             leading: Icon(
-                              Icons.school,
+                              Icons.group,
                               color: UserHomePage.primaryBlue,
                             ),
                             title: const Text('College Interests'),

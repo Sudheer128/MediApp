@@ -302,14 +302,25 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
     );
   }
 
-  Future<void> _launchURL(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+  Future<void> _launchURL(BuildContext context, String url) async {
+    if (kIsWeb) {
+      // Open in external application on the web
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Could not open document')));
+      }
     } else {
-      ScaffoldMessenger.of(
+      // Show PDF in-app for mobile platforms
+      Navigator.push(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Could not open document')));
+        MaterialPageRoute(
+          builder: (context) => PdfViewerPage(url: url, color: Colors.blue),
+        ),
+      );
     }
   }
 
@@ -328,7 +339,7 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
                   onPressed: () {
                     final url = doc['url'] ?? '';
                     if (url.isNotEmpty) {
-                      _launchURL(url);
+                      _launchURL(context, url);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('No URL provided')),

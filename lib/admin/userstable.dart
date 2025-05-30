@@ -484,19 +484,17 @@ class _UserManagementPageState extends State<UserManagementPage> {
                                               DropdownButton<String>(
                                                 value: cmDropdownValue,
                                                 items: [
-                                                  const DropdownMenuItem<
-                                                    String
-                                                  >(
-                                                    value: 'not_assigned',
-                                                    child: Text('not_assigned'),
-                                                  ),
-                                                  ..._cmNames.map(
+                                                  ...{
+                                                    'not_assigned',
+                                                    ..._cmNames,
+                                                  }.map(
                                                     (cm) => DropdownMenuItem(
                                                       value: cm,
                                                       child: Text(cm),
                                                     ),
                                                   ),
                                                 ],
+
                                                 onChanged: (newCm) async {
                                                   if (newCm != null &&
                                                       newCm != user.cmName) {

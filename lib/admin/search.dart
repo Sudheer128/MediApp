@@ -9,11 +9,30 @@ class SearchPage extends StatefulWidget {
   _SearchPageState createState() => _SearchPageState();
 }
 
-class _SearchPageState extends State<SearchPage> {
+class _SearchPageState extends State<SearchPage>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   List<dynamic>? students;
   bool isLoading = false;
   bool hasSearched = false;
+  static const Color primaryBlue = Colors.blue;
+  late AnimationController _animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 300),
+    );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _animationController.dispose();
+    super.dispose();
+  }
 
   Future<void> fetchStudents(String query) async {
     if (query.isEmpty) return;
@@ -41,119 +60,203 @@ class _SearchPageState extends State<SearchPage> {
     }
   }
 
+  Widget _buildSearchBarWithButton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Material(
+              elevation: 4,
+              shadowColor: primaryBlue.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(12),
+              child: TextField(
+                controller: _searchController,
+                textInputAction: TextInputAction.search,
+                onSubmitted: (query) => fetchStudents(query),
+                decoration: InputDecoration(
+                  prefixIcon: Icon(Icons.search, color: primaryBlue),
+                  hintText: 'Search students by name, email...',
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: EdgeInsets.symmetric(vertical: 16),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.horizontal(
+                      left: Radius.circular(12),
+                    ),
+                    borderSide: BorderSide.none,
+                  ),
+                  suffixIcon:
+                      _searchController.text.isNotEmpty
+                          ? IconButton(
+                            icon: Icon(Icons.clear, color: primaryBlue),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                students = null;
+                                hasSearched = false;
+                              });
+                            },
+                          )
+                          : null,
+                ),
+                cursorColor: primaryBlue,
+                style: TextStyle(fontSize: 16, color: primaryBlue),
+                onChanged: (value) {
+                  setState(() {}); // update clear icon visibility
+                },
+              ),
+            ),
+          ),
+          SizedBox(width: 12),
+          ElevatedButton(
+            onPressed: () => fetchStudents(_searchController.text),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryBlue,
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 4,
+              shadowColor: primaryBlue.withOpacity(0.4),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.search, color: Colors.white),
+                SizedBox(width: 8),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStudentCard(dynamic student) {
+    return Card(
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      elevation: 5,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shadowColor: primaryBlue.withOpacity(0.25),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        splashColor: primaryBlue.withOpacity(0.2),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AdminEditForm(userId: student['user_id']),
+            ),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+          child: Row(
+            children: [
+              SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      student['name'],
+                      style: TextStyle(
+                        color: primaryBlue,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                      ),
+                    ),
+                    SizedBox(height: 6),
+                    Text(
+                      'Email: ${student['email']}',
+                      style: TextStyle(color: primaryBlue, fontSize: 14),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Phone: ${student['phone']}',
+                      style: TextStyle(color: primaryBlue, fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: primaryBlue),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(IconData icon, String message, {Color? color}) {
+    return Expanded(
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 80, color: color ?? primaryBlue.withOpacity(0.3)),
+            SizedBox(height: 16),
+            Text(
+              message,
+              style: TextStyle(
+                color: color ?? primaryBlue.withOpacity(0.7),
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: Text('Search Students'),
-        backgroundColor: Colors.blue,
-        elevation: 2.0,
+        title: Text(
+          'Search Students',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: primaryBlue,
+        elevation: 5,
+        centerTitle: true,
+        shadowColor: primaryBlue.withOpacity(0.4),
       ),
-      body: Container(
-        color: Colors.white,
+      body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: 'Search...',
-                  filled: true,
-                  fillColor: Colors.blue[50],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                    borderSide: BorderSide.none,
-                  ),
-                  suffixIcon: IconButton(
-                    icon: Icon(Icons.search, color: Colors.blue),
-                    onPressed: () => fetchStudents(_searchController.text),
-                  ),
+            _buildSearchBarWithButton(),
+            if (isLoading)
+              Padding(
+                padding: const EdgeInsets.only(top: 40),
+                child: CircularProgressIndicator(
+                  color: primaryBlue,
+                  strokeWidth: 4,
                 ),
-                onSubmitted: (query) => fetchStudents(query),
               ),
-            ),
-            isLoading
-                ? Center(child: CircularProgressIndicator(color: Colors.blue))
-                : hasSearched && (students == null || students!.isEmpty)
-                ? Expanded(
-                  child: Center(
-                    child: Text(
-                      'No Data Available',
-                      style: TextStyle(
-                        color: Colors.blue[800],
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                )
-                : students != null && students!.isNotEmpty
-                ? Expanded(
-                  child: ListView.builder(
-                    itemCount: students!.length,
-                    itemBuilder: (context, index) {
-                      final student = students![index];
-                      return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (context) =>
-                                      AdminEditForm(userId: student['user_id']),
-                            ),
-                          );
-                        },
-                        child: Card(
-                          margin: EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          color: Colors.blue[50],
-                          elevation: 2.0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                          child: ListTile(
-                            title: Text(
-                              student['name'],
-                              style: TextStyle(
-                                color: Colors.blue[800],
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Email: ${student['email']}',
-                                  style: TextStyle(color: Colors.blue[700]),
-                                ),
-                                Text(
-                                  'Phone: ${student['phone']}',
-                                  style: TextStyle(color: Colors.blue[700]),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                )
-                : Expanded(
-                  child: Center(
-                    child: Text(
-                      'Please search for students.',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ),
+            if (!isLoading &&
+                hasSearched &&
+                (students == null || students!.isEmpty))
+              _buildEmptyState(Icons.search_off, 'No students found..'),
+            if (!isLoading && !hasSearched)
+              _buildEmptyState(
+                Icons.search,
+                'Search for students to get started.',
+                color: Colors.grey,
+              ),
+            if (!isLoading && students != null && students!.isNotEmpty)
+              Expanded(
+                child: ListView.builder(
+                  padding: EdgeInsets.only(bottom: 16),
+                  itemCount: students!.length,
+                  itemBuilder: (context, index) {
+                    final student = students![index];
+                    return _buildStudentCard(student);
+                  },
                 ),
+              ),
           ],
         ),
       ),

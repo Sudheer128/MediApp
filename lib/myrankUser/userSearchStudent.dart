@@ -340,7 +340,7 @@ class _StudentDetailScreenState extends State<UserEditForm> {
           children: [
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF00796B), // teal color
+                backgroundColor: Colors.red, // teal color
               ),
               onPressed: () {
                 if (data != null) {

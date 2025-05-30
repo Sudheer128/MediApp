@@ -170,7 +170,7 @@ class _UserHomePageState extends State<UserHomePage> {
                           ),
                           ListTile(
                             leading: Icon(
-                              Icons.school,
+                              Icons.manage_accounts_outlined,
                               color: UserHomePage.primaryBlue,
                             ),
                             title: const Text('Manage Users'),
@@ -186,7 +186,7 @@ class _UserHomePageState extends State<UserHomePage> {
                           ),
                           ListTile(
                             leading: Icon(
-                              Icons.school,
+                              Icons.group,
                               color: UserHomePage.primaryBlue,
                             ),
                             title: const Text('College Interests'),

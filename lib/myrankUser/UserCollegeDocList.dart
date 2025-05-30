@@ -162,7 +162,7 @@ class _DegreesScreenState extends State<UserCollegeDegreesScreen>
                           ),
                           ListTile(
                             leading: Icon(
-                              Icons.school,
+                              Icons.manage_accounts_outlined,
                               color: UserHomePage.primaryBlue,
                             ),
                             title: const Text('Manage Users'),
@@ -178,7 +178,7 @@ class _DegreesScreenState extends State<UserCollegeDegreesScreen>
                           ),
                           ListTile(
                             leading: Icon(
-                              Icons.school,
+                              Icons.group,
                               color: UserHomePage.primaryBlue,
                             ),
                             title: const Text('College Interests'),
