@@ -160,11 +160,14 @@ class _EditApplicationFormState extends State<UserEditApplicationForm> {
 
     for (var edu in educations) {
       final type = edu['type'] ?? 'MBBS';
-      final ed = EducationDetail(type: type);
-      ed.courseName = edu['courseName'] ?? '';
-      ed.collegeName = edu['collegeName'] ?? '';
+      final ed = EducationDetail(
+        type: type,
+        courseName: edu['courseName'] ?? '',
+        collegeName: edu['collegeName'] ?? '',
+      );
       ed.fromDateController.text = _formatDateForController(edu['fromDate']);
       ed.toDateController.text = _formatDateForController(edu['toDate']);
+      ed.collegeNameController.text = ed.collegeName; // sync controller
 
       if (type == 'MBBS') {
         educationDetails.add(ed);
@@ -1324,15 +1327,16 @@ class _EditApplicationFormState extends State<UserEditApplicationForm> {
               ],
               const SizedBox(height: 16),
               TextFormField(
-                initialValue: education.collegeName,
+                controller: education.collegeNameController,
                 decoration: const InputDecoration(labelText: 'College Name'),
-                onChanged: (value) => education.collegeName = value,
                 validator:
                     (value) =>
                         (value == null || value.isEmpty)
                             ? 'Please enter college name'
                             : null,
+                onChanged: (value) => education.collegeName = value,
               ),
+
               const SizedBox(height: 16),
               Row(
                 children: [
@@ -2102,14 +2106,24 @@ class EducationDetail {
   String collegeName = '';
   final TextEditingController fromDateController = TextEditingController();
   final TextEditingController toDateController = TextEditingController();
-  String location = '';
 
-  EducationDetail({required this.type});
+  // Add controller for collegeName
+  final TextEditingController collegeNameController = TextEditingController();
+
+  EducationDetail({
+    required this.type,
+    String? courseName,
+    String? collegeName,
+  }) {
+    this.courseName = courseName ?? '';
+    this.collegeName = collegeName ?? '';
+    collegeNameController.text = this.collegeName;
+  }
 
   Map<String, dynamic> toJson() => {
     'type': type,
     'courseName': courseName,
-    'collegeName': collegeName,
+    'collegeName': collegeNameController.text,
     'fromDate': convertDateToBackendFormat(fromDateController.text),
     'toDate': convertDateToBackendFormat(toDateController.text),
   };

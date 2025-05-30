@@ -280,7 +280,7 @@ class _DegreesScreenState extends State<UserCollegeDegreesScreen>
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
             child: Align(
-              alignment: Alignment.topRight,
+              alignment: Alignment.topLeft,
               child: DropdownButton<int>(
                 value: _selectedStatus,
                 dropdownColor: Colors.white,

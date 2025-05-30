@@ -12,6 +12,7 @@ import 'package:medicalapp/admin/adminintreststatus.dart';
 import 'package:medicalapp/admin/adminloginlogs.dart';
 import 'package:medicalapp/admin/form_page.dart';
 import 'package:medicalapp/admin/mainscreen.dart';
+import 'package:medicalapp/admin/search.dart';
 import 'package:medicalapp/admin/searchstudent.dart';
 import 'package:medicalapp/admin/userstable.dart';
 
@@ -98,6 +99,8 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
   File? _resumeFile;
   String? _resumeFileName;
 
+  String _username = "Admin";
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -116,10 +119,18 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
   @override
   void initState() {
     super.initState();
+    _loadUsername();
     fetchCourses().then((_) {
       if (widget.existingData != null) {
         _populateFormWithExistingData(widget.existingData!);
       }
+    });
+  }
+
+  Future<void> _loadUsername() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _username = prefs.getString('name') ?? "Doctor";
     });
   }
 
@@ -139,11 +150,14 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
 
     for (var edu in educations) {
       final type = edu['type'] ?? 'MBBS';
-      final ed = EducationDetail(type: type);
-      ed.courseName = edu['courseName'] ?? '';
-      ed.collegeName = edu['collegeName'] ?? '';
+      final ed = EducationDetail(
+        type: type,
+        courseName: edu['courseName'] ?? '',
+        collegeName: edu['collegeName'] ?? '',
+      );
       ed.fromDateController.text = _formatDateForController(edu['fromDate']);
       ed.toDateController.text = _formatDateForController(edu['toDate']);
+      ed.collegeNameController.text = ed.collegeName; // sync controller
 
       if (type == 'MBBS') {
         educationDetails.add(ed);
@@ -635,6 +649,11 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
     return Stack(
       children: [
         Scaffold(
+          appBar: AppBar(
+            backgroundColor: primaryBlue,
+            title: const Text('Admin Dashboard'),
+            automaticallyImplyLeading: true,
+          ),
           drawer: Drawer(
             child: SafeArea(
               child: SingleChildScrollView(
@@ -643,15 +662,26 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
                   children: [
                     DrawerHeader(
                       decoration: const BoxDecoration(color: primaryBlue),
-                      child: const Center(
-                        child: Text(
-                          'Admin Menu',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Admin Menu',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Welcome, $_username',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     ListTile(
@@ -709,14 +739,13 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
                       },
                     ),
                     ListTile(
-                      leading: Icon(Icons.person, color: primaryBlue),
+                      leading: Icon(Icons.school, color: primaryBlue),
                       title: const Text('Search Student'),
                       onTap: () {
+                        Navigator.pop(context);
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => AdminEditForm(),
-                          ),
+                          MaterialPageRoute(builder: (context) => SearchPage()),
                         );
                       },
                     ),
@@ -761,11 +790,7 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
               ),
             ),
           ),
-          appBar: AppBar(
-            title: const Text('Medical Professional Application Form'),
-            backgroundColor: primaryBlue,
-            actions: [],
-          ),
+
           body: Form(
             key: _formKey,
             child: SingleChildScrollView(
@@ -1309,15 +1334,16 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
               ],
               const SizedBox(height: 16),
               TextFormField(
-                initialValue: education.collegeName,
+                controller: education.collegeNameController,
                 decoration: const InputDecoration(labelText: 'College Name'),
-                onChanged: (value) => education.collegeName = value,
                 validator:
                     (value) =>
                         (value == null || value.isEmpty)
                             ? 'Please enter college name'
                             : null,
+                onChanged: (value) => education.collegeName = value,
               ),
+
               const SizedBox(height: 16),
               Row(
                 children: [
@@ -2087,14 +2113,24 @@ class EducationDetail {
   String collegeName = '';
   final TextEditingController fromDateController = TextEditingController();
   final TextEditingController toDateController = TextEditingController();
-  String location = '';
 
-  EducationDetail({required this.type});
+  // Add controller for collegeName
+  final TextEditingController collegeNameController = TextEditingController();
+
+  EducationDetail({
+    required this.type,
+    String? courseName,
+    String? collegeName,
+  }) {
+    this.courseName = courseName ?? '';
+    this.collegeName = collegeName ?? '';
+    collegeNameController.text = this.collegeName;
+  }
 
   Map<String, dynamic> toJson() => {
     'type': type,
     'courseName': courseName,
-    'collegeName': collegeName,
+    'collegeName': collegeNameController.text,
     'fromDate': convertDateToBackendFormat(fromDateController.text),
     'toDate': convertDateToBackendFormat(toDateController.text),
   };
