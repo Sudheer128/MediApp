@@ -38,75 +38,73 @@ class _IndexState extends State<Index> {
   Future<void> _checkIfLoggedIn() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      // User logged in, fetch role from backend to verify/refresh it
+      final email = user.email ?? '';
+      if (email.isEmpty) {
+        setState(() => _isCheckingAuth = false);
+        return;
+      }
+
       try {
-        await _fetchAndStoreUserRole(user.email ?? '');
+        // Fetch role and user info from backend
+        final response = await http.post(
+          Uri.parse(
+            '$baseurl/api/user/check-or-insert',
+          ), // or your role endpoint
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'email': email, 'name': user.displayName ?? ''}),
+        );
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+
+          final prefs = await SharedPreferences.getInstance();
+          final userId = data['userid'];
+          final userName = data['name'];
+          final role = data['role'];
+
+          await prefs.setString('name', userName ?? '');
+          await prefs.setString('role', role ?? '');
+          if (userId != null) {
+            await prefs.setInt('userid', userId);
+          }
+
+          Widget destinationPage;
+          switch (role) {
+            case 'admin':
+              destinationPage = AdminHomePage();
+              break;
+            case 'college':
+              destinationPage = CollegeDegreesScreen();
+              break;
+            case 'doctor':
+              destinationPage = DoctorDashboardApp();
+              break;
+            case 'myrank_user':
+              destinationPage = UserHomePage();
+              break;
+            case 'myrank_cm':
+              destinationPage = CmHomePage();
+              break;
+            default:
+              destinationPage = ApprovalScreen();
+          }
+
+          if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => destinationPage),
+            );
+          }
+        } else {
+          setState(() => _isCheckingAuth = false);
+        }
       } catch (e) {
-        debugPrint('Error fetching role: $e');
-        // fallback to showing login page
+        print('Error fetching user role: $e');
         setState(() => _isCheckingAuth = false);
       }
     } else {
       // No user logged in, show login screen
       setState(() => _isCheckingAuth = false);
     }
-  }
-
-  Future<void> _fetchAndStoreUserRole(String email) async {
-    final prefs = await SharedPreferences.getInstance();
-
-    // Call your API to get user info including role by email
-    final response = await http.post(
-      Uri.parse('$baseurl/api/user/get-role-by-email'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email}),
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-
-      final userId = data['userid'];
-      final userName = data['name'];
-      final role = data['role'];
-
-      // Save info in SharedPreferences
-      await prefs.setInt('userid', userId ?? 0);
-      await prefs.setString('name', userName ?? '');
-      await prefs.setString('role', role ?? '');
-
-      // Navigate to role-appropriate page
-      _navigateByRole(role);
-    } else {
-      throw Exception('Failed to fetch user role');
-    }
-  }
-
-  void _navigateByRole(String? role) {
-    Widget destinationPage;
-
-    switch (role) {
-      case 'admin':
-        destinationPage = AdminHomePage();
-        break;
-      case 'college':
-        destinationPage = CollegeDegreesScreen();
-        break;
-      case 'doctor':
-        destinationPage = DoctorDashboardApp();
-        break;
-      case 'myrank_user':
-        destinationPage = UserHomePage();
-        break;
-      case 'myrank_cm':
-        destinationPage = CmHomePage();
-        break;
-      default:
-        destinationPage = ApprovalScreen();
-    }
-
-    Navigator.of(
-      context,
-    ).pushReplacement(MaterialPageRoute(builder: (_) => destinationPage));
   }
 
   @override

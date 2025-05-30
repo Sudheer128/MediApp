@@ -327,8 +327,6 @@ class _UserManagementPageState extends State<ManagementPage> {
       body:
           _allUsers.isEmpty
               ? const Center(child: CircularProgressIndicator())
-              : _filteredUsers.isEmpty
-              ? const Center(child: Text('No users found'))
               : Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
