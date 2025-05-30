@@ -205,9 +205,9 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
         children: [
           // Dropdown at top-right of page
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+            padding: const EdgeInsets.fromLTRB(60, 20, 16, 6),
             child: Align(
-              alignment: Alignment.topRight,
+              alignment: Alignment.topLeft,
               child: DropdownButton<int>(
                 value: _selectedStatus,
                 dropdownColor: Colors.white,
