@@ -53,11 +53,9 @@ class UserService {
     final response = await http.get(Uri.parse('$baseUrl/users'));
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = json.decode(response.body);
-      // top-level list of all CM names for dropdown
       final cmNames = List<String>.from(
         data['myrank_cm_names'] as List<dynamic>,
       );
-      // list of users
       final usersJson = data['users'] as List<dynamic>;
       final users =
           usersJson
@@ -113,7 +111,6 @@ class ManagementPage extends StatefulWidget {
 }
 
 class _UserManagementPageState extends State<ManagementPage> {
-  late Future<UserResponse> futureUserData;
   final UserService userService = UserService(baseUrl: baseurl);
 
   static const Color primaryBlue = Color(0xFF00897B);
@@ -123,17 +120,26 @@ class _UserManagementPageState extends State<ManagementPage> {
   List<String> _roles = [];
   List<String> _cmNames = [];
 
-  int _rowsPerPage = PaginatedDataTable.defaultRowsPerPage;
-  int _sortColumnIndex = 0;
+  int _rowsPerPage = 10;
+  int _currentPage = 0;
+
+  int? _sortColumnIndex;
   bool _sortAscending = true;
   String _searchQuery = '';
 
-  late UserDataTableSource _dataSource;
+  late final ScrollController _scrollController;
 
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
     _loadUsers();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadUsers() async {
@@ -158,18 +164,10 @@ class _UserManagementPageState extends State<ManagementPage> {
           if (!_roles.contains(r)) _roles.add(r);
         }
 
-        _dataSource = UserDataTableSource(
-          context: context,
-          users: _filteredUsers,
-          roles: _roles,
-          cmNames: _cmNames,
-          userService: userService,
-          onRoleUpdated: _loadUsers,
-          onCMNameUpdated: _loadUsers,
-        );
+        _currentPage = 0;
       });
     } catch (e) {
-      // Handle error, maybe show SnackBar
+      // Handle error here if needed
     }
   }
 
@@ -188,15 +186,7 @@ class _UserManagementPageState extends State<ManagementPage> {
     setState(() {
       _sortColumnIndex = columnIndex;
       _sortAscending = ascending;
-      _dataSource = UserDataTableSource(
-        context: context,
-        users: _filteredUsers,
-        roles: _roles,
-        cmNames: _cmNames,
-        userService: userService,
-        onRoleUpdated: () => setState(() {}),
-        onCMNameUpdated: () => setState(() {}),
-      );
+      _currentPage = 0; // reset page on sort
     });
   }
 
@@ -213,17 +203,51 @@ class _UserManagementPageState extends State<ManagementPage> {
                 user.createdAt.toLowerCase().contains(query) ||
                 user.userId.toString().contains(query);
           }).toList();
-
-      _dataSource = UserDataTableSource(
-        context: context,
-        users: _filteredUsers,
-        roles: _roles,
-        cmNames: _cmNames,
-        userService: userService,
-        onRoleUpdated: () => setState(() {}),
-        onCMNameUpdated: () => setState(() {}),
-      );
+      _currentPage = 0; // reset page on filter
     });
+  }
+
+  int get _totalPages => (_filteredUsers.length / _rowsPerPage).ceil();
+
+  List<User> get _currentPageItems {
+    final start = _currentPage * _rowsPerPage;
+    final end = start + _rowsPerPage;
+    return _filteredUsers.sublist(
+      start,
+      end > _filteredUsers.length ? _filteredUsers.length : end,
+    );
+  }
+
+  void _goToFirstPage() {
+    if (_currentPage != 0) {
+      setState(() {
+        _currentPage = 0;
+      });
+    }
+  }
+
+  void _goToPreviousPage() {
+    if (_currentPage > 0) {
+      setState(() {
+        _currentPage--;
+      });
+    }
+  }
+
+  void _goToNextPage() {
+    if (_currentPage < _totalPages - 1) {
+      setState(() {
+        _currentPage++;
+      });
+    }
+  }
+
+  void _goToLastPage() {
+    if (_currentPage != _totalPages - 1) {
+      setState(() {
+        _currentPage = _totalPages - 1;
+      });
+    }
   }
 
   void _showAddUserDialog(BuildContext context) {
@@ -269,27 +293,7 @@ class _UserManagementPageState extends State<ManagementPage> {
                 if (email.isNotEmpty && name.isNotEmpty) {
                   try {
                     await userService.addUser(email, name, _selectedRole);
-                    final resp = await userService.fetchUsers();
-                    setState(() {
-                      _allUsers = resp.users;
-                      _filteredUsers = List.from(resp.users);
-                      _cmNames = resp.cmNames;
-
-                      final extraRoles = resp.users.map((u) => u.role).toSet();
-                      for (var r in extraRoles) {
-                        if (!_roles.contains(r)) _roles.add(r);
-                      }
-
-                      _dataSource = UserDataTableSource(
-                        context: context,
-                        users: _filteredUsers,
-                        roles: _roles,
-                        cmNames: _cmNames,
-                        userService: userService,
-                        onRoleUpdated: () => setState(() {}),
-                        onCMNameUpdated: () => setState(() {}),
-                      );
-                    });
+                    await _loadUsers();
                     Navigator.of(context).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('User added successfully')),
@@ -341,59 +345,134 @@ class _UserManagementPageState extends State<ManagementPage> {
                     ),
                     const SizedBox(height: 16),
                     Expanded(
-                      child: SingleChildScrollView(
-                        child: PaginatedDataTable(
-                          header: const Text('Users'),
-                          rowsPerPage: _rowsPerPage,
-                          availableRowsPerPage: const [5, 10, 20],
-                          onRowsPerPageChanged: (rows) {
-                            setState(() {
-                              if (rows != null) _rowsPerPage = rows;
-                            });
-                          },
-                          sortColumnIndex: _sortColumnIndex,
-                          sortAscending: _sortAscending,
-                          columns: [
-                            DataColumn(
-                              label: const Text('User ID'),
-                              numeric: true,
-                              onSort:
-                                  (i, asc) =>
-                                      _sort<num>((u) => u.userId, i, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('Name'),
-                              onSort:
-                                  (i, asc) =>
-                                      _sort<String>((u) => u.name, i, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('Email'),
-                              onSort:
-                                  (i, asc) =>
-                                      _sort<String>((u) => u.email, i, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('Role'),
-                              onSort:
-                                  (i, asc) =>
-                                      _sort<String>((u) => u.role, i, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('CM Name'),
-                              // no sort on this one
-                            ),
-                            DataColumn(
-                              label: const Text('Created At'),
-                              onSort:
-                                  (i, asc) =>
-                                      _sort<String>((u) => u.createdAt, i, asc),
-                            ),
-                          ],
-                          source: _dataSource,
+                      child: Scrollbar(
+                        thumbVisibility: true,
+                        controller: _scrollController,
+                        child: SingleChildScrollView(
+                          controller: _scrollController,
+                          scrollDirection: Axis.horizontal,
+                          child: Column(
+                            children: [
+                              DataTable(
+                                sortColumnIndex: _sortColumnIndex,
+                                sortAscending: _sortAscending,
+                                columns: [
+                                  DataColumn(
+                                    label: const Text('User ID'),
+                                    numeric: true,
+                                    onSort:
+                                        (i, asc) =>
+                                            _sort<num>((u) => u.userId, i, asc),
+                                  ),
+                                  DataColumn(
+                                    label: const Text('Name'),
+                                    onSort:
+                                        (i, asc) => _sort<String>(
+                                          (u) => u.name,
+                                          i,
+                                          asc,
+                                        ),
+                                  ),
+                                  DataColumn(
+                                    label: const Text('Email'),
+                                    onSort:
+                                        (i, asc) => _sort<String>(
+                                          (u) => u.email,
+                                          i,
+                                          asc,
+                                        ),
+                                  ),
+                                  DataColumn(
+                                    label: const Text('Role'),
+                                    onSort:
+                                        (i, asc) => _sort<String>(
+                                          (u) => u.role,
+                                          i,
+                                          asc,
+                                        ),
+                                  ),
+                                  const DataColumn(label: Text('CM Name')),
+                                  DataColumn(
+                                    label: const Text('Created At'),
+                                    onSort:
+                                        (i, asc) => _sort<String>(
+                                          (u) => u.createdAt,
+                                          i,
+                                          asc,
+                                        ),
+                                  ),
+                                ],
+                                rows:
+                                    _currentPageItems.map((user) {
+                                      final roleDropdownValue =
+                                          _roles.contains(user.role)
+                                              ? user.role
+                                              : 'not_assigned';
+                                      final cmDropdownValue =
+                                          _cmNames.contains(user.cmName)
+                                              ? user.cmName
+                                              : 'not_assigned';
+
+                                      return DataRow(
+                                        cells: [
+                                          DataCell(
+                                            Text(user.userId.toString()),
+                                          ),
+                                          DataCell(Text(user.name)),
+                                          DataCell(Text(user.email)),
+                                          DataCell(Text(user.role)),
+                                          DataCell(Text(user.cmName)),
+                                          DataCell(Text(user.createdAt)),
+                                        ],
+                                      );
+                                    }).toList(),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          icon: const Text(
+                            '<|',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                          onPressed: _currentPage == 0 ? null : _goToFirstPage,
+                        ),
+                        IconButton(
+                          icon: const Text('<', style: TextStyle(fontSize: 18)),
+                          onPressed:
+                              _currentPage == 0 ? null : _goToPreviousPage,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                          child: Text(
+                            'Page ${_currentPage + 1} of $_totalPages',
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Text('>', style: TextStyle(fontSize: 18)),
+                          onPressed:
+                              _currentPage >= _totalPages - 1
+                                  ? null
+                                  : _goToNextPage,
+                        ),
+                        IconButton(
+                          icon: const Text(
+                            '>|',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                          onPressed:
+                              _currentPage >= _totalPages - 1
+                                  ? null
+                                  : _goToLastPage,
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -404,51 +483,4 @@ class _UserManagementPageState extends State<ManagementPage> {
       ),
     );
   }
-}
-
-class UserDataTableSource extends DataTableSource {
-  final BuildContext context;
-  final List<User> users;
-  final List<String> roles;
-  final List<String> cmNames;
-  final UserService userService;
-  final VoidCallback onRoleUpdated;
-  final VoidCallback onCMNameUpdated;
-
-  UserDataTableSource({
-    required this.context,
-    required this.users,
-    required this.roles,
-    required this.cmNames,
-    required this.userService,
-    required this.onRoleUpdated,
-    required this.onCMNameUpdated,
-  });
-
-  @override
-  DataRow? getRow(int index) {
-    if (index >= users.length) return null;
-    final user = users[index];
-
-    return DataRow.byIndex(
-      index: index,
-      cells: [
-        DataCell(Text(user.userId.toString())),
-        DataCell(Text(user.name)),
-        DataCell(Text(user.email)),
-        DataCell(Text(user.role)),
-        DataCell(Text(user.cmName)),
-        DataCell(Text(user.createdAt)),
-      ],
-    );
-  }
-
-  @override
-  bool get isRowCountApproximate => false;
-
-  @override
-  int get rowCount => users.length;
-
-  @override
-  int get selectedRowCount => 0;
 }

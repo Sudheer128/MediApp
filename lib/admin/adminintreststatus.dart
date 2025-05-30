@@ -351,69 +351,43 @@ class _InterestsPageState extends State<InterestsPage> {
                                     );
                                   }).toList(),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 12.0,
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  IconButton(
-                                    icon: const Text(
-                                      '<|',
-                                      style: TextStyle(fontSize: 18),
-                                    ),
-                                    onPressed:
-                                        _currentPage == 0
-                                            ? null
-                                            : _goToFirstPage,
-                                  ),
-                                  IconButton(
-                                    icon: const Text(
-                                      '<',
-                                      style: TextStyle(fontSize: 18),
-                                    ),
-                                    onPressed:
-                                        _currentPage == 0
-                                            ? null
-                                            : _goToPreviousPage,
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12.0,
-                                    ),
-                                    child: Text(
-                                      'Page ${_currentPage + 1} of $_totalPages',
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: const Text(
-                                      '>',
-                                      style: TextStyle(fontSize: 18),
-                                    ),
-                                    onPressed:
-                                        _currentPage >= _totalPages - 1
-                                            ? null
-                                            : _goToNextPage,
-                                  ),
-                                  IconButton(
-                                    icon: const Text(
-                                      '>|',
-                                      style: TextStyle(fontSize: 18),
-                                    ),
-                                    onPressed:
-                                        _currentPage >= _totalPages - 1
-                                            ? null
-                                            : _goToLastPage,
-                                  ),
-                                ],
-                              ),
-                            ),
                           ],
                         ),
                       ),
                     ),
                   ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: const Text('<|', style: TextStyle(fontSize: 18)),
+                        onPressed: _currentPage == 0 ? null : _goToFirstPage,
+                      ),
+                      IconButton(
+                        icon: const Text('<', style: TextStyle(fontSize: 18)),
+                        onPressed: _currentPage == 0 ? null : _goToPreviousPage,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                        child: Text('Page ${_currentPage + 1} of $_totalPages'),
+                      ),
+                      IconButton(
+                        icon: const Text('>', style: TextStyle(fontSize: 18)),
+                        onPressed:
+                            _currentPage >= _totalPages - 1
+                                ? null
+                                : _goToNextPage,
+                      ),
+                      IconButton(
+                        icon: const Text('>|', style: TextStyle(fontSize: 18)),
+                        onPressed:
+                            _currentPage >= _totalPages - 1
+                                ? null
+                                : _goToLastPage,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20),
                 ],
               ),
     );

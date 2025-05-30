@@ -360,73 +360,47 @@ class _InterestsPageState extends State<CollegeInterestsPage> {
                                     );
                                   }).toList(),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 12.0,
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  IconButton(
-                                    icon: Text(
-                                      '<|',
-                                      style: TextStyle(fontSize: 18),
-                                    ),
-                                    onPressed:
-                                        _currentPage == 0
-                                            ? null
-                                            : _goToFirstPage,
-                                    tooltip: 'First Page',
-                                  ),
-                                  IconButton(
-                                    icon: Text(
-                                      '<',
-                                      style: TextStyle(fontSize: 18),
-                                    ),
-                                    onPressed:
-                                        _currentPage == 0
-                                            ? null
-                                            : _goToPreviousPage,
-                                    tooltip: 'Previous Page',
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12.0,
-                                    ),
-                                    child: Text(
-                                      'Page ${_currentPage + 1} of $_totalPages',
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: Text(
-                                      '>',
-                                      style: TextStyle(fontSize: 18),
-                                    ),
-                                    onPressed:
-                                        _currentPage >= _totalPages - 1
-                                            ? null
-                                            : _goToNextPage,
-                                    tooltip: 'Next Page',
-                                  ),
-                                  IconButton(
-                                    icon: Text(
-                                      '>|',
-                                      style: TextStyle(fontSize: 18),
-                                    ),
-                                    onPressed:
-                                        _currentPage >= _totalPages - 1
-                                            ? null
-                                            : _goToLastPage,
-                                    tooltip: 'Last Page',
-                                  ),
-                                ],
-                              ),
-                            ),
                           ],
                         ),
                       ),
                     ),
                   ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: Text('<|', style: TextStyle(fontSize: 18)),
+                        onPressed: _currentPage == 0 ? null : _goToFirstPage,
+                        tooltip: 'First Page',
+                      ),
+                      IconButton(
+                        icon: Text('<', style: TextStyle(fontSize: 18)),
+                        onPressed: _currentPage == 0 ? null : _goToPreviousPage,
+                        tooltip: 'Previous Page',
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                        child: Text('Page ${_currentPage + 1} of $_totalPages'),
+                      ),
+                      IconButton(
+                        icon: Text('>', style: TextStyle(fontSize: 18)),
+                        onPressed:
+                            _currentPage >= _totalPages - 1
+                                ? null
+                                : _goToNextPage,
+                        tooltip: 'Next Page',
+                      ),
+                      IconButton(
+                        icon: Text('>|', style: TextStyle(fontSize: 18)),
+                        onPressed:
+                            _currentPage >= _totalPages - 1
+                                ? null
+                                : _goToLastPage,
+                        tooltip: 'Last Page',
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20),
                 ],
               ),
     );
