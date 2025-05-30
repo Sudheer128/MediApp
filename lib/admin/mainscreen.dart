@@ -203,60 +203,60 @@ class AdminHomePage extends StatelessWidget {
       ),
 
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Welcome, Admin!',
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 30),
-            _buildCard(
-              context,
-              title: 'Create New Student Form',
-              icon: Icons.analytics,
-              subtitle: 'Add new student application',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AdminApplicationForm(),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 20),
-            _buildCard(
-              context,
-              title: 'Search and Find Student Details',
-              icon: Icons.search,
-              subtitle: 'Locate student information',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => SearchPage()),
-                );
-              },
-            ),
-            const SizedBox(height: 20),
-            _buildCard(
-              context,
-              title: 'Available Doctors',
-              icon: Icons.medical_services_outlined,
-              subtitle: 'List of Doctors in Particular Courses',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AdminCollegeDegreesScreen(),
-                  ),
-                );
-              },
-            ),
-
-            const FooterSection(), // footer is last child, so appears at bottom after scroll
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Welcome, Admin!',
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 30),
+              _buildCard(
+                context,
+                title: 'Create New Student Form',
+                icon: Icons.analytics,
+                subtitle: 'Add new student application',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AdminApplicationForm(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+              _buildCard(
+                context,
+                title: 'Search and Find Student Details',
+                icon: Icons.search,
+                subtitle: 'Locate student information',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SearchPage()),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+              _buildCard(
+                context,
+                title: 'Available Doctors',
+                icon: Icons.medical_services_outlined,
+                subtitle: 'List of Doctors in Particular Courses',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AdminCollegeDegreesScreen(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
