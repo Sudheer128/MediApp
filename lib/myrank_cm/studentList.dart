@@ -126,11 +126,11 @@ class _CourseDetailsScreenState extends State<CmCourseDetailsScreen> {
               ? const Center(child: CircularProgressIndicator())
               : error != null
               ? Center(child: Text(error!))
-              : filteredStudents.isEmpty
+              : students.isEmpty
               ? const Center(child: Text("No Data Available"))
               : Column(
                 children: [
-                  // --- Search Bar ---
+                  // Search Bar
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: TextField(
@@ -148,48 +148,62 @@ class _CourseDetailsScreenState extends State<CmCourseDetailsScreen> {
                     ),
                   ),
 
-                  // --- Filtered List / Grid ---
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isWide = constraints.maxWidth > 600;
+                  // If filteredStudents is empty (search text no matches), show nothing or optionally a small hint:
+                  if (filteredStudents.isEmpty)
+                    Expanded(
+                      child: Center(
+                        child: Text(
+                          'No matches found',
+                          style: TextStyle(
+                            color: kPrimaryColor.withOpacity(0.7),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    Expanded(
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isWide = constraints.maxWidth > 600;
 
-                        if (kIsWeb || isWide) {
-                          return SingleChildScrollView(
-                            padding: const EdgeInsets.all(16),
-                            child: Align(
-                              alignment: Alignment.topLeft,
-                              child: Wrap(
-                                spacing: 24,
-                                runSpacing: 24,
-                                children:
-                                    filteredStudents.map((s) {
-                                      return SizedBox(
-                                        width: 450,
-                                        child: buildStudentCard(context, s),
-                                      );
-                                    }).toList(),
-                              ),
-                            ),
-                          );
-                        } else {
-                          return ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: filteredStudents.length,
-                            itemBuilder: (ctx, i) {
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 20),
-                                child: buildStudentCard(
-                                  context,
-                                  filteredStudents[i],
+                          if (kIsWeb || isWide) {
+                            return SingleChildScrollView(
+                              padding: const EdgeInsets.all(16),
+                              child: Align(
+                                alignment: Alignment.topLeft,
+                                child: Wrap(
+                                  spacing: 24,
+                                  runSpacing: 24,
+                                  children:
+                                      filteredStudents.map((s) {
+                                        return SizedBox(
+                                          width: 450,
+                                          child: buildStudentCard(context, s),
+                                        );
+                                      }).toList(),
                                 ),
-                              );
-                            },
-                          );
-                        }
-                      },
+                              ),
+                            );
+                          } else {
+                            return ListView.builder(
+                              padding: const EdgeInsets.all(16),
+                              itemCount: filteredStudents.length,
+                              itemBuilder: (ctx, i) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 20),
+                                  child: buildStudentCard(
+                                    context,
+                                    filteredStudents[i],
+                                  ),
+                                );
+                              },
+                            );
+                          }
+                        },
+                      ),
                     ),
-                  ),
                 ],
               ),
     );

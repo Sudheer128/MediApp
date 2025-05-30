@@ -21,8 +21,10 @@ class CourseDetailsScreen extends StatefulWidget {
 
 class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
   List<dynamic> students = [];
+  List<dynamic> filteredStudents = [];
   bool isLoading = true;
   String? error;
+  String searchQuery = '';
 
   @override
   void initState() {
@@ -46,6 +48,7 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
         final List<dynamic> jsonResponse = jsonDecode(response.body);
         setState(() {
           students = jsonResponse;
+          filteredStudents = students;
           isLoading = false;
           error = null;
         });
@@ -61,6 +64,31 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
         isLoading = false;
       });
     }
+  }
+
+  void _filterStudents(String query) {
+    final lowerQuery = query.toLowerCase();
+
+    setState(() {
+      searchQuery = query;
+      filteredStudents =
+          students.where((student) {
+            final name = (student['name'] ?? '').toString().toLowerCase();
+
+            final highestDegree = (student['highest_degree'] ?? {}) as Map;
+            final degree =
+                (highestDegree['degree'] ?? '').toString().toLowerCase();
+
+            final latestExperience =
+                (student['latest_experience'] ?? {}) as Map;
+            final role =
+                (latestExperience['role'] ?? '').toString().toLowerCase();
+
+            return name.contains(lowerQuery) ||
+                degree.contains(lowerQuery) ||
+                role.contains(lowerQuery);
+          }).toList();
+    });
   }
 
   Widget buildStudentCard(BuildContext context, Map<String, dynamic> student) {
@@ -91,10 +119,10 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Colors.white),
         title: Text(
           '${widget.courseName} Details',
-          style: TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.white),
         ),
         backgroundColor: Colors.deepPurple.shade700,
       ),
@@ -103,39 +131,69 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
               ? const Center(child: CircularProgressIndicator())
               : error != null
               ? Center(child: Text(error!))
-              : LayoutBuilder(
-                builder: (context, constraints) {
-                  final isWideScreen = constraints.maxWidth > 600;
-                  // breakpoint for mobile vs web/tablet layout
-
-                  if (kIsWeb || isWideScreen) {
-                    return SingleChildScrollView(
-                      padding: const EdgeInsets.all(16),
-                      child: Wrap(
-                        spacing: 24,
-                        runSpacing: 24,
-                        children:
-                            students.map((student) {
-                              return SizedBox(
-                                width: 450,
-                                child: buildStudentCard(context, student),
-                              );
-                            }).toList(),
+              : Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Search by name, degree, or experience...',
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 10,
+                        ),
                       ),
-                    );
-                  } else {
-                    return ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: students.length,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 20),
-                          child: buildStudentCard(context, students[index]),
-                        );
+                      onChanged: _filterStudents,
+                    ),
+                  ),
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isWideScreen = constraints.maxWidth > 600;
+
+                        if (kIsWeb || isWideScreen) {
+                          return SingleChildScrollView(
+                            padding: const EdgeInsets.all(16),
+                            child: Align(
+                              alignment: Alignment.topLeft,
+                              child: Wrap(
+                                spacing: 24,
+                                runSpacing: 24,
+                                children:
+                                    filteredStudents.map((student) {
+                                      return SizedBox(
+                                        width: 450,
+                                        child: buildStudentCard(
+                                          context,
+                                          student,
+                                        ),
+                                      );
+                                    }).toList(),
+                              ),
+                            ),
+                          );
+                        } else {
+                          return ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: filteredStudents.length,
+                            itemBuilder: (ctx, i) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 20),
+                                child: buildStudentCard(
+                                  context,
+                                  filteredStudents[i],
+                                ),
+                              );
+                            },
+                          );
+                        }
                       },
-                    );
-                  }
-                },
+                    ),
+                  ),
+                ],
               ),
     );
   }
