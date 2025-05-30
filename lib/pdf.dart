@@ -3,15 +3,15 @@ import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 class PdfViewerPage extends StatelessWidget {
   final String url;
-  final String title;
+  final Color color;
 
-  const PdfViewerPage({Key? key, required this.url, required this.title})
+  const PdfViewerPage({Key? key, required this.url, required this.color})
     : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(title: Text('PDF Viewer'), backgroundColor: color),
       body: SfPdfViewer.network(
         url,
         onDocumentLoaded: (details) {

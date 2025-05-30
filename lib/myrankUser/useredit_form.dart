@@ -17,6 +17,7 @@ import 'package:medicalapp/index.dart';
 import 'package:medicalapp/myrankUser/UserCollegeDocList.dart';
 import 'package:medicalapp/myrankUser/UsersTable.dart';
 import 'package:medicalapp/myrankUser/homepage.dart';
+import 'package:medicalapp/myrankUser/search.dart';
 import 'package:medicalapp/myrankUser/userSearchStudent.dart';
 import 'package:medicalapp/myrankUser/userform_page.dart';
 import 'package:medicalapp/url.dart';
@@ -741,7 +742,7 @@ class _EditApplicationFormState extends State<UserEditApplicationForm> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => UserEditForm(),
+                                  builder: (context) => UserSearchPage(),
                                 ),
                               );
                             },

@@ -157,16 +157,19 @@ class _CourseDetailsScreenState extends State<CmCourseDetailsScreen> {
                         if (kIsWeb || isWide) {
                           return SingleChildScrollView(
                             padding: const EdgeInsets.all(16),
-                            child: Wrap(
-                              spacing: 24,
-                              runSpacing: 24,
-                              children:
-                                  filteredStudents.map((s) {
-                                    return SizedBox(
-                                      width: 450,
-                                      child: buildStudentCard(context, s),
-                                    );
-                                  }).toList(),
+                            child: Align(
+                              alignment: Alignment.topLeft,
+                              child: Wrap(
+                                spacing: 24,
+                                runSpacing: 24,
+                                children:
+                                    filteredStudents.map((s) {
+                                      return SizedBox(
+                                        width: 450,
+                                        child: buildStudentCard(context, s),
+                                      );
+                                    }).toList(),
+                              ),
                             ),
                           );
                         } else {

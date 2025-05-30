@@ -6,6 +6,7 @@ import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
 import 'package:medicalapp/myrankUser/UsersTable.dart';
 import 'package:medicalapp/myrankUser/homepage.dart';
+import 'package:medicalapp/myrankUser/search.dart';
 import 'package:medicalapp/myrankUser/studentList.dart';
 import 'package:medicalapp/myrankUser/userSearchStudent.dart';
 import 'package:medicalapp/myrankUser/userform_page.dart';
@@ -216,7 +217,7 @@ class _DegreesScreenState extends State<UserCollegeDegreesScreen>
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => UserEditForm(),
+                                  builder: (context) => UserSearchPage(),
                                 ),
                               );
                             },

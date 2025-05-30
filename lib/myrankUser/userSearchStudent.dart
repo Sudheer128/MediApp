@@ -9,7 +9,8 @@ import 'package:medicalapp/url.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class UserEditForm extends StatefulWidget {
-  const UserEditForm({Key? key}) : super(key: key);
+  final String? userId;
+  const UserEditForm({super.key, this.userId});
 
   @override
   State<UserEditForm> createState() => _StudentDetailScreenState();
@@ -29,6 +30,14 @@ class _StudentDetailScreenState extends State<UserEditForm> {
     super.dispose();
   }
 
+  @override
+  void initState() {
+    super.initState();
+    if (widget.userId != null) {
+      fetchStudentData(widget.userId!);
+    }
+  }
+
   Future<void> fetchStudentData(String userId) async {
     setState(() {
       loading = true;
@@ -37,7 +46,7 @@ class _StudentDetailScreenState extends State<UserEditForm> {
     });
     try {
       final response = await http.get(
-        Uri.parse('$baseurl/studentscompletedetails?user_id=$userId'),
+        Uri.parse('$baseurl/studentscompletedetails?user_id=${widget.userId}'),
       );
 
       if (response.statusCode == 200) {
@@ -120,39 +129,10 @@ class _StudentDetailScreenState extends State<UserEditForm> {
 
   // Education section with standalone Edit button above the section header
   Widget buildEducationSection(List<dynamic> educationList) {
-    final userIdText = _userIdController.text.trim();
-    final userId = int.tryParse(userIdText) ?? 0;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Edit button at the top right
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF00796B), // teal color
-              ),
-              onPressed: () {
-                if (data != null) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => UserEditApplicationForm(
-                            existingData: data,
-                            userId: userId,
-                          ),
-                    ),
-                  );
-                }
-              },
-              child: const Text('Edit', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
 
         // Education section header without edit button
         buildSectionHeader('Education', Icons.school),
@@ -293,14 +273,25 @@ class _StudentDetailScreenState extends State<UserEditForm> {
     );
   }
 
-  Future<void> _launchURL(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+  Future<void> _launchURL(BuildContext context, String url) async {
+    if (kIsWeb) {
+      // Open in external application on the web
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Could not open document')));
+      }
     } else {
-      ScaffoldMessenger.of(
+      // Show PDF in-app for mobile platforms
+      Navigator.push(
         context,
-      ).showSnackBar(SnackBar(content: Text('Could not open document')));
+        MaterialPageRoute(
+          builder: (context) => PdfViewerPage(url: url, color: primaryTeal),
+        ),
+      );
     }
   }
 
@@ -319,7 +310,7 @@ class _StudentDetailScreenState extends State<UserEditForm> {
                   onPressed: () {
                     final url = doc['url'] ?? '';
                     if (url.isNotEmpty) {
-                      _launchURL(url);
+                      _launchURL(context, url);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('No URL provided')),
@@ -336,6 +327,55 @@ class _StudentDetailScreenState extends State<UserEditForm> {
     );
   }
 
+  Widget buildPersonalDetailsSection(Map<String, dynamic> data) {
+    final userIdText = _userIdController.text.trim();
+    final userId = int.tryParse(userIdText) ?? 0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF00796B), // teal color
+              ),
+              onPressed: () {
+                if (data != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => UserEditApplicationForm(
+                            existingData: data,
+                            userId: userId,
+                          ),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Edit', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+        buildSectionHeader('Personal Details', Icons.person),
+        buildCard(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              buildInfoRow('Name', data['name'] ?? ''),
+              buildInfoRow('Phone', data['phone']?.toString() ?? ''),
+              buildInfoRow('Email', data['email'] ?? ''),
+              buildInfoRow('Address', data['address'] ?? ''),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -348,34 +388,6 @@ class _StudentDetailScreenState extends State<UserEditForm> {
         child: Column(
           children: [
             // Search Input Row
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _userIdController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Search Student Details by User ID',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                ElevatedButton(
-                  onPressed: () {
-                    final userId = _userIdController.text.trim();
-                    if (userId.isNotEmpty) {
-                      fetchStudentData(userId);
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please enter a User ID')),
-                      );
-                    }
-                  },
-                  child: const Text('Search'),
-                ),
-              ],
-            ),
             const SizedBox(height: 24),
 
             // Loading Indicator
@@ -419,6 +431,7 @@ class _StudentDetailScreenState extends State<UserEditForm> {
                   ),
                 ),
               ),
+              if (data != null) buildPersonalDetailsSection(data!),
               if (data?['education'] != null)
                 buildEducationSection(data!['education']),
               if (data?['fellowships'] != null)

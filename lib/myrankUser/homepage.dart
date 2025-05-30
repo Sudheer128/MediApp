@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:medicalapp/myrankUser/UserCollegeDocList.dart';
 import 'package:medicalapp/myrankUser/UsersTable.dart';
+import 'package:medicalapp/myrankUser/search.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // add this import
 import 'package:medicalapp/admin/adminintreststatus.dart';
 import 'package:medicalapp/admin/form_page.dart';
@@ -300,7 +301,7 @@ class _UserHomePageState extends State<UserHomePage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => UserEditForm()),
+                    MaterialPageRoute(builder: (context) => UserSearchPage()),
                   );
                 },
               ),
