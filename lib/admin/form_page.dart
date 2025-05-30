@@ -92,6 +92,8 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
   File? _resumeFile;
   String? _resumeFileName;
 
+  String _username = "Doctor";
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -113,6 +115,14 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
   void initState() {
     super.initState();
     fetchCourses();
+    _loadUsername();
+  }
+
+  Future<void> _loadUsername() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _username = prefs.getString('name') ?? "Doctor";
+    });
   }
 
   Future<void> _pickDate(TextEditingController controller) async {
@@ -562,8 +572,12 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
   @override
   Widget build(BuildContext context) {
     const Color primaryBlue = Color(0xFF007FFF);
-
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: primaryBlue,
+        title: const Text('Admin Dashboard'),
+        automaticallyImplyLeading: true,
+      ),
       drawer: Drawer(
         child: SafeArea(
           child: SingleChildScrollView(
@@ -572,15 +586,26 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
               children: [
                 DrawerHeader(
                   decoration: const BoxDecoration(color: primaryBlue),
-                  child: const Center(
-                    child: Text(
-                      'Admin Menu',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Admin Menu',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Welcome, $_username',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 ListTile(
@@ -673,11 +698,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
           ),
         ),
       ),
-      appBar: AppBar(
-        title: const Text('Medical Professional Application Form'),
-        actions: [],
-        backgroundColor: primaryBlue,
-      ),
+
       body:
           _isLoading
               ? const Center(

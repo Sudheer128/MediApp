@@ -13,6 +13,7 @@ import 'package:medicalapp/college/studentList.dart';
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
 import 'package:medicalapp/url.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AdminCollegeDegreesScreen extends StatefulWidget {
   const AdminCollegeDegreesScreen({super.key});
@@ -29,12 +30,14 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
 
   static const Color primaryBlue = Color(0xFF007FFF);
 
+  String _username = "Admin";
   // Track selected status: 1 = Active, 0 = Inactive
   int _selectedStatus = 1;
 
   @override
   void initState() {
     super.initState();
+    _loadUsername();
     degreesFuture = fetchDegrees(status: _selectedStatus);
     _animationController = AnimationController(
       vsync: this,
@@ -44,6 +47,13 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
       parent: _animationController,
       curve: Curves.easeIn,
     );
+  }
+
+  Future<void> _loadUsername() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _username = prefs.getString('name') ?? "Admin";
+    });
   }
 
   @override
@@ -92,6 +102,7 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
           ),
         ),
       ),
+
       drawer: Drawer(
         child: SafeArea(
           child: SingleChildScrollView(
@@ -100,15 +111,26 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
               children: [
                 DrawerHeader(
                   decoration: const BoxDecoration(color: primaryBlue),
-                  child: const Center(
-                    child: Text(
-                      'Admin Menu',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Admin Menu',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Welcome, $_username',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 ListTile(
