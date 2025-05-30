@@ -4,6 +4,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:medicalapp/admin/adminCollegedocList.dart';
 import 'package:medicalapp/admin/adminintreststatus.dart';
 import 'package:medicalapp/admin/form_page.dart';
+import 'package:medicalapp/admin/search.dart';
 import 'package:medicalapp/admin/searchstudent.dart';
 import 'package:medicalapp/admin/userstable.dart';
 import 'package:medicalapp/index.dart';
@@ -132,6 +133,7 @@ class AdminHomePage extends StatelessWidget {
                     );
                   },
                 ),
+
                 ListTile(
                   leading: Icon(Icons.school, color: primaryBlue),
                   title: const Text('College Interests'),
@@ -140,6 +142,17 @@ class AdminHomePage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => InterestsPage()),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.school, color: primaryBlue),
+                  title: const Text('Search Student'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => SearchPage()),
                     );
                   },
                 ),
@@ -158,16 +171,7 @@ class AdminHomePage extends StatelessWidget {
                     );
                   },
                 ),
-                ListTile(
-                  leading: Icon(Icons.person, color: primaryBlue),
-                  title: const Text('Search Student'),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => AdminEditForm()),
-                    );
-                  },
-                ),
+
                 ListTile(
                   leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
                   title: const Text('Available Doctors'),
@@ -232,7 +236,7 @@ class AdminHomePage extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => AdminEditForm()),
+                    MaterialPageRoute(builder: (context) => SearchPage()),
                   );
                 },
               ),

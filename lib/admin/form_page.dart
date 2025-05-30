@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:medicalapp/admin/adminCollegedocList.dart';
 import 'package:medicalapp/admin/adminintreststatus.dart';
 import 'package:medicalapp/admin/mainscreen.dart';
+import 'package:medicalapp/admin/search.dart';
 import 'package:medicalapp/admin/searchstudent.dart';
 import 'package:medicalapp/admin/userstable.dart';
 
@@ -633,12 +634,13 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.person, color: primaryBlue),
+                  leading: Icon(Icons.school, color: primaryBlue),
                   title: const Text('Search Student'),
                   onTap: () {
+                    Navigator.pop(context);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => AdminEditForm()),
+                      MaterialPageRoute(builder: (context) => SearchPage()),
                     );
                   },
                 ),
@@ -810,7 +812,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
 
                                 // Medical Course Certificate Section
                                 _buildSectionHeader(
-                                  'Currently Active Medical Councel Certificate',
+                                  'Currently Active Medical Council Certificate',
                                   'certificate',
                                 ),
                                 if (_isEditing)
@@ -1848,7 +1850,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
           TextFormField(
             controller: _registrationNumberController,
             decoration: const InputDecoration(
-              labelText: 'Medical Course Registration Number',
+              labelText: 'Medical Council Registration Number',
             ),
             validator:
                 (v) =>
@@ -1925,7 +1927,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
           TextFormField(
             controller: _registrationNumberController,
             decoration: const InputDecoration(
-              labelText: 'Medical Course Registration Number',
+              labelText: 'Medical Council Registration Number',
             ),
             validator:
                 (v) =>

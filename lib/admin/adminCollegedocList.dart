@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:medicalapp/admin/adminintreststatus.dart';
 import 'package:medicalapp/admin/form_page.dart';
 import 'package:medicalapp/admin/mainscreen.dart';
+import 'package:medicalapp/admin/search.dart';
 import 'package:medicalapp/admin/searchstudent.dart';
 import 'package:medicalapp/admin/studentsList.dart';
 import 'package:medicalapp/admin/userstable.dart';
@@ -161,12 +162,13 @@ class _DegreesScreenState extends State<AdminCollegeDegreesScreen>
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.person, color: primaryBlue),
+                  leading: Icon(Icons.school, color: primaryBlue),
                   title: const Text('Search Student'),
                   onTap: () {
+                    Navigator.pop(context);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => AdminEditForm()),
+                      MaterialPageRoute(builder: (context) => SearchPage()),
                     );
                   },
                 ),

@@ -60,16 +60,27 @@ class _InterestsPageState extends State<CollegeInterestsPage> {
   bool _isLoading = false;
   String? _error;
 
-  int _rowsPerPage = PaginatedDataTable.defaultRowsPerPage;
+  int _rowsPerPage = 10; // Number of rows per page
+  int _currentPage = 0;
+
   int? _sortColumnIndex;
   bool _sortAscending = true;
 
   String _searchQuery = '';
 
+  late final ScrollController _scrollController;
+
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
     _fetchInterests();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchInterests() async {
@@ -79,7 +90,7 @@ class _InterestsPageState extends State<CollegeInterestsPage> {
     });
 
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt('userid') ?? "";
+    final userId = prefs.getInt('userid') ?? 0;
 
     try {
       final response = await http.get(
@@ -94,6 +105,7 @@ class _InterestsPageState extends State<CollegeInterestsPage> {
           _allInterests =
               interestList.map((e) => Interest.fromJson(e)).toList();
           _filteredInterests = List.from(_allInterests);
+          _currentPage = 0;
         });
       } else {
         throw Exception('Failed to load data: ${response.body}');
@@ -124,6 +136,7 @@ class _InterestsPageState extends State<CollegeInterestsPage> {
     setState(() {
       _sortColumnIndex = columnIndex;
       _sortAscending = ascending;
+      _currentPage = 0; // Reset to first page on sort
     });
   }
 
@@ -144,7 +157,55 @@ class _InterestsPageState extends State<CollegeInterestsPage> {
                 interest.collegeId.toString().contains(query) ||
                 interest.studentId.toString().contains(query);
           }).toList();
+      _currentPage = 0; // Reset page on filter
     });
+  }
+
+  // Get current page items
+  List<Interest> get _currentPageItems {
+    final startIndex = _currentPage * _rowsPerPage;
+    final endIndex = startIndex + _rowsPerPage;
+    return _filteredInterests.sublist(
+      startIndex,
+      endIndex > _filteredInterests.length
+          ? _filteredInterests.length
+          : endIndex,
+    );
+  }
+
+  // Calculate total pages
+  int get _totalPages => (_filteredInterests.length / _rowsPerPage).ceil();
+
+  void _goToFirstPage() {
+    if (_currentPage != 0) {
+      setState(() {
+        _currentPage = 0;
+      });
+    }
+  }
+
+  void _goToPreviousPage() {
+    if (_currentPage > 0) {
+      setState(() {
+        _currentPage--;
+      });
+    }
+  }
+
+  void _goToNextPage() {
+    if (_currentPage < _totalPages - 1) {
+      setState(() {
+        _currentPage++;
+      });
+    }
+  }
+
+  void _goToLastPage() {
+    if (_currentPage != _totalPages - 1) {
+      setState(() {
+        _currentPage = _totalPages - 1;
+      });
+    }
   }
 
   @override
@@ -174,91 +235,195 @@ class _InterestsPageState extends State<CollegeInterestsPage> {
                     ),
                   ),
                   Expanded(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: DataTable(
-                        sortColumnIndex: _sortColumnIndex,
-                        sortAscending: _sortAscending,
-                        columns: [
-                          DataColumn(
-                            label: Text('ID'),
-                            numeric: true,
-                            onSort: (i, asc) => _sort<num>((d) => d.id, i, asc),
-                          ),
-                          DataColumn(
-                            label: Text('College ID'),
-                            numeric: true,
-                            onSort:
-                                (i, asc) =>
-                                    _sort<num>((d) => d.collegeId, i, asc),
-                          ),
-                          DataColumn(
-                            label: Text('College Name'),
-                            onSort:
-                                (i, asc) =>
-                                    _sort<String>((d) => d.collegeName, i, asc),
-                          ),
-                          DataColumn(
-                            label: Text('Student ID'),
-                            numeric: true,
-                            onSort:
-                                (i, asc) =>
-                                    _sort<num>((d) => d.studentId, i, asc),
-                          ),
-                          DataColumn(
-                            label: Text('Student Name'),
-                            onSort:
-                                (i, asc) =>
-                                    _sort<String>((d) => d.studentName, i, asc),
-                          ),
-                          DataColumn(
-                            label: Text('Course Name'),
-                            onSort:
-                                (i, asc) =>
-                                    _sort<String>((d) => d.courseName, i, asc),
-                          ),
-                          DataColumn(
-                            label: Text('Degree'),
-                            onSort:
-                                (i, asc) =>
-                                    _sort<String>((d) => d.degree, i, asc),
-                          ),
-                          DataColumn(
-                            label: Text('Message'),
-                            onSort:
-                                (i, asc) =>
-                                    _sort<String>((d) => d.message, i, asc),
-                          ),
-                          DataColumn(
-                            label: Text('Status'),
-                            onSort:
-                                (i, asc) =>
-                                    _sort<String>((d) => d.status, i, asc),
-                          ),
-                          DataColumn(
-                            label: Text('Created At'),
-                            onSort:
-                                (i, asc) =>
-                                    _sort<String>((d) => d.createdAt, i, asc),
-                          ),
-                        ],
-                        rows:
-                            _filteredInterests.map((interest) {
-                              return DataRow(
-                                cells: [
-                                  DataCell(Text(interest.id.toString())),
-                                  DataCell(Text(interest.collegeId.toString())),
-                                  DataCell(Text(interest.collegeName)),
-                                  DataCell(Text(interest.studentId.toString())),
-                                  DataCell(Text(interest.studentName)),
-                                  DataCell(Text(interest.courseName)),
-                                  DataCell(Text(interest.degree)),
-                                  DataCell(Text(interest.message)),
-                                  DataCell(Text(interest.status)),
-                                  DataCell(Text(interest.createdAt)),
+                    child: Scrollbar(
+                      thumbVisibility: true,
+                      controller: _scrollController,
+                      child: SingleChildScrollView(
+                        controller: _scrollController,
+                        scrollDirection: Axis.horizontal,
+                        child: Column(
+                          children: [
+                            DataTable(
+                              sortColumnIndex: _sortColumnIndex,
+                              sortAscending: _sortAscending,
+                              columns: [
+                                DataColumn(
+                                  label: Text('ID'),
+                                  numeric: true,
+                                  onSort:
+                                      (i, asc) =>
+                                          _sort<num>((d) => d.id, i, asc),
+                                ),
+                                DataColumn(
+                                  label: Text('College ID'),
+                                  numeric: true,
+                                  onSort:
+                                      (i, asc) => _sort<num>(
+                                        (d) => d.collegeId,
+                                        i,
+                                        asc,
+                                      ),
+                                ),
+                                DataColumn(
+                                  label: Text('College Name'),
+                                  onSort:
+                                      (i, asc) => _sort<String>(
+                                        (d) => d.collegeName,
+                                        i,
+                                        asc,
+                                      ),
+                                ),
+                                DataColumn(
+                                  label: Text('Student ID'),
+                                  numeric: true,
+                                  onSort:
+                                      (i, asc) => _sort<num>(
+                                        (d) => d.studentId,
+                                        i,
+                                        asc,
+                                      ),
+                                ),
+                                DataColumn(
+                                  label: Text('Student Name'),
+                                  onSort:
+                                      (i, asc) => _sort<String>(
+                                        (d) => d.studentName,
+                                        i,
+                                        asc,
+                                      ),
+                                ),
+                                DataColumn(
+                                  label: Text('Course Name'),
+                                  onSort:
+                                      (i, asc) => _sort<String>(
+                                        (d) => d.courseName,
+                                        i,
+                                        asc,
+                                      ),
+                                ),
+                                DataColumn(
+                                  label: Text('Degree'),
+                                  onSort:
+                                      (i, asc) => _sort<String>(
+                                        (d) => d.degree,
+                                        i,
+                                        asc,
+                                      ),
+                                ),
+                                DataColumn(
+                                  label: Text('Message'),
+                                  onSort:
+                                      (i, asc) => _sort<String>(
+                                        (d) => d.message,
+                                        i,
+                                        asc,
+                                      ),
+                                ),
+                                DataColumn(
+                                  label: Text('Status'),
+                                  onSort:
+                                      (i, asc) => _sort<String>(
+                                        (d) => d.status,
+                                        i,
+                                        asc,
+                                      ),
+                                ),
+                                DataColumn(
+                                  label: Text('Created At'),
+                                  onSort:
+                                      (i, asc) => _sort<String>(
+                                        (d) => d.createdAt,
+                                        i,
+                                        asc,
+                                      ),
+                                ),
+                              ],
+                              rows:
+                                  _currentPageItems.map((interest) {
+                                    return DataRow(
+                                      cells: [
+                                        DataCell(Text(interest.id.toString())),
+                                        DataCell(
+                                          Text(interest.collegeId.toString()),
+                                        ),
+                                        DataCell(Text(interest.collegeName)),
+                                        DataCell(
+                                          Text(interest.studentId.toString()),
+                                        ),
+                                        DataCell(Text(interest.studentName)),
+                                        DataCell(Text(interest.courseName)),
+                                        DataCell(Text(interest.degree)),
+                                        DataCell(Text(interest.message)),
+                                        DataCell(Text(interest.status)),
+                                        DataCell(Text(interest.createdAt)),
+                                      ],
+                                    );
+                                  }).toList(),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12.0,
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  IconButton(
+                                    icon: Text(
+                                      '<|',
+                                      style: TextStyle(fontSize: 18),
+                                    ),
+                                    onPressed:
+                                        _currentPage == 0
+                                            ? null
+                                            : _goToFirstPage,
+                                    tooltip: 'First Page',
+                                  ),
+                                  IconButton(
+                                    icon: Text(
+                                      '<',
+                                      style: TextStyle(fontSize: 18),
+                                    ),
+                                    onPressed:
+                                        _currentPage == 0
+                                            ? null
+                                            : _goToPreviousPage,
+                                    tooltip: 'Previous Page',
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12.0,
+                                    ),
+                                    child: Text(
+                                      'Page ${_currentPage + 1} of $_totalPages',
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: Text(
+                                      '>',
+                                      style: TextStyle(fontSize: 18),
+                                    ),
+                                    onPressed:
+                                        _currentPage >= _totalPages - 1
+                                            ? null
+                                            : _goToNextPage,
+                                    tooltip: 'Next Page',
+                                  ),
+                                  IconButton(
+                                    icon: Text(
+                                      '>|',
+                                      style: TextStyle(fontSize: 18),
+                                    ),
+                                    onPressed:
+                                        _currentPage >= _totalPages - 1
+                                            ? null
+                                            : _goToLastPage,
+                                    tooltip: 'Last Page',
+                                  ),
                                 ],
-                              );
-                            }).toList(),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

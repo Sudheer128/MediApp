@@ -53,11 +53,9 @@ class UserService {
     final response = await http.get(Uri.parse('$baseUrl/users'));
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = json.decode(response.body);
-      // top-level list of all CM names for dropdown
       final cmNames = List<String>.from(
         data['myrank_cm_names'] as List<dynamic>,
       );
-      // list of users
       final usersJson = data['users'] as List<dynamic>;
       final users =
           usersJson
@@ -113,25 +111,36 @@ class UserManagementPage extends StatefulWidget {
 }
 
 class _UserManagementPageState extends State<UserManagementPage> {
-  late Future<UserResponse> futureUserData;
   final UserService userService = UserService(baseUrl: baseurl);
+
+  late final ScrollController _scrollController;
 
   List<User> _allUsers = [];
   List<User> _filteredUsers = [];
   List<String> _roles = [];
   List<String> _cmNames = [];
 
-  int _rowsPerPage = PaginatedDataTable.defaultRowsPerPage;
-  int _sortColumnIndex = 0;
+  int? _sortColumnIndex;
   bool _sortAscending = true;
   String _searchQuery = '';
 
-  late UserDataTableSource _dataSource;
+  Comparable Function(User user)? _currentSortField;
+
+  // Pagination
+  static const int _rowsPerPage = 10;
+  int _currentPage = 0;
 
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
     _loadUsers();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose(); // <-- Added this line
+    super.dispose();
   }
 
   Future<void> _loadUsers() async {
@@ -156,18 +165,10 @@ class _UserManagementPageState extends State<UserManagementPage> {
           if (!_roles.contains(r)) _roles.add(r);
         }
 
-        _dataSource = UserDataTableSource(
-          context: context,
-          users: _filteredUsers,
-          roles: _roles,
-          cmNames: _cmNames,
-          userService: userService,
-          onRoleUpdated: _loadUsers,
-          onCMNameUpdated: _loadUsers,
-        );
+        _currentPage = 0;
       });
     } catch (e) {
-      // Handle error, maybe show SnackBar
+      // Handle error if needed
     }
   }
 
@@ -176,6 +177,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
     int columnIndex,
     bool ascending,
   ) {
+    _currentSortField = getField;
     _filteredUsers.sort((a, b) {
       final aValue = getField(a);
       final bValue = getField(b);
@@ -186,15 +188,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
     setState(() {
       _sortColumnIndex = columnIndex;
       _sortAscending = ascending;
-      _dataSource = UserDataTableSource(
-        context: context,
-        users: _filteredUsers,
-        roles: _roles,
-        cmNames: _cmNames,
-        userService: userService,
-        onRoleUpdated: () => setState(() {}),
-        onCMNameUpdated: () => setState(() {}),
-      );
+      _currentPage = 0;
     });
   }
 
@@ -212,16 +206,43 @@ class _UserManagementPageState extends State<UserManagementPage> {
                 user.userId.toString().contains(query);
           }).toList();
 
-      _dataSource = UserDataTableSource(
-        context: context,
-        users: _filteredUsers,
-        roles: _roles,
-        cmNames: _cmNames,
-        userService: userService,
-        onRoleUpdated: () => setState(() {}),
-        onCMNameUpdated: () => setState(() {}),
-      );
+      if (_currentSortField != null) {
+        _filteredUsers.sort((a, b) {
+          final aValue = _currentSortField!(a);
+          final bValue = _currentSortField!(b);
+          return _sortAscending
+              ? Comparable.compare(aValue, bValue)
+              : Comparable.compare(bValue, aValue);
+        });
+      }
+
+      _currentPage = 0;
     });
+  }
+
+  List<User> get _paginatedUsers {
+    final start = _currentPage * _rowsPerPage;
+    final end = start + _rowsPerPage;
+    return _filteredUsers.sublist(
+      start,
+      end > _filteredUsers.length ? _filteredUsers.length : end,
+    );
+  }
+
+  void _nextPage() {
+    if ((_currentPage + 1) * _rowsPerPage < _filteredUsers.length) {
+      setState(() {
+        _currentPage++;
+      });
+    }
+  }
+
+  void _prevPage() {
+    if (_currentPage > 0) {
+      setState(() {
+        _currentPage--;
+      });
+    }
   }
 
   void _showAddUserDialog(BuildContext context) {
@@ -272,27 +293,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
                 if (email.isNotEmpty && name.isNotEmpty) {
                   try {
                     await userService.addUser(email, name, _selectedRole);
-                    final resp = await userService.fetchUsers();
-                    setState(() {
-                      _allUsers = resp.users;
-                      _filteredUsers = List.from(resp.users);
-                      _cmNames = resp.cmNames;
-
-                      final extraRoles = resp.users.map((u) => u.role).toSet();
-                      for (var r in extraRoles) {
-                        if (!_roles.contains(r)) _roles.add(r);
-                      }
-
-                      _dataSource = UserDataTableSource(
-                        context: context,
-                        users: _filteredUsers,
-                        roles: _roles,
-                        cmNames: _cmNames,
-                        userService: userService,
-                        onRoleUpdated: () => setState(() {}),
-                        onCMNameUpdated: () => setState(() {}),
-                      );
-                    });
+                    await _loadUsers();
                     Navigator.of(context).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('User added successfully')),
@@ -318,6 +319,8 @@ class _UserManagementPageState extends State<UserManagementPage> {
 
   @override
   Widget build(BuildContext context) {
+    final totalPages = (_filteredUsers.length / _rowsPerPage).ceil();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Manage Users'),
@@ -326,8 +329,6 @@ class _UserManagementPageState extends State<UserManagementPage> {
       body:
           _allUsers.isEmpty
               ? const Center(child: CircularProgressIndicator())
-              : _filteredUsers.isEmpty
-              ? const Center(child: Text('No users found'))
               : Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -343,179 +344,295 @@ class _UserManagementPageState extends State<UserManagementPage> {
                       onChanged: _filterUsers,
                     ),
                     const SizedBox(height: 16),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: PaginatedDataTable(
-                          header: const Text('Users'),
-                          rowsPerPage: _rowsPerPage,
-                          availableRowsPerPage: const [5, 10, 20],
-                          onRowsPerPageChanged: (rows) {
-                            setState(() {
-                              if (rows != null) _rowsPerPage = rows;
-                            });
-                          },
-                          sortColumnIndex: _sortColumnIndex,
-                          sortAscending: _sortAscending,
-                          columns: [
-                            DataColumn(
-                              label: const Text('User ID'),
-                              numeric: true,
-                              onSort:
-                                  (i, asc) =>
-                                      _sort<num>((u) => u.userId, i, asc),
+                    _filteredUsers.isEmpty
+                        ? Expanded(
+                          child: Center(child: Text('No data available')),
+                        )
+                        : Expanded(
+                          child: Scrollbar(
+                            thumbVisibility:
+                                true, // <-- Added Scrollbar widget with visible thumb
+                            controller:
+                                _scrollController, // <-- Assigned scroll controller here
+                            child: SingleChildScrollView(
+                              controller:
+                                  _scrollController, // <-- Assigned controller here too
+                              scrollDirection: Axis.horizontal,
+                              child: SingleChildScrollView(
+                                child: DataTable(
+                                  sortColumnIndex: _sortColumnIndex,
+                                  sortAscending: _sortAscending,
+                                  columns: [
+                                    DataColumn(
+                                      label: const Text('User ID'),
+                                      numeric: true,
+                                      onSort:
+                                          (i, asc) => _sort<num>(
+                                            (u) => u.userId,
+                                            i,
+                                            asc,
+                                          ),
+                                    ),
+                                    DataColumn(
+                                      label: const Text('Name'),
+                                      onSort:
+                                          (i, asc) => _sort<String>(
+                                            (u) => u.name,
+                                            i,
+                                            asc,
+                                          ),
+                                    ),
+                                    DataColumn(
+                                      label: const Text('Email'),
+                                      onSort:
+                                          (i, asc) => _sort<String>(
+                                            (u) => u.email,
+                                            i,
+                                            asc,
+                                          ),
+                                    ),
+                                    DataColumn(
+                                      label: const Text('Role'),
+                                      onSort:
+                                          (i, asc) => _sort<String>(
+                                            (u) => u.role,
+                                            i,
+                                            asc,
+                                          ),
+                                    ),
+                                    const DataColumn(label: Text('CM Name')),
+                                    DataColumn(
+                                      label: const Text('Created At'),
+                                      onSort:
+                                          (i, asc) => _sort<String>(
+                                            (u) => u.createdAt,
+                                            i,
+                                            asc,
+                                          ),
+                                    ),
+                                  ],
+                                  rows:
+                                      _paginatedUsers.map((user) {
+                                        final roleDropdownValue =
+                                            _roles.contains(user.role)
+                                                ? user.role
+                                                : 'not_assigned';
+                                        final cmDropdownValue =
+                                            _cmNames.contains(user.cmName)
+                                                ? user.cmName
+                                                : 'not_assigned';
+
+                                        return DataRow(
+                                          cells: [
+                                            DataCell(
+                                              Text(user.userId.toString()),
+                                            ),
+                                            DataCell(Text(user.name)),
+                                            DataCell(Text(user.email)),
+                                            DataCell(
+                                              DropdownButton<String>(
+                                                value: roleDropdownValue,
+                                                items:
+                                                    _roles
+                                                        .map(
+                                                          (role) =>
+                                                              DropdownMenuItem(
+                                                                value: role,
+                                                                child: Text(
+                                                                  role,
+                                                                ),
+                                                              ),
+                                                        )
+                                                        .toList(),
+                                                onChanged: (newRole) async {
+                                                  if (newRole != null &&
+                                                      newRole != user.role) {
+                                                    try {
+                                                      await userService
+                                                          .updateUserRole(
+                                                            user.userId,
+                                                            newRole,
+                                                          );
+                                                      setState(() {
+                                                        user.role = newRole;
+                                                      });
+                                                      ScaffoldMessenger.of(
+                                                        context,
+                                                      ).showSnackBar(
+                                                        const SnackBar(
+                                                          content: Text(
+                                                            'Role updated successfully',
+                                                          ),
+                                                        ),
+                                                      );
+                                                    } catch (e) {
+                                                      ScaffoldMessenger.of(
+                                                        context,
+                                                      ).showSnackBar(
+                                                        const SnackBar(
+                                                          content: Text(
+                                                            'Failed to update role',
+                                                          ),
+                                                        ),
+                                                      );
+                                                    }
+                                                  }
+                                                },
+                                              ),
+                                            ),
+                                            DataCell(
+                                              DropdownButton<String>(
+                                                value: cmDropdownValue,
+                                                items: [
+                                                  const DropdownMenuItem<
+                                                    String
+                                                  >(
+                                                    value: 'not_assigned',
+                                                    child: Text('not_assigned'),
+                                                  ),
+                                                  ..._cmNames.map(
+                                                    (cm) => DropdownMenuItem(
+                                                      value: cm,
+                                                      child: Text(cm),
+                                                    ),
+                                                  ),
+                                                ],
+                                                onChanged: (newCm) async {
+                                                  if (newCm != null &&
+                                                      newCm != user.cmName) {
+                                                    try {
+                                                      await userService
+                                                          .updateUserCMName(
+                                                            user.userId,
+                                                            newCm,
+                                                          );
+                                                      setState(() {
+                                                        user.cmName = newCm;
+                                                      });
+                                                      ScaffoldMessenger.of(
+                                                        context,
+                                                      ).showSnackBar(
+                                                        const SnackBar(
+                                                          content: Text(
+                                                            'CM Name updated successfully',
+                                                          ),
+                                                        ),
+                                                      );
+                                                    } catch (e) {
+                                                      ScaffoldMessenger.of(
+                                                        context,
+                                                      ).showSnackBar(
+                                                        const SnackBar(
+                                                          content: Text(
+                                                            'Failed to update CM Name',
+                                                          ),
+                                                        ),
+                                                      );
+                                                    }
+                                                  }
+                                                },
+                                              ),
+                                            ),
+                                            DataCell(Text(user.createdAt)),
+                                          ],
+                                        );
+                                      }).toList(),
+                                ),
+                              ),
                             ),
-                            DataColumn(
-                              label: const Text('Name'),
-                              onSort:
-                                  (i, asc) =>
-                                      _sort<String>((u) => u.name, i, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('Email'),
-                              onSort:
-                                  (i, asc) =>
-                                      _sort<String>((u) => u.email, i, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('Role'),
-                              onSort:
-                                  (i, asc) =>
-                                      _sort<String>((u) => u.role, i, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('CM Name'),
-                              // no sort on this one
-                            ),
-                            DataColumn(
-                              label: const Text('Created At'),
-                              onSort:
-                                  (i, asc) =>
-                                      _sort<String>((u) => u.createdAt, i, asc),
-                            ),
-                          ],
-                          source: _dataSource,
+                          ),
+                        ),
+
+                    const SizedBox(height: 16),
+
+                    // Add User button placed above pagination:
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: SizedBox(
+                        width: 56, // default FAB width is 56
+                        height: 56, // default FAB height is 56
+                        child: FloatingActionButton(
+                          onPressed: () => _showAddUserDialog(context),
+                          child: const Icon(Icons.person_add),
+                          backgroundColor: Colors.blue,
+                          heroTag: 'addUserButton',
+                          elevation: 4,
                         ),
                       ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Inside build(), replace the pagination Row with this:
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          tooltip: 'First Page',
+                          icon: const Text(
+                            '|<',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                          onPressed:
+                              _currentPage > 0
+                                  ? () => setState(() {
+                                    _currentPage = 0;
+                                  })
+                                  : null,
+                        ),
+                        IconButton(
+                          tooltip: 'Previous Page',
+                          icon: const Text(
+                            '<',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                          onPressed: _currentPage > 0 ? _prevPage : null,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            'Page ${_currentPage + 1} of $totalPages',
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Next Page',
+                          icon: const Text(
+                            '>',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                          onPressed:
+                              _currentPage < totalPages - 1 ? _nextPage : null,
+                        ),
+                        IconButton(
+                          tooltip: 'Last Page',
+                          icon: const Text(
+                            '>|',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                          onPressed:
+                              _currentPage < totalPages - 1
+                                  ? () => setState(() {
+                                    _currentPage = totalPages - 1;
+                                  })
+                                  : null,
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddUserDialog(context),
-        child: const Icon(Icons.person_add),
-        backgroundColor: Colors.blue,
-      ),
     );
   }
-}
-
-class UserDataTableSource extends DataTableSource {
-  final BuildContext context;
-  final List<User> users;
-  final List<String> roles;
-  final List<String> cmNames;
-  final UserService userService;
-  final VoidCallback onRoleUpdated;
-  final VoidCallback onCMNameUpdated;
-
-  UserDataTableSource({
-    required this.context,
-    required this.users,
-    required this.roles,
-    required this.cmNames,
-    required this.userService,
-    required this.onRoleUpdated,
-    required this.onCMNameUpdated,
-  });
-
-  @override
-  DataRow? getRow(int index) {
-    if (index >= users.length) return null;
-    final user = users[index];
-
-    final roleDropdownValue =
-        roles.contains(user.role) ? user.role : 'not_assigned';
-    final cmDropdownValue = cmNames.contains(user.cmName) ? user.cmName : null;
-
-    return DataRow.byIndex(
-      index: index,
-      cells: [
-        DataCell(Text(user.userId.toString())),
-        DataCell(Text(user.name)),
-        DataCell(Text(user.email)),
-        DataCell(
-          DropdownButton<String>(
-            value: roleDropdownValue,
-            items:
-                roles
-                    .map(
-                      (role) =>
-                          DropdownMenuItem(value: role, child: Text(role)),
-                    )
-                    .toList(),
-            onChanged: (newRole) async {
-              if (newRole != null && newRole != user.role) {
-                try {
-                  await userService.updateUserRole(user.userId, newRole);
-                  user.role = newRole;
-                  onRoleUpdated();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Role updated successfully')),
-                  );
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Failed to update role')),
-                  );
-                }
-              }
-            },
-          ),
-        ),
-        DataCell(
-          DropdownButton<String>(
-            hint: const Text('Select CM'),
-            value: cmDropdownValue,
-            items: [
-              const DropdownMenuItem<String>(
-                value: 'not_assigned',
-                child: Text('not_assigned'),
-              ),
-              ...cmNames.map(
-                (cm) => DropdownMenuItem(value: cm, child: Text(cm)),
-              ),
-            ],
-            onChanged: (newCm) async {
-              if (newCm != null && newCm != user.cmName) {
-                try {
-                  await userService.updateUserCMName(user.userId, newCm);
-                  user.cmName = newCm;
-                  onCMNameUpdated();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('CM Name updated successfully'),
-                    ),
-                  );
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Failed to update CM Name')),
-                  );
-                }
-              }
-            },
-          ),
-        ),
-
-        DataCell(Text(user.createdAt)),
-      ],
-    );
-  }
-
-  @override
-  bool get isRowCountApproximate => false;
-
-  @override
-  int get rowCount => users.length;
-
-  @override
-  int get selectedRowCount => 0;
 }

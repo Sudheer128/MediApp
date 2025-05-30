@@ -811,7 +811,7 @@ class _ApplicationFormState extends State<CmApplicationForm> {
 
                                 // Medical Course Certificate Section
                                 _buildSectionHeader(
-                                  'Currently Active Medical Councel Certificate',
+                                  'Currently Active Medical Council Certificate',
                                   'certificate',
                                 ),
                                 if (_isEditing)
@@ -1848,7 +1848,7 @@ class _ApplicationFormState extends State<CmApplicationForm> {
           TextFormField(
             controller: _registrationNumberController,
             decoration: const InputDecoration(
-              labelText: 'Medical Course Registration Number',
+              labelText: 'Medical Council Registration Number',
             ),
             validator:
                 (v) =>
@@ -1925,7 +1925,7 @@ class _ApplicationFormState extends State<CmApplicationForm> {
           TextFormField(
             controller: _registrationNumberController,
             decoration: const InputDecoration(
-              labelText: 'Medical Course Registration Number',
+              labelText: 'Medical Council Registration Number',
             ),
             validator:
                 (v) =>

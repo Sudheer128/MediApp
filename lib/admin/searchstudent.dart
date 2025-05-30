@@ -15,7 +15,8 @@ import 'package:medicalapp/url.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AdminEditForm extends StatefulWidget {
-  const AdminEditForm({Key? key}) : super(key: key);
+  final String? userId;
+  const AdminEditForm({super.key, this.userId});
 
   @override
   State<AdminEditForm> createState() => _StudentDetailScreenState();
@@ -34,6 +35,12 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
     super.dispose();
   }
 
+  @override
+  void initState() {
+    super.initState();
+    fetchStudentData(widget.userId ?? '');
+  }
+
   Future<void> fetchStudentData(String userId) async {
     setState(() {
       loading = true;
@@ -42,7 +49,7 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
     });
     try {
       final response = await http.get(
-        Uri.parse('$baseurl/studentscompletedetails?user_id=$userId'),
+        Uri.parse('$baseurl/studentscompletedetails?user_id=${widget.userId}'),
       );
 
       if (response.statusCode == 200) {
@@ -275,6 +282,26 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
     );
   }
 
+  Widget buildPersonalDetailsSection(Map<String, dynamic> data) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        buildSectionHeader('Personal Details', Icons.person),
+        buildCard(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              buildInfoRow('Name', data['name'] ?? ''),
+              buildInfoRow('Phone', data['phone']?.toString() ?? ''),
+              buildInfoRow('Email', data['email'] ?? ''),
+              buildInfoRow('Address', data['address'] ?? ''),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Future<void> _launchURL(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
@@ -301,16 +328,7 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
                   onPressed: () {
                     final url = doc['url'] ?? '';
                     if (url.isNotEmpty) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => PdfViewerPage(
-                                url: url,
-                                title: doc['name'] ?? 'Document',
-                              ),
-                        ),
-                      );
+                      _launchURL(url);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('No URL provided')),
@@ -330,114 +348,6 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: Drawer(
-        child: SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                DrawerHeader(
-                  decoration: const BoxDecoration(color: primaryBlue),
-                  child: const Center(
-                    child: Text(
-                      'Admin Menu',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                ListTile(
-                  leading: Icon(Icons.home_filled, color: primaryBlue),
-                  title: const Text('Home'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => AdminHomePage()),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.group, color: primaryBlue),
-                  title: const Text('Manage Users'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => UserManagementPage(),
-                      ),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.school, color: primaryBlue),
-                  title: const Text('College Interests'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => InterestsPage()),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: Icon(
-                    Icons.format_align_left_sharp,
-                    color: primaryBlue,
-                  ),
-                  title: const Text('New Student Form'),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AdminApplicationForm(),
-                      ),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.person, color: primaryBlue),
-                  title: const Text('Search Student'),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => AdminEditForm()),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
-                  title: const Text('Available Doctors'),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AdminCollegeDegreesScreen(),
-                      ),
-                    );
-                  },
-                ),
-                SizedBox(height: 24), // or whatever spacing you want
-                const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.logout, color: Colors.red),
-                  title: const Text(
-                    'Logout',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                  onTap: () {
-                    _logout(context);
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
       appBar: AppBar(
         title: const Text('Student Details'),
         backgroundColor: Colors.blue.shade700,
@@ -447,34 +357,6 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
         child: Column(
           children: [
             // Search Input Row
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _userIdController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Search Student Details by User ID',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                ElevatedButton(
-                  onPressed: () {
-                    final userId = _userIdController.text.trim();
-                    if (userId.isNotEmpty) {
-                      fetchStudentData(userId);
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please enter a User ID')),
-                      );
-                    }
-                  },
-                  child: const Text('Search'),
-                ),
-              ],
-            ),
             const SizedBox(height: 24),
 
             // Loading Indicator
@@ -557,7 +439,7 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
                   ],
                 ),
               ),
-
+              if (data != null) buildPersonalDetailsSection(data!),
               if (data?['education'] != null)
                 buildEducationSection(data!['education']),
               if (data?['fellowships'] != null)

@@ -7,13 +7,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:medicalapp/admin/mainscreen.dart';
 
-import 'package:medicalapp/college_view.dart';
-import 'package:medicalapp/edit_formAfterSave.dart';
-import 'package:medicalapp/googlesignin.dart';
-import 'package:medicalapp/index.dart';
-import 'package:medicalapp/student/home.dart';
 import 'package:medicalapp/url.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -698,7 +692,7 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
 
               // Medical Course Certificate Section
               _buildSectionHeader(
-                'Currently Active Medical Councel Certificate',
+                'Currently Active Medical Council Certificate',
                 'certificate',
               ),
               if (_isEditing)
@@ -1755,7 +1749,7 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
           TextFormField(
             controller: _registrationNumberController,
             decoration: const InputDecoration(
-              labelText: 'Medical Course Registration Number',
+              labelText: 'Medical Council Registration Number',
             ),
             validator:
                 (v) =>
@@ -1832,7 +1826,7 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
           TextFormField(
             controller: _registrationNumberController,
             decoration: const InputDecoration(
-              labelText: 'Medical Course Registration Number',
+              labelText: 'Medical Council Registration Number',
             ),
             validator:
                 (v) =>
