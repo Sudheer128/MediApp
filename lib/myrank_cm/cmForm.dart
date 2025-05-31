@@ -984,7 +984,8 @@ class _ApplicationFormState extends State<CmApplicationForm> {
             decoration: InputDecoration(
               label: RichText(
                 text: TextSpan(
-                  text: 'Email Address',
+                  text:
+                      'Email Address(should be same as your registered email)',
                   style: TextStyle(color: Colors.grey[700], fontSize: 16),
                   children: [
                     TextSpan(text: ' *', style: TextStyle(color: Colors.red)),
@@ -1067,7 +1068,10 @@ class _ApplicationFormState extends State<CmApplicationForm> {
               Expanded(
                 child: TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(labelText: 'Email Address'),
+                  decoration: const InputDecoration(
+                    labelText:
+                        'Email Address(should be same as your registered email)',
+                  ),
                   keyboardType: TextInputType.emailAddress,
                   validator: (v) {
                     if (v == null || v.isEmpty)
