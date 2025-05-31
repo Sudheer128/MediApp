@@ -906,9 +906,11 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
       ),
       child: Row(
         children: [
-          Text(
-            title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
           ),
           const Spacer(),
           if (!_isEditing)
@@ -978,7 +980,8 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
             decoration: InputDecoration(
               label: RichText(
                 text: TextSpan(
-                  text: 'Email Address',
+                  text:
+                      'Email Address(should be same as your registered email)',
                   style: TextStyle(color: Colors.grey[700], fontSize: 16),
                   children: [
                     TextSpan(text: ' *', style: TextStyle(color: Colors.red)),
@@ -1061,7 +1064,10 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
               Expanded(
                 child: TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(labelText: 'Email Address'),
+                  decoration: const InputDecoration(
+                    labelText:
+                        'Email Address(should be same as your registered email)',
+                  ),
                   keyboardType: TextInputType.emailAddress,
                   validator: (v) {
                     if (v == null || v.isEmpty)
