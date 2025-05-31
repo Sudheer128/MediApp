@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:medicalapp/pdf.dart';
 
 import 'package:medicalapp/student/edit.dart';
 import 'package:medicalapp/url.dart';
@@ -304,14 +305,26 @@ class _StudentDetailScreenState extends State<EditForm> {
     );
   }
 
-  Future<void> _launchURL(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+  Future<void> _launchURL(BuildContext context, String url) async {
+    if (kIsWeb) {
+      // Open in external application on the web
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Could not open document')));
+      }
     } else {
-      ScaffoldMessenger.of(
+      // Show PDF in-app for mobile platforms
+      Navigator.push(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Could not open document')));
+        MaterialPageRoute(
+          builder:
+              (context) => PdfViewerPage(url: url, color: Colors.blue.shade700),
+        ),
+      );
     }
   }
 
@@ -330,7 +343,7 @@ class _StudentDetailScreenState extends State<EditForm> {
                   onPressed: () {
                     final url = doc['url'] ?? '';
                     if (url.isNotEmpty) {
-                      _launchURL(url);
+                      _launchURL(context, url);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('No URL provided')),

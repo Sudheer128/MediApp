@@ -232,126 +232,130 @@ class _InterestsPageState extends State<InterestsPage> {
                       child: SingleChildScrollView(
                         controller: _scrollController,
                         scrollDirection: Axis.horizontal,
-                        child: Column(
-                          children: [
-                            DataTable(
-                              sortColumnIndex: _sortColumnIndex,
-                              sortAscending: _sortAscending,
-                              columns: [
-                                DataColumn(
-                                  label: const Text('ID'),
-                                  numeric: true,
-                                  onSort:
-                                      (i, asc) =>
-                                          _sort<num>((d) => d.id, i, asc),
-                                ),
-                                DataColumn(
-                                  label: const Text('College ID'),
-                                  numeric: true,
-                                  onSort:
-                                      (i, asc) => _sort<num>(
-                                        (d) => d.collegeId,
-                                        i,
-                                        asc,
-                                      ),
-                                ),
-                                DataColumn(
-                                  label: const Text('College Name'),
-                                  onSort:
-                                      (i, asc) => _sort<String>(
-                                        (d) => d.collegeName,
-                                        i,
-                                        asc,
-                                      ),
-                                ),
-                                DataColumn(
-                                  label: const Text('Student ID'),
-                                  numeric: true,
-                                  onSort:
-                                      (i, asc) => _sort<num>(
-                                        (d) => d.studentId,
-                                        i,
-                                        asc,
-                                      ),
-                                ),
-                                DataColumn(
-                                  label: const Text('Student Name'),
-                                  onSort:
-                                      (i, asc) => _sort<String>(
-                                        (d) => d.studentName,
-                                        i,
-                                        asc,
-                                      ),
-                                ),
-                                DataColumn(
-                                  label: const Text('Course Name'),
-                                  onSort:
-                                      (i, asc) => _sort<String>(
-                                        (d) => d.courseName,
-                                        i,
-                                        asc,
-                                      ),
-                                ),
-                                DataColumn(
-                                  label: const Text('Degree'),
-                                  onSort:
-                                      (i, asc) => _sort<String>(
-                                        (d) => d.degree,
-                                        i,
-                                        asc,
-                                      ),
-                                ),
-                                DataColumn(
-                                  label: const Text('Message'),
-                                  onSort:
-                                      (i, asc) => _sort<String>(
-                                        (d) => d.message,
-                                        i,
-                                        asc,
-                                      ),
-                                ),
-                                DataColumn(
-                                  label: const Text('Status'),
-                                  onSort:
-                                      (i, asc) => _sort<String>(
-                                        (d) => d.status,
-                                        i,
-                                        asc,
-                                      ),
-                                ),
-                                DataColumn(
-                                  label: const Text('Created At'),
-                                  onSort:
-                                      (i, asc) => _sort<String>(
-                                        (d) => d.createdAt,
-                                        i,
-                                        asc,
-                                      ),
-                                ),
-                              ],
-                              rows:
-                                  _currentPageItems.map((interest) {
-                                    return DataRow(
-                                      cells: [
-                                        DataCell(Text(interest.id.toString())),
-                                        DataCell(
-                                          Text(interest.collegeId.toString()),
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              DataTable(
+                                sortColumnIndex: _sortColumnIndex,
+                                sortAscending: _sortAscending,
+                                columns: [
+                                  DataColumn(
+                                    label: const Text('ID'),
+                                    numeric: true,
+                                    onSort:
+                                        (i, asc) =>
+                                            _sort<num>((d) => d.id, i, asc),
+                                  ),
+                                  DataColumn(
+                                    label: const Text('College ID'),
+                                    numeric: true,
+                                    onSort:
+                                        (i, asc) => _sort<num>(
+                                          (d) => d.collegeId,
+                                          i,
+                                          asc,
                                         ),
-                                        DataCell(Text(interest.collegeName)),
-                                        DataCell(
-                                          Text(interest.studentId.toString()),
+                                  ),
+                                  DataColumn(
+                                    label: const Text('College Name'),
+                                    onSort:
+                                        (i, asc) => _sort<String>(
+                                          (d) => d.collegeName,
+                                          i,
+                                          asc,
                                         ),
-                                        DataCell(Text(interest.studentName)),
-                                        DataCell(Text(interest.courseName)),
-                                        DataCell(Text(interest.degree)),
-                                        DataCell(Text(interest.message)),
-                                        DataCell(Text(interest.status)),
-                                        DataCell(Text(interest.createdAt)),
-                                      ],
-                                    );
-                                  }).toList(),
-                            ),
-                          ],
+                                  ),
+                                  DataColumn(
+                                    label: const Text('Student ID'),
+                                    numeric: true,
+                                    onSort:
+                                        (i, asc) => _sort<num>(
+                                          (d) => d.studentId,
+                                          i,
+                                          asc,
+                                        ),
+                                  ),
+                                  DataColumn(
+                                    label: const Text('Student Name'),
+                                    onSort:
+                                        (i, asc) => _sort<String>(
+                                          (d) => d.studentName,
+                                          i,
+                                          asc,
+                                        ),
+                                  ),
+                                  DataColumn(
+                                    label: const Text('Course Name'),
+                                    onSort:
+                                        (i, asc) => _sort<String>(
+                                          (d) => d.courseName,
+                                          i,
+                                          asc,
+                                        ),
+                                  ),
+                                  DataColumn(
+                                    label: const Text('Degree'),
+                                    onSort:
+                                        (i, asc) => _sort<String>(
+                                          (d) => d.degree,
+                                          i,
+                                          asc,
+                                        ),
+                                  ),
+                                  DataColumn(
+                                    label: const Text('Message'),
+                                    onSort:
+                                        (i, asc) => _sort<String>(
+                                          (d) => d.message,
+                                          i,
+                                          asc,
+                                        ),
+                                  ),
+                                  DataColumn(
+                                    label: const Text('Status'),
+                                    onSort:
+                                        (i, asc) => _sort<String>(
+                                          (d) => d.status,
+                                          i,
+                                          asc,
+                                        ),
+                                  ),
+                                  DataColumn(
+                                    label: const Text('Created At'),
+                                    onSort:
+                                        (i, asc) => _sort<String>(
+                                          (d) => d.createdAt,
+                                          i,
+                                          asc,
+                                        ),
+                                  ),
+                                ],
+                                rows:
+                                    _currentPageItems.map((interest) {
+                                      return DataRow(
+                                        cells: [
+                                          DataCell(
+                                            Text(interest.id.toString()),
+                                          ),
+                                          DataCell(
+                                            Text(interest.collegeId.toString()),
+                                          ),
+                                          DataCell(Text(interest.collegeName)),
+                                          DataCell(
+                                            Text(interest.studentId.toString()),
+                                          ),
+                                          DataCell(Text(interest.studentName)),
+                                          DataCell(Text(interest.courseName)),
+                                          DataCell(Text(interest.degree)),
+                                          DataCell(Text(interest.message)),
+                                          DataCell(Text(interest.status)),
+                                          DataCell(Text(interest.createdAt)),
+                                        ],
+                                      );
+                                    }).toList(),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),

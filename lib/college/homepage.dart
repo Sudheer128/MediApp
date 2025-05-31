@@ -96,7 +96,7 @@ class _DegreesScreenState extends State<CollegeDegreesScreen>
                       ),
                     ),
                     accountName: Text(
-                      name,
+                      'Welcome, ${name}',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,

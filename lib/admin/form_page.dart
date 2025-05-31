@@ -906,9 +906,11 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
       ),
       child: Row(
         children: [
-          Text(
-            title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
           ),
           const Spacer(),
           if (!_isEditing)

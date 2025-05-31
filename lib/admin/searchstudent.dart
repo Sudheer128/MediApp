@@ -425,8 +425,6 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
                             Colors.white, // text and icon default color
                       ),
                       onPressed: () {
-                        final userIdText = _userIdController.text.trim();
-                        final userId = int.tryParse(userIdText) ?? 0;
                         if (data != null) {
                           Navigator.push(
                             context,
@@ -434,7 +432,7 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
                               builder:
                                   (context) => AdminEditApplicationForm(
                                     existingData: data,
-                                    userId: userId,
+                                    userId: int.tryParse(widget.userId ?? ''),
                                   ),
                             ),
                           );

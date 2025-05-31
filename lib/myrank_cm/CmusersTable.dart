@@ -308,8 +308,6 @@ class _CmManagementPageState extends State<CmManagementPage> {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.users.isEmpty) {
-            return const Center(child: Text('No data available'));
           } else {
             return Padding(
               padding: const EdgeInsets.all(16),

@@ -409,6 +409,14 @@ class _ApplicationFormState extends State<ApplicationForm> {
           const SnackBar(content: Text('Submitted successfully!')),
         );
         return true;
+      } else if (response.statusCode == 400) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please enter registered Email only'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return false;
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Submission failed: ${response.statusCode}')),

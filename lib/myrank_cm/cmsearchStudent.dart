@@ -341,7 +341,7 @@ class _StudentDetailScreenState extends State<CmEditForm> {
                       builder:
                           (context) => CmEditApplicationForm(
                             existingData: data,
-                            userId: userId,
+                            userId: int.tryParse(widget.userId ?? ''),
                           ),
                     ),
                   );

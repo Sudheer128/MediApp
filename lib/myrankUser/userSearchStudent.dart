@@ -350,7 +350,7 @@ class _StudentDetailScreenState extends State<UserEditForm> {
                       builder:
                           (context) => UserEditApplicationForm(
                             existingData: data,
-                            userId: userId,
+                            userId: int.tryParse(widget.userId ?? ''),
                           ),
                     ),
                   );

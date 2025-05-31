@@ -171,51 +171,58 @@ class _LoginLogsPageState extends State<LoginLogsPage> {
                       child: SingleChildScrollView(
                         controller: _scrollController,
                         scrollDirection: Axis.horizontal,
-                        child: DataTable(
-                          sortColumnIndex: _sortColumnIndex,
-                          sortAscending: _sortAscending,
-                          columns: [
-                            DataColumn(
-                              label: const Text('User ID'),
-                              onSort:
-                                  (i, asc) => _sort((d) => d.userId, i, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('Name'),
-                              onSort: (i, asc) => _sort((d) => d.name, i, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('Email'),
-                              onSort: (i, asc) => _sort((d) => d.email, i, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('Role'),
-                              onSort: (i, asc) => _sort((d) => d.role, i, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('IP Address'),
-                              onSort:
-                                  (i, asc) => _sort((d) => d.ipAddress, i, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('Login Time'),
-                              onSort:
-                                  (i, asc) => _sort((d) => d.loginTime, i, asc),
-                            ),
-                          ],
-                          rows:
-                              _currentPageItems.map((log) {
-                                return DataRow(
-                                  cells: [
-                                    DataCell(Text(log.userId)),
-                                    DataCell(Text(log.name)),
-                                    DataCell(Text(log.email)),
-                                    DataCell(Text(log.role)),
-                                    DataCell(Text(log.ipAddress)),
-                                    DataCell(Text(log.loginTime)),
-                                  ],
-                                );
-                              }).toList(),
+                        child: SingleChildScrollView(
+                          child: DataTable(
+                            sortColumnIndex: _sortColumnIndex,
+                            sortAscending: _sortAscending,
+                            columns: [
+                              DataColumn(
+                                label: const Text('User ID'),
+                                onSort:
+                                    (i, asc) => _sort((d) => d.userId, i, asc),
+                              ),
+                              DataColumn(
+                                label: const Text('Name'),
+                                onSort:
+                                    (i, asc) => _sort((d) => d.name, i, asc),
+                              ),
+                              DataColumn(
+                                label: const Text('Email'),
+                                onSort:
+                                    (i, asc) => _sort((d) => d.email, i, asc),
+                              ),
+                              DataColumn(
+                                label: const Text('Role'),
+                                onSort:
+                                    (i, asc) => _sort((d) => d.role, i, asc),
+                              ),
+                              DataColumn(
+                                label: const Text('IP Address'),
+                                onSort:
+                                    (i, asc) =>
+                                        _sort((d) => d.ipAddress, i, asc),
+                              ),
+                              DataColumn(
+                                label: const Text('Login Time'),
+                                onSort:
+                                    (i, asc) =>
+                                        _sort((d) => d.loginTime, i, asc),
+                              ),
+                            ],
+                            rows:
+                                _currentPageItems.map((log) {
+                                  return DataRow(
+                                    cells: [
+                                      DataCell(Text(log.userId)),
+                                      DataCell(Text(log.name)),
+                                      DataCell(Text(log.email)),
+                                      DataCell(Text(log.role)),
+                                      DataCell(Text(log.ipAddress)),
+                                      DataCell(Text(log.loginTime)),
+                                    ],
+                                  );
+                                }).toList(),
+                          ),
                         ),
                       ),
                     ),

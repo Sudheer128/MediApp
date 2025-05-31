@@ -417,76 +417,84 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
         centerTitle: false,
         iconTheme: IconThemeData(color: Colors.white),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            _buildCard(
-              icon: Icons.person_outline,
-              title: "Your Profile",
-              subtitle:
-                  "Complete and manage your professional profile to increase visibility to medical institutions.",
-              buttonText: "Edit Profile",
-              iconColor: Colors.blue,
-              onPressed: () async {
-                final prefs = await SharedPreferences.getInstance();
-                final userId = prefs.getInt('userid') ?? 0;
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EditForm(applicationId: userId),
-                  ),
-                );
-              },
-            ),
-            SizedBox(height: 16),
-            _buildCompleteProfileSection(context),
-            SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.notifications, color: Colors.blue),
-                        SizedBox(width: 8),
-                        Text(
-                          "Enable Profile Visibility",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await _loadStatus();
+          await _loadUsername();
+          // You can add other refresh methods here if needed
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              _buildCard(
+                icon: Icons.person_outline,
+                title: "Your Profile",
+                subtitle:
+                    "Complete and manage your professional profile to increase visibility to medical institutions.",
+                buttonText: "Edit Profile",
+                iconColor: Colors.blue,
+                onPressed: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  final userId = prefs.getInt('userid') ?? 0;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EditForm(applicationId: userId),
+                    ),
+                  );
+                },
+              ),
+              SizedBox(height: 16),
+              _buildCompleteProfileSection(context),
+              SizedBox(height: 16),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.notifications, color: Colors.blue),
+                          SizedBox(width: 8),
+                          Text(
+                            "Enable Profile Visibility",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                           ),
+                        ],
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        "If you are looking for new opportunities or wish for your profile to be visible to potential employers or institutions, enabling this setting will allow your profile to be shown to colleges and organizations actively seeking candidates.",
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
                         ),
-                      ],
-                    ),
-                    SizedBox(height: 12),
-                    Text(
-                      "If you are looking for new opportunities or wish for your profile to be visible to potential employers or institutions, enabling this setting will allow your profile to be shown to colleges and organizations actively seeking candidates.",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade600,
                       ),
-                    ),
-                    SizedBox(height: 12),
-                    SwitchListTile(
-                      title: Text('Active Status'),
-                      value: _isActive,
-                      onChanged: (bool value) {
-                        _updateStatus(value);
-                      },
-                      secondary: Icon(
-                        Icons.toggle_on,
-                        color: _isActive ? Colors.green : Colors.grey,
+                      SizedBox(height: 12),
+                      SwitchListTile(
+                        title: Text('Active Status'),
+                        value: _isActive,
+                        onChanged: (bool value) {
+                          _updateStatus(value);
+                        },
+                        secondary: Icon(
+                          Icons.toggle_on,
+                          color: _isActive ? Colors.green : Colors.grey,
+                        ),
+                        activeColor: Colors.green,
                       ),
-                      activeColor: Colors.green,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

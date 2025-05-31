@@ -152,8 +152,8 @@ class _UserHomePageState extends State<UserHomePage> {
                                 ),
                                 Text(
                                   _username != null
-                                      ? 'Hello, $_username'
-                                      : 'Doctor Dashboard',
+                                      ? '$_username'
+                                      : 'Admin User',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 20,
