@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/url.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -54,7 +55,7 @@ class OrganizationProfile {
   final int userId;
   final String name;
   final int estYear;
-  final int totalEmp;
+  final String totalEmp;
   final String location;
   final String overview;
 
@@ -170,9 +171,6 @@ class OrgService {
         body: jsonEncode(profile.toJson()),
       );
 
-      print("SAVE STATUS: ${response.statusCode}");
-      print("SAVE BODY: ${response.body}");
-
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
       print("SAVE ERROR: $e");
@@ -214,6 +212,7 @@ class _HospitalProfilePageState extends State<HospitalProfilePage> {
   Future<void> _loadUserId() async {
     final prefs = await SharedPreferences.getInstance();
     userId = prefs.getInt("userid") ?? 0;
+    print("Saving user_id: $userId");
     _fetchProfileData();
   }
 
@@ -251,38 +250,47 @@ class _HospitalProfilePageState extends State<HospitalProfilePage> {
   }
 
   void _saveChanges() async {
-    if (profileData == null) return;
-
-    final profile = OrganizationProfile(
-      id: profileData!.organizationProfile.id,
-      userId: userId,
-      name: _orgNameController.text,
-      estYear: int.tryParse(_establishedController.text) ?? 0,
-      totalEmp: int.tryParse(_employeesController.text) ?? 0,
-      location: _locationController.text,
-      overview: _overviewController.text,
-    );
-
-    final success = await OrgService.saveProfile(profile);
-
-    if (success) {
-      setState(() {
-        _isEditingAbout = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Changes saved successfully'),
-          backgroundColor: Colors.green,
-        ),
+    try {
+      final profile = OrganizationProfile(
+        id: profileData?.organizationProfile.id ?? 0,
+        userId: userId,
+        name: _orgNameController.text.trim(),
+        estYear: int.tryParse(_establishedController.text) ?? 0,
+        totalEmp: _employeesController.text,
+        location: _locationController.text.trim(),
+        overview: _overviewController.text.trim(),
       );
 
-      // Refresh data
-      _fetchProfileData();
-    } else {
+      final success = await OrgService.saveProfile(profile);
+
+      if (success) {
+        setState(() {
+          _isEditingAbout = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Changes saved successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Refresh data
+        _fetchProfileData();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to save'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e, st) {
+      print("SAVE ERROR (exception): $e");
+      print(st);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to save'),
+        SnackBar(
+          content: Text('Error while saving: $e'),
           backgroundColor: Colors.red,
         ),
       );
@@ -322,29 +330,23 @@ class _HospitalProfilePageState extends State<HospitalProfilePage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF3F2EF),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
 
-        title: const Text(
-          'Hospital Profile',
-          style: TextStyle(
-            color: Colors.black87,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-      ),
       body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildHeaderSection(),
-            const SizedBox(height: 8),
-            _buildAboutSection(),
-            const SizedBox(height: 8),
-            _buildJobsSection(),
-          ],
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: 900,
+            ), // LinkedIn-like width
+            child: Column(
+              children: [
+                _buildHeaderSection(),
+                const SizedBox(height: 8),
+                _buildAboutSection(),
+                const SizedBox(height: 8),
+                _buildJobsSection(),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -477,6 +479,10 @@ class _HospitalProfilePageState extends State<HospitalProfilePage> {
               'Established Year',
               _establishedController,
               Icons.calendar_today,
+              keyboardType: TextInputType.number, // 👈 ADD THIS
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+              ], // 👈 AND THIS
             ),
             const SizedBox(height: 16),
 
@@ -596,6 +602,8 @@ class _HospitalProfilePageState extends State<HospitalProfilePage> {
     TextEditingController controller,
     IconData icon, {
     int maxLines = 1,
+    TextInputType keyboardType = TextInputType.text, // 👈 ADD
+    List<TextInputFormatter>? inputFormatters, // 👈 ADD
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -611,6 +619,8 @@ class _HospitalProfilePageState extends State<HospitalProfilePage> {
         TextField(
           controller: controller,
           maxLines: maxLines,
+          keyboardType: keyboardType, // 👈 USE IT
+          inputFormatters: inputFormatters, // 👈 USE IT
           decoration: InputDecoration(
             hintText: "Enter $label",
             border: OutlineInputBorder(
