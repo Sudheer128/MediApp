@@ -138,8 +138,8 @@ class _AllJobsPageState extends State<AllJobsPage> {
           SizedBox(height: 20),
           _buildFilterSection('Job Type', [
             'All',
-            'Full-time',
-            'Part-time',
+            'Full Time',
+            'Part Time',
             'Contract',
             'Internship',
           ]),

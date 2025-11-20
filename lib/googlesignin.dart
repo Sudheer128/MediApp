@@ -57,7 +57,7 @@ class _SignInScreenState extends State<SignInScreen> {
             destinationPage = AdminHomePage();
             break;
           case 'college':
-            destinationPage = CollegeDegreesScreen();
+            destinationPage = CollegeDashboard();
             break;
           case 'doctor':
             destinationPage = DoctorDashboardApp();
