@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/url.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class JobNotificationForm extends StatefulWidget {
   const JobNotificationForm({Key? key}) : super(key: key);
@@ -83,8 +84,11 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
 
   Future<void> submitJobNotification() async {
     final url = Uri.parse("$baseurl/add-job-notification");
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('userid') ?? 0;
 
     final body = {
+      "userid": userId,
       "organization": _organizationController.text,
       "job_title": _jobTitleController.text,
       "description": _descriptionController.text,

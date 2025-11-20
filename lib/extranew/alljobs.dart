@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/extranew/jobdetails.dart';
+import 'package:medicalapp/extranew/jobnotification.dart';
 import 'package:medicalapp/url.dart';
 
 class AllJobsPage extends StatefulWidget {
@@ -145,20 +146,21 @@ class _AllJobsPageState extends State<AllJobsPage> {
           ]),
           SizedBox(height: 20),
           Divider(height: 1),
-          SizedBox(height: 20),
-          Text(
-            'Saved Jobs',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            '${savedJobs.length} jobs saved',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-          ),
+          // SizedBox(height: 20),
+          // Text(
+          //   'Saved Jobs',
+          //   style: TextStyle(
+          //     fontSize: 14,
+          //     fontWeight: FontWeight.w600,
+          //     color: Colors.black87,
+          //   ),
+          // ),
+          // SizedBox(height: 8),
+          // Text(
+          //   '${savedJobs.length} jobs saved',
+          //   style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+
+          // ),
         ],
       ),
     );

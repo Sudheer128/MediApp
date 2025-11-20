@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:medicalapp/extranew/jobnotification.dart';
 import 'package:medicalapp/url.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -163,11 +164,19 @@ class OrgService {
   }
 
   static Future<bool> saveProfile(OrganizationProfile profile) async {
+    final url = Uri.parse("$baseurl/organization-profile/update/${profile.id}");
+
     final response = await http.post(
-      Uri.parse("$baseurl/organization-profile/add"),
-      headers: {"Content-Type": "application/json"},
+      url,
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
       body: jsonEncode(profile.toJson()),
     );
+
+    print("SAVE RESPONSE CODE: ${response.statusCode}");
+    print("SAVE RESPONSE BODY: ${response.body}");
 
     return response.statusCode == 200 || response.statusCode == 201;
   }
@@ -185,7 +194,7 @@ class HospitalProfilePage extends StatefulWidget {
 }
 
 class _HospitalProfilePageState extends State<HospitalProfilePage> {
-  bool _isEditingAbout = false;
+  bool _isEditingAbout = true;
 
   ProfileData? profileData;
   bool loading = true;
@@ -511,7 +520,11 @@ class _HospitalProfilePageState extends State<HospitalProfilePage> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: _saveChanges,
+                    onPressed: () {
+                      print("SAVE BUTTON CLICKED"); // DEBUG 1
+                      _saveChanges();
+                    },
+
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0A66C2),
                       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -666,9 +679,24 @@ class _HospitalProfilePageState extends State<HospitalProfilePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Jobs",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          Row(
+            children: [
+              const Text(
+                "Jobs",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => JobNotificationForm(),
+                    ),
+                  );
+                },
+                icon: Icon(Icons.person_add),
+              ),
+            ],
           ),
           const SizedBox(height: 4),
           Text(
