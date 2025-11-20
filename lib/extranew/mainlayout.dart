@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:medicalapp/googlesignin.dart';
+import 'package:medicalapp/index.dart';
 
 class MainLayout extends StatefulWidget {
   final List<Widget> pages;
@@ -33,7 +35,7 @@ class _MainLayoutState extends State<MainLayout> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          /// ---------- Logo ---------
+          /// --------- LOGO ----------
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
@@ -45,7 +47,7 @@ class _MainLayoutState extends State<MainLayout> {
 
           const SizedBox(width: 20),
 
-          /// ---------- SEARCH BAR ----------
+          /// --------- SEARCH BAR ----------
           if (widget.showSearchBar)
             Expanded(
               child: Container(
@@ -70,20 +72,22 @@ class _MainLayoutState extends State<MainLayout> {
               ),
             ),
 
-          const SizedBox(width: 30),
+          const SizedBox(width: 40),
 
-          /// ---------- ICON NAV CENTERED ----------
+          /// --------- CENTER NAV MENU ----------
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               _navItem(Icons.home, "Home", 0),
               _navItem(Icons.work_outline, "Jobs", 1),
               _navItem(Icons.notifications_outlined, "Notifications", 2),
-              _navItem(Icons.person_outline, "Me", 3),
             ],
           ),
 
-          const SizedBox(width: 20),
+          const SizedBox(width: 40),
+
+          /// --------- ME DROPDOWN ----------
+          _meMenu(),
         ],
       ),
     );
@@ -96,12 +100,12 @@ class _MainLayoutState extends State<MainLayout> {
     return InkWell(
       onTap: () => setState(() => currentIndex = index),
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 20),
+        margin: const EdgeInsets.symmetric(horizontal: 18),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: isActive ? Colors.black : Colors.grey, size: 28),
-            const SizedBox(height: 3),
+            Icon(icon, color: isActive ? Colors.black : Colors.grey, size: 26),
+            const SizedBox(height: 2),
             Text(
               label,
               style: TextStyle(
@@ -112,7 +116,7 @@ class _MainLayoutState extends State<MainLayout> {
             ),
             if (isActive)
               Container(
-                margin: const EdgeInsets.only(top: 3),
+                margin: const EdgeInsets.only(top: 2),
                 height: 2,
                 width: 35,
                 color: Colors.black,
@@ -120,6 +124,80 @@ class _MainLayoutState extends State<MainLayout> {
           ],
         ),
       ),
+    );
+  }
+
+  /// ---------------------- "ME" MENU WITH LOGOUT ----------------------
+  Widget _meMenu() {
+    return PopupMenuButton<int>(
+      tooltip: "Me",
+      position: PopupMenuPosition.under,
+      offset: const Offset(0, 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      onSelected: (value) {
+        if (value == 1) {
+          // Profile
+          setState(() => currentIndex = 3);
+        } else if (value == 2) {
+          // Logout
+          signOutGoogle();
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => Index()),
+            (route) => false,
+          );
+        }
+      },
+      child: Column(
+        children: [
+          Icon(
+            Icons.person_outline,
+            size: 28,
+            color: currentIndex == 3 ? Colors.black : Colors.grey,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            "Me",
+            style: TextStyle(
+              fontSize: 12,
+              color: currentIndex == 3 ? Colors.black : Colors.grey,
+              fontWeight:
+                  currentIndex == 3 ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+          if (currentIndex == 3)
+            Container(
+              margin: const EdgeInsets.only(top: 2),
+              height: 2,
+              width: 30,
+              color: Colors.black,
+            ),
+        ],
+      ),
+      itemBuilder:
+          (context) => [
+            const PopupMenuItem(
+              value: 1,
+              child: Row(
+                children: [
+                  Icon(Icons.person, size: 20),
+                  SizedBox(width: 10),
+                  Text("View Profile"),
+                ],
+              ),
+            ),
+            const PopupMenuDivider(),
+            const PopupMenuItem(
+              value: 2,
+              child: Row(
+                children: [
+                  Icon(Icons.logout, size: 20, color: Colors.red),
+                  SizedBox(width: 10),
+                  Text("Logout", style: TextStyle(color: Colors.red)),
+                ],
+              ),
+            ),
+          ],
     );
   }
 
@@ -131,7 +209,6 @@ class _MainLayoutState extends State<MainLayout> {
     return Scaffold(
       backgroundColor: const Color(0xFFF3F2EF),
 
-      /// ---------------------- APPBAR ----------------------
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
@@ -139,10 +216,8 @@ class _MainLayoutState extends State<MainLayout> {
         title: isWeb ? _buildWebNavBar() : Text(widget.title),
       ),
 
-      /// ---------------------- BODY ----------------------
       body: IndexedStack(index: currentIndex, children: widget.pages),
 
-      /// ---------------------- BOTTOM NAV (MOBILE ONLY) ----------------------
       bottomNavigationBar:
           !isWeb
               ? BottomNavigationBar(
