@@ -93,6 +93,46 @@ class _MainLayoutState extends State<MainLayout> {
     );
   }
 
+  void _showMobileMeMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.person),
+                title: Text("View Profile"),
+                onTap: () {
+                  Navigator.pop(context);
+                  setState(() => currentIndex = 3);
+                },
+              ),
+
+              ListTile(
+                leading: Icon(Icons.logout, color: Colors.red),
+                title: Text("Logout", style: TextStyle(color: Colors.red)),
+                onTap: () {
+                  Navigator.pop(context);
+                  signOutGoogle();
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => Index()),
+                    (route) => false,
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   /// ---------------------- NAV ITEM ----------------------
   Widget _navItem(IconData icon, String label, int index) {
     final bool isActive = currentIndex == index;
@@ -222,7 +262,15 @@ class _MainLayoutState extends State<MainLayout> {
           !isWeb
               ? BottomNavigationBar(
                 currentIndex: currentIndex,
-                onTap: (i) => setState(() => currentIndex = i),
+                onTap: (i) {
+                  if (i == 3) {
+                    // Me button on mobile → open dropdown
+                    _showMobileMeMenu(context);
+                  } else {
+                    setState(() => currentIndex = i);
+                  }
+                },
+
                 selectedItemColor: Colors.black,
                 unselectedItemColor: Colors.grey,
                 items: const [
