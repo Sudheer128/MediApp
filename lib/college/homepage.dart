@@ -413,8 +413,8 @@ class CollegeDashboard extends StatelessWidget {
       pages: [
         CollegeDegreesScreen(), // Page 1
         AllJobsPage(),
-        // CollegeInterestsPage(), // Page 2
-        CollegeDegreesScreen(), // Page 1
+        CollegeInterestsPage(), // Page 2
+        // CollegeDegreesScreen(), // Page 1
         HospitalProfilePage(),
         // StudentListPage(),          // Page 3
         // CollegeProfilePage(),       // Page 4 (optional)

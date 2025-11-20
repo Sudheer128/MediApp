@@ -211,11 +211,6 @@ class _InterestsPageState extends State<CollegeInterestsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        iconTheme: IconThemeData(color: Colors.white),
-        title: Text('College Interests', style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.deepPurple.shade700,
-      ),
       body:
           _isLoading
               ? Center(child: CircularProgressIndicator())
@@ -223,6 +218,10 @@ class _InterestsPageState extends State<CollegeInterestsPage> {
               ? Center(child: Text('Error: $_error'))
               : Column(
                 children: [
+                  Text(
+                    'College Interests',
+                    style: TextStyle(color: Colors.lightBlue, fontSize: 24),
+                  ),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: TextField(
