@@ -17,6 +17,7 @@ class DoctorDashboardApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Doctor Dashboard',
       theme: ThemeData(
+        useMaterial3: true, // optional but recommended for latest versions
         primarySwatch: Colors.blue,
         fontFamily: 'Roboto',
         cardTheme: CardThemeData(
@@ -24,7 +25,7 @@ class DoctorDashboardApp extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          margin: EdgeInsets.all(8),
+          margin: const EdgeInsets.all(8),
         ),
       ),
       home: const DoctorDashboard(),

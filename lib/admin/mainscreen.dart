@@ -8,6 +8,8 @@ import 'package:medicalapp/admin/form_page.dart';
 import 'package:medicalapp/admin/search.dart';
 import 'package:medicalapp/admin/searchstudent.dart';
 import 'package:medicalapp/admin/userstable.dart';
+import 'package:medicalapp/extranew/jobdetails.dart';
+import 'package:medicalapp/extranew/jobnotification.dart';
 import 'package:medicalapp/index.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -294,6 +296,37 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => AdminCollegeDegreesScreen(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 30),
+              _buildCard(
+                context,
+                title: 'Add New Job Notification',
+                icon: Icons.analytics,
+                subtitle: 'Add here',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => JobNotificationForm(),
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 30),
+              _buildCard(
+                context,
+                title: 'Job Details',
+                icon: Icons.analytics,
+                subtitle: 'View Job Details',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => JobDetailsPage(jobId: 2),
                     ),
                   );
                 },
