@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:medicalapp/college/college_profile.dart';
 import 'package:medicalapp/college/collegeintrests.dart';
 import 'package:medicalapp/college/studentList.dart';
 import 'package:medicalapp/googlesignin.dart';
@@ -171,6 +172,28 @@ class _DegreesScreenState extends State<CollegeDegreesScreen>
                       },
                     ),
 
+                    ListTile(
+                      leading: Icon(
+                        Icons.person,
+                        color: Colors.deepPurple.shade700,
+                      ),
+                      title: Text(
+                        'Profile',
+                        style: TextStyle(
+                          color: Colors.deepPurple.shade900,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => HospitalProfilePage(),
+                          ),
+                        );
+                      },
+                    ),
                     // You can add more menu items here...
                   ],
                 ),
