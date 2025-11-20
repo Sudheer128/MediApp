@@ -74,7 +74,7 @@ class _IndexState extends State<Index> {
               destinationPage = AdminHomePage();
               break;
             case 'college':
-              destinationPage = CollegeDegreesScreen();
+              destinationPage = CollegeDashboard();
               break;
             case 'doctor':
               destinationPage = DoctorDashboardApp();
@@ -180,7 +180,7 @@ class _HomePageState extends State<HomePage> {
             destinationPage = AdminHomePage();
             break;
           case 'college':
-            destinationPage = CollegeDegreesScreen();
+            destinationPage = CollegeDashboard();
             break;
           case 'doctor':
             destinationPage = DoctorDashboardApp();

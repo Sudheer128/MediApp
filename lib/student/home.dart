@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/edit_formAfterSave.dart';
 import 'package:medicalapp/extranew/alljobs.dart';
+import 'package:medicalapp/extranew/mainlayout.dart';
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
 import 'package:medicalapp/student/form_page.dart';
@@ -792,78 +793,14 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final isWeb = MediaQuery.of(context).size.width > 900;
-
-    return Scaffold(
-      backgroundColor: Color(0xFFF3F2EF),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: isWeb ? _buildWebNavBar() : _buildMobileTitle(),
-        actions: isWeb ? [] : null,
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Container(color: Colors.grey[300], height: 1),
-        ),
-      ),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: [
-          _buildHomePage(),
-          AllJobsPage(),
-          _buildNotificationsPage(),
-          _buildProfilePage(),
-        ],
-      ),
-      bottomNavigationBar:
-          isWeb
-              ? null
-              : Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border(top: BorderSide(color: Color(0xFFE0E0E0))),
-                ),
-                child: SafeArea(
-                  child: BottomNavigationBar(
-                    currentIndex: _currentIndex,
-                    onTap: (index) {
-                      setState(() {
-                        _currentIndex = index;
-                      });
-                    },
-                    type: BottomNavigationBarType.fixed,
-                    backgroundColor: Colors.white,
-                    selectedItemColor: Colors.black87,
-                    unselectedItemColor: Colors.grey.shade600,
-                    selectedFontSize: 12,
-                    unselectedFontSize: 12,
-                    elevation: 0,
-                    items: [
-                      BottomNavigationBarItem(
-                        icon: Icon(Icons.home_outlined),
-                        activeIcon: Icon(Icons.home),
-                        label: 'Home',
-                      ),
-                      BottomNavigationBarItem(
-                        icon: Icon(Icons.work_outline),
-                        activeIcon: Icon(Icons.work),
-                        label: 'Jobs',
-                      ),
-                      BottomNavigationBarItem(
-                        icon: Icon(Icons.notifications_outlined),
-                        activeIcon: Icon(Icons.notifications),
-                        label: 'Notifications',
-                      ),
-                      BottomNavigationBarItem(
-                        icon: Icon(Icons.person_outline),
-                        activeIcon: Icon(Icons.person),
-                        label: 'Me',
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+    return MainLayout(
+      title: "Doctor Dashboard",
+      pages: [
+        _buildHomePage(),
+        AllJobsPage(),
+        _buildNotificationsPage(),
+        _buildProfilePage(),
+      ],
     );
   }
 }
