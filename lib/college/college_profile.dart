@@ -163,13 +163,21 @@ class OrgService {
   }
 
   static Future<bool> saveProfile(OrganizationProfile profile) async {
-    final response = await http.post(
-      Uri.parse("$baseurl/organization-profile/add"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode(profile.toJson()),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse("$baseurl/organization-profile/add"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(profile.toJson()),
+      );
 
-    return response.statusCode == 200 || response.statusCode == 201;
+      print("SAVE STATUS: ${response.statusCode}");
+      print("SAVE BODY: ${response.body}");
+
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      print("SAVE ERROR: $e");
+      return false;
+    }
   }
 }
 
