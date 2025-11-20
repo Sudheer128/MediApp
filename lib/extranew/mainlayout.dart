@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 class MainLayout extends StatefulWidget {
-  final List<Widget> pages; // Pages for Home / Page 2 / Page 3 / Page 4
-  final int initialIndex; // Optional
-  final bool showSearchBar; // For web navbar
-  final String title; // AppBar Title for Mobile
+  final List<Widget> pages;
+  final int initialIndex;
+  final bool showSearchBar;
+  final String title;
 
   const MainLayout({
     super.key,
@@ -27,81 +27,129 @@ class _MainLayoutState extends State<MainLayout> {
     currentIndex = widget.initialIndex;
   }
 
+  /// ---------------------- WEB NAVBAR ----------------------
   Widget _buildWebNavBar() {
-    return Row(
-      children: [
-        Icon(Icons.medical_services, color: Colors.blue),
-        const SizedBox(width: 10),
-
-        if (widget.showSearchBar)
-          Expanded(
-            child: Container(
-              height: 36,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.search, color: Colors.grey),
-                  SizedBox(width: 8),
-                  Expanded(child: Text("Search...")),
-                ],
-              ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          /// ---------- Logo ---------
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: Colors.blue,
+              borderRadius: BorderRadius.circular(6),
             ),
+            child: const Icon(Icons.medical_services, color: Colors.white),
           ),
 
-        const SizedBox(width: 20),
+          const SizedBox(width: 20),
 
-        _navItem(Icons.home, 0),
-        _navItem(Icons.work_outline, 1),
-        _navItem(Icons.notifications_outlined, 2),
-        _navItem(Icons.person_outline, 3),
-      ],
+          /// ---------- SEARCH BAR ----------
+          if (widget.showSearchBar)
+            Expanded(
+              child: Container(
+                height: 36,
+                padding: const EdgeInsets.only(left: 10),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.search, color: Colors.grey),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        "Search...",
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+          const SizedBox(width: 30),
+
+          /// ---------- ICON NAV CENTERED ----------
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _navItem(Icons.home, "Home", 0),
+              _navItem(Icons.work_outline, "Jobs", 1),
+              _navItem(Icons.notifications_outlined, "Notifications", 2),
+              _navItem(Icons.person_outline, "Me", 3),
+            ],
+          ),
+
+          const SizedBox(width: 20),
+        ],
+      ),
     );
   }
 
-  Widget _navItem(IconData icon, int index) {
-    final isSelected = currentIndex == index;
+  /// ---------------------- NAV ITEM ----------------------
+  Widget _navItem(IconData icon, String label, int index) {
+    final bool isActive = currentIndex == index;
 
     return InkWell(
       onTap: () => setState(() => currentIndex = index),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        margin: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: isSelected ? Colors.black : Colors.grey),
-            const SizedBox(height: 2),
-            if (isSelected)
-              Container(height: 2, width: 30, color: Colors.black),
+            Icon(icon, color: isActive ? Colors.black : Colors.grey, size: 28),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: isActive ? Colors.black : Colors.grey,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+            if (isActive)
+              Container(
+                margin: const EdgeInsets.only(top: 3),
+                height: 2,
+                width: 35,
+                color: Colors.black,
+              ),
           ],
         ),
       ),
     );
   }
 
+  /// ---------------------- BUILD ----------------------
   @override
   Widget build(BuildContext context) {
-    final isWeb = MediaQuery.of(context).size.width > 900;
+    final bool isWeb = MediaQuery.of(context).size.width > 900;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF3F2EF),
+
+      /// ---------------------- APPBAR ----------------------
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: isWeb ? _buildWebNavBar() : Text(widget.title),
-        automaticallyImplyLeading: false,
         elevation: 1,
+        automaticallyImplyLeading: false,
+        title: isWeb ? _buildWebNavBar() : Text(widget.title),
       ),
 
+      /// ---------------------- BODY ----------------------
       body: IndexedStack(index: currentIndex, children: widget.pages),
 
+      /// ---------------------- BOTTOM NAV (MOBILE ONLY) ----------------------
       bottomNavigationBar:
           !isWeb
               ? BottomNavigationBar(
                 currentIndex: currentIndex,
                 onTap: (i) => setState(() => currentIndex = i),
                 selectedItemColor: Colors.black,
+                unselectedItemColor: Colors.grey,
                 items: const [
                   BottomNavigationBarItem(
                     icon: Icon(Icons.home_outlined),

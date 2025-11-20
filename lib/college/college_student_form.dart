@@ -6,6 +6,7 @@ import 'package:medicalapp/myrankUser/studentList.dart';
 import 'package:medicalapp/pdf.dart';
 import 'package:medicalapp/url.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class StudentDetailScreen extends StatefulWidget {
@@ -74,268 +75,588 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
     return MediaQuery.of(context).size.width >= 800 || kIsWeb;
   }
 
-  Widget buildSectionTitle(String title, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.deepPurple.shade700),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              title,
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 20,
-                color: Colors.deepPurple.shade700,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Container(
-              margin: const EdgeInsets.only(left: 12),
-              height: 1,
-              color: Colors.deepPurple.shade100,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // LinkedIn-style Profile Card with Cover and Profile Picture
+  Widget buildProfileHeader(Map<String, dynamic> data) {
+    final name = data['name'] ?? '';
+    final email = data['email'] ?? '';
+    final phone = data['phone']?.toString() ?? '';
+    final address = data['address'] ?? '';
 
-  Widget buildKeyValueRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              '$label:',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade800,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(color: Colors.grey.shade900, fontSize: 15),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget buildCard(Widget child) {
-    return Card(
-      elevation: 5,
-      shadowColor: Colors.deepPurple.shade100,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: const EdgeInsets.all(8),
-      child: Container(
-        width: 600, // fixed width for cards on web for nice row wrapping
-        padding: const EdgeInsets.all(16),
-        child: child,
-      ),
-    );
-  }
-
-  Widget buildCardsList(BuildContext context, List<Widget> cards) {
-    if (isWideScreen(context)) {
-      // For web or wide screen, wrap cards horizontally with spacing, wrap to new line if needed
-      return Wrap(spacing: 12, runSpacing: 12, children: cards);
-    } else {
-      // Mobile: stack vertically
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: cards,
-      );
-    }
-  }
-
-  Widget buildEducationSection(
-    List<dynamic> educationList,
-    BuildContext context,
-  ) {
-    final cards =
-        educationList.map((edu) {
-          return buildCard(
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                buildKeyValueRow('Degree', edu['type'] ?? ''),
-                buildKeyValueRow('Course Name', edu['courseName'] ?? ''),
-                buildKeyValueRow('College Name', edu['collegeName'] ?? ''),
-                buildKeyValueRow(
-                  'Duration',
-                  '${edu['fromDate'] ?? ''} to ${edu['toDate'] ?? ''}',
-                ),
-              ],
-            ),
-          );
-        }).toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        buildSectionTitle('Education', Icons.school),
-        buildCardsList(context, cards),
-      ],
-    );
-  }
-
-  Widget buildFellowshipsSection(
-    List<dynamic> fellowships,
-    BuildContext context,
-  ) {
-    final cards =
-        fellowships.asMap().entries.map((entry) {
-          int idx = entry.key + 1;
-          var fellowship = entry.value;
-          return buildCard(
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Fellowship $idx',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
-                  ),
-                ),
-                const Divider(
-                  color: Colors.deepPurple,
-                  thickness: 1,
-                  height: 16,
-                ),
-                buildKeyValueRow('Course Name', fellowship['courseName'] ?? ''),
-                buildKeyValueRow(
-                  'College Name',
-                  fellowship['collegeName'] ?? '',
-                ),
-                buildKeyValueRow(
-                  'Duration',
-                  '${fellowship['fromDate'] ?? ''} to ${fellowship['toDate'] ?? ''}',
-                ),
-              ],
-            ),
-          );
-        }).toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        buildSectionTitle('Fellowships', Icons.workspace_premium),
-        buildCardsList(context, cards),
-      ],
-    );
-  }
-
-  Widget buildPapersSection(List<dynamic> papers, BuildContext context) {
-    final cards =
-        papers.map((paper) {
-          return buildCard(
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                buildKeyValueRow('Title', paper['name'] ?? ''),
-                buildKeyValueRow('Description', paper['description'] ?? ''),
-                buildKeyValueRow('Submission Date', paper['submittedOn'] ?? ''),
-              ],
-            ),
-          );
-        }).toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        buildSectionTitle('Papers', Icons.menu_book),
-        buildCardsList(context, cards),
-      ],
-    );
-  }
-
-  Widget buildWorkExperienceSection(
-    List<dynamic> workExperiences,
-    BuildContext context,
-  ) {
-    final cards =
-        workExperiences.asMap().entries.map((entry) {
-          int idx = entry.key + 1;
-          var work = entry.value;
-          return buildCard(
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Work Experience $idx',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
-                  ),
-                ),
-                const Divider(
-                  color: Colors.deepPurple,
-                  thickness: 1,
-                  height: 16,
-                ),
-                buildKeyValueRow('Role', work['role'] ?? ''),
-                buildKeyValueRow('Hospital Name', work['name'] ?? ''),
-                buildKeyValueRow(
-                  'Duration',
-                  '${work['from'] ?? ''} to ${work['to'] ?? ''}',
-                ),
-                buildKeyValueRow('Place', work['place'] ?? ''),
-                buildKeyValueRow('Description', work['description'] ?? ''),
-              ],
-            ),
-          );
-        }).toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        buildSectionTitle('Work Experience', Icons.work),
-        buildCardsList(context, cards),
-      ],
-    );
-  }
-
-  Widget buildCertificatesSection(dynamic certificates) {
-    if (certificates == null) return Container();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        buildSectionTitle(
-          'Currently Active Medical Council Certificate',
-          Icons.verified,
-        ),
-        buildCard(
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          // Cover Photo
+          Stack(
+            clipBehavior: Clip.none,
             children: [
-              buildKeyValueRow('Course Name', certificates['courseName'] ?? ''),
-              buildKeyValueRow(
-                'Counsel Name',
-                certificates['counselName'] ?? '',
+              // Cover Image
+              Container(
+                height: 200,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(8),
+                    topRight: Radius.circular(8),
+                  ),
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade700, Colors.blue.shade400],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
               ),
-              buildKeyValueRow(
-                'Duration',
-                '${certificates['validFrom'] ?? ''} to ${certificates['validTo'] ?? ''}',
-              ),
-              buildKeyValueRow(
-                'Reg. No.',
-                certificates['registrationNumber'] ?? '',
+              // Edit Cover Button
+
+              // Profile Picture
+              Positioned(
+                bottom: -50,
+                left: 24,
+                child: Stack(
+                  children: [
+                    Container(
+                      width: 150,
+                      height: 150,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 4),
+                        color: Colors.grey.shade300,
+                      ),
+                      child: ClipOval(
+                        child: Icon(
+                          Icons.person,
+                          size: 80,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
+          const SizedBox(height: 60),
+          // Profile Info
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name,
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.degree,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.location_on,
+                                size: 16,
+                                color: Colors.grey.shade600,
+                              ),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  address,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '$email • $phone',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.blue.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                // Action Buttons
+                Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: showExpressInterestDialog,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade700,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      child: const Text(
+                        'Express Interest',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    OutlinedButton(
+                      onPressed: () {
+                        // Message action
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.blue.shade700,
+                        side: BorderSide(color: Colors.blue.shade700),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      child: const Text(
+                        'Message',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // LinkedIn-style Section Card
+  Widget buildLinkedInSection({
+    required String title,
+    required Widget content,
+    VoidCallback? onEdit,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                // if (onEdit != null)
+                //   IconButton(
+                //     icon: const Icon(Icons.edit, size: 20),
+                //     onPressed: onEdit,
+                //     color: Colors.grey.shade700,
+                //   ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            content,
+          ],
         ),
+      ),
+    );
+  }
+
+  // About Section
+  Widget buildAboutSection() {
+    return buildLinkedInSection(
+      title: 'About',
+      onEdit: () {
+        // Edit about
+      },
+      content: Text(
+        'Experienced medical professional specializing in ${widget.courseName}. Passionate about delivering quality healthcare and continuous learning in the medical field.',
+        style: TextStyle(
+          fontSize: 14,
+          color: Colors.grey.shade800,
+          height: 1.5,
+        ),
+      ),
+    );
+  }
+
+  // Experience Item
+  Widget buildExperienceItem(Map<String, dynamic> work, bool isLast) {
+    return Column(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Icon(Icons.business, color: Colors.grey.shade600),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    work['role'] ?? '',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    work['name'] ?? '',
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${work['from'] ?? ''} - ${work['to'] ?? ''}',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    work['place'] ?? '',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                  ),
+                  if (work['description'] != null &&
+                      work['description'].toString().isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      work['description'],
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade800,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+        if (!isLast) ...[
+          const SizedBox(height: 20),
+          Divider(color: Colors.grey.shade300),
+          const SizedBox(height: 20),
+        ],
       ],
+    );
+  }
+
+  // Professional Work Experience Section
+  Widget buildProfessionalExperienceSection(List<dynamic> workExperiences) {
+    return buildLinkedInSection(
+      title: 'Professional Work Experience',
+      onEdit: () {
+        // Edit professional experience
+      },
+      content: Column(
+        children:
+            workExperiences.asMap().entries.map((entry) {
+              return buildExperienceItem(
+                entry.value,
+                entry.key == workExperiences.length - 1,
+              );
+            }).toList(),
+      ),
+    );
+  }
+
+  // Fellowship Experience Item
+  Widget buildFellowshipItem(Map<String, dynamic> fellowship, bool isLast) {
+    return Column(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Icon(
+                Icons.workspace_premium,
+                color: Colors.amber.shade700,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    fellowship['courseName'] ?? '',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    fellowship['collegeName'] ?? '',
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${fellowship['fromDate'] ?? ''} - ${fellowship['toDate'] ?? ''}',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        if (!isLast) ...[
+          const SizedBox(height: 20),
+          Divider(color: Colors.grey.shade300),
+          const SizedBox(height: 20),
+        ],
+      ],
+    );
+  }
+
+  // Fellowship Experience Section
+  Widget buildFellowshipExperienceSection(List<dynamic> fellowships) {
+    return buildLinkedInSection(
+      title: 'Fellowship Experience',
+      onEdit: () {
+        // Edit fellowship experience
+      },
+      content: Column(
+        children:
+            fellowships.asMap().entries.map((entry) {
+              return buildFellowshipItem(
+                entry.value,
+                entry.key == fellowships.length - 1,
+              );
+            }).toList(),
+      ),
+    );
+  }
+
+  // Education Item
+  Widget buildEducationItem(Map<String, dynamic> edu, bool isLast) {
+    return Column(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Icon(Icons.school, color: Colors.grey.shade600),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    edu['collegeName'] ?? '',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${edu['type'] ?? ''}, ${edu['courseName'] ?? ''}',
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${edu['fromDate'] ?? ''} - ${edu['toDate'] ?? ''}',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        if (!isLast) ...[
+          const SizedBox(height: 20),
+          Divider(color: Colors.grey.shade300),
+          const SizedBox(height: 20),
+        ],
+      ],
+    );
+  }
+
+  // Education Section
+  Widget buildEducationSection(List<dynamic> education) {
+    return buildLinkedInSection(
+      title: 'Education',
+      onEdit: () {
+        // Edit education
+      },
+      content: Column(
+        children:
+            education.asMap().entries.map((entry) {
+              return buildEducationItem(
+                entry.value,
+                entry.key == education.length - 1,
+              );
+            }).toList(),
+      ),
+    );
+  }
+
+  // Licenses & Certifications
+  Widget buildLicensesSection(dynamic certificate) {
+    return buildLinkedInSection(
+      title: 'Licenses & Certifications',
+      onEdit: () {
+        // Edit licenses
+      },
+      content: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Icon(Icons.verified, color: Colors.blue.shade700),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  certificate['courseName'] ?? '',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  certificate['counselName'] ?? '',
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Registration No: ${certificate['registrationNumber'] ?? ''}',
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Valid: ${certificate['validFrom'] ?? ''} - ${certificate['validTo'] ?? ''}',
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Publications Section
+  Widget buildPublicationsSection(List<dynamic> papers) {
+    return buildLinkedInSection(
+      title: 'Publications',
+      onEdit: () {
+        // Edit publications
+      },
+      content: Column(
+        children:
+            papers.asMap().entries.map((entry) {
+              final paper = entry.value;
+              final isLast = entry.key == papers.length - 1;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    paper['name'] ?? '',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    paper['description'] ?? '',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade800,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Published: ${paper['submittedOn'] ?? ''}',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                  ),
+                  if (!isLast) ...[
+                    const SizedBox(height: 16),
+                    Divider(color: Colors.grey.shade300),
+                    const SizedBox(height: 16),
+                  ],
+                ],
+              );
+            }).toList(),
+      ),
     );
   }
 
@@ -386,13 +707,10 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
   }
 
   Future<void> _sendInterestRequest(String? message) async {
-    // Close the form dialog first
     Navigator.of(context).pop();
 
-    // Check if widget is still mounted
     if (!mounted) return;
 
-    // Show loading dialog
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -427,15 +745,11 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
           'course_name': widget.courseName,
         }),
       );
-      print(widget.courseName);
-      print(widget.degree);
-      // Check if widget is still mounted before proceeding
+
       if (!mounted) return;
 
-      // Dismiss loading dialog
       Navigator.of(context).pop();
 
-      // Show result
       if (response.statusCode == 200) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -458,10 +772,8 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
         }
       }
     } catch (e) {
-      // Check if widget is still mounted before proceeding
       if (!mounted) return;
 
-      // Dismiss loading dialog if it's still showing
       Navigator.of(context).pop();
 
       if (mounted) {
@@ -472,6 +784,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
     }
   }
 
+  // Resume/Documents Section
   Future<void> _launchURL(BuildContext context, String url) async {
     if (kIsWeb) {
       // Open in external application on the web
@@ -479,76 +792,100 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Could not open document')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open document')),
+        );
       }
     } else {
       // Show PDF in-app for mobile platforms
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder:
-              (context) =>
-                  PdfViewerPage(url: url, color: Colors.deepPurple.shade700),
+          builder: (context) => PdfViewerPage(url: url, color: Colors.blue),
         ),
       );
     }
   }
 
-  Widget buildSectionHeader(String title, IconData icon) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(4)),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.deepPurple.shade400),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              title,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: Colors.deepPurple.shade700,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget buildResumeSection(List<dynamic> documents) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        buildSectionHeader('Resume', Icons.description),
-        ...documents.map((doc) {
-          return buildCard(
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(child: Text(doc['name'] ?? 'Unnamed Document')),
-                TextButton(
-                  onPressed: () {
-                    final url = doc['url'] ?? '';
-                    if (url.isNotEmpty) {
-                      _launchURL(context, url);
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('No URL provided')),
-                      );
-                    }
-                  },
-                  child: const Text('View'),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
-      ],
+    return buildLinkedInSection(
+      title: 'Resume & Documents',
+      onEdit: () {
+        // Edit documents
+      },
+      content: Column(
+        children:
+            documents.asMap().entries.map((entry) {
+              final doc = entry.value;
+              final isLast = entry.key == documents.length - 1;
+              return Column(
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Icon(
+                          Icons.description,
+                          color: Colors.red.shade700,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              doc['name'] ?? 'Unnamed Document',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              doc['type'] ?? '',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      TextButton.icon(
+                        onPressed: () {
+                          final url = doc['url'] ?? '';
+                          if (url.isNotEmpty) {
+                            _launchURL(context, url);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('No URL provided')),
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.visibility, size: 18),
+                        label: const Text('View'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.blue.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (!isLast) ...[
+                    const SizedBox(height: 16),
+                    Divider(color: Colors.grey.shade300),
+                    const SizedBox(height: 16),
+                  ],
+                ],
+              );
+            }).toList(),
+      ),
     );
   }
 
@@ -556,102 +893,69 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
   Widget build(BuildContext context) {
     if (loading) {
       return Scaffold(
+        backgroundColor: Colors.grey.shade100,
         appBar: AppBar(
-          title: const Text(
-            'Student Details',
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.deepPurple,
+          title: const Text('Profile'),
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black87,
+          elevation: 0,
         ),
-        body: const Center(child: CircularProgressIndicator()),
+        body: linkedInProfileShimmer(),
       );
     }
 
-    if (error != null) {
+    if (loading) {
       return Scaffold(
+        backgroundColor: Colors.grey.shade100,
         appBar: AppBar(
-          title: const Text(
-            'Student Details',
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.deepPurple,
+          title: const Text('Profile'),
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black87,
+          elevation: 0,
         ),
         body: Center(child: Text(error!)),
       );
     }
 
-    final name = data?['name'] ?? '';
-
     return Scaffold(
+      backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        iconTheme: IconThemeData(color: Colors.white),
-        title: const Text(
-          'Student Details',
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Colors.deepPurple.shade700,
+        title: const Text('Profile'),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-              margin: const EdgeInsets.only(bottom: 24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.deepPurple.shade400,
-                    Colors.deepPurple.shade700,
+            // Main Content
+            Center(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 800),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    if (data != null) buildProfileHeader(data!),
+                    buildAboutSection(),
+                    if (data?['workExperiences'] != null &&
+                        (data!['workExperiences'] as List).isNotEmpty)
+                      buildProfessionalExperienceSection(
+                        data!['workExperiences'],
+                      ),
+                    if (data?['fellowships'] != null &&
+                        (data!['fellowships'] as List).isNotEmpty)
+                      buildFellowshipExperienceSection(data!['fellowships']),
+                    if (data?['education'] != null)
+                      buildEducationSection(data!['education']),
+                    if (data?['certificate'] != null)
+                      buildLicensesSection(data!['certificate']),
+                    if (data?['papers'] != null &&
+                        (data!['papers'] as List).isNotEmpty)
+                      buildPublicationsSection(data!['papers']),
+                    if (data?['documents'] != null &&
+                        (data!['documents'] as List).isNotEmpty)
+                      buildResumeSection(data!['documents']), // ← ADD THIS
                   ],
-                ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.deepPurple.shade200.withOpacity(0.6),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Text(
-                name,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ),
-            if (data?['education'] != null)
-              buildEducationSection(data!['education'], context),
-            if (data?['fellowships'] != null)
-              buildFellowshipsSection(data!['fellowships'], context),
-            if (data?['papers'] != null)
-              buildPapersSection(data!['papers'], context),
-            if (data?['workExperiences'] != null)
-              buildWorkExperienceSection(data!['workExperiences'], context),
-            if (data?['certificate'] != null)
-              buildCertificatesSection(data!['certificate']),
-            if (data?['documents'] != null)
-              buildResumeSection(data!['documents']),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: showExpressInterestDialog,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple.shade700,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text(
-                  'Express Interest',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
                 ),
               ),
             ),
@@ -660,4 +964,131 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
       ),
     );
   }
+}
+
+Widget shimmerBox({
+  double height = 16,
+  double width = double.infinity,
+  double radius = 8,
+}) {
+  return Shimmer.fromColors(
+    baseColor: Colors.grey.shade300,
+    highlightColor: Colors.grey.shade100,
+    child: Container(
+      height: height,
+      width: width,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade300,
+        borderRadius: BorderRadius.circular(radius),
+      ),
+    ),
+  );
+}
+
+Widget linkedInProfileShimmer() {
+  return SingleChildScrollView(
+    child: Column(
+      children: [
+        Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 800),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // HEADER CARD
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Column(
+                    children: [
+                      // Cover Image Shimmer
+                      Shimmer.fromColors(
+                        baseColor: Colors.grey.shade300,
+                        highlightColor: Colors.grey.shade100,
+                        child: Container(
+                          height: 200,
+                          width: double.infinity,
+                          decoration: const BoxDecoration(
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(8),
+                              topRight: Radius.circular(8),
+                            ),
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 60),
+
+                      // Profile Info
+                      Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            shimmerBox(height: 25, width: 200),
+                            const SizedBox(height: 12),
+
+                            shimmerBox(height: 18, width: 150),
+                            const SizedBox(height: 12),
+
+                            shimmerBox(height: 14, width: 250),
+                            const SizedBox(height: 8),
+
+                            shimmerBox(height: 14, width: 180),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // ABOUT SECTION
+                shimmerSection(),
+
+                // EXPERIENCE SECTION
+                shimmerSection(),
+
+                // EDUCATION SECTION
+                shimmerSection(),
+
+                //RESUME SECTION
+                shimmerSection(),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget shimmerSection() {
+  return Container(
+    margin: const EdgeInsets.only(bottom: 16),
+    padding: const EdgeInsets.all(24),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(color: Colors.grey.shade300),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        shimmerBox(height: 20, width: 160),
+        const SizedBox(height: 20),
+        shimmerBox(height: 14),
+        const SizedBox(height: 12),
+        shimmerBox(height: 14, width: 220),
+        const SizedBox(height: 12),
+        shimmerBox(height: 14),
+      ],
+    ),
+  );
 }

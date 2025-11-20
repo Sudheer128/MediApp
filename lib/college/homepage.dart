@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:medicalapp/college/college_profile.dart';
 import 'package:medicalapp/college/collegeintrests.dart';
 import 'package:medicalapp/college/studentList.dart';
 import 'package:medicalapp/extranew/mainlayout.dart';
@@ -249,7 +250,7 @@ class CollegeDashboard extends StatelessWidget {
         CollegeDegreesScreen(), // Page 1
         CollegeInterestsPage(), // Page 2
         CollegeDegreesScreen(), // Page 1
-        CollegeInterestsPage(), // Page 2
+        HospitalProfilePage(),
         // StudentListPage(),          // Page 3
         // CollegeProfilePage(),       // Page 4 (optional)
       ],
