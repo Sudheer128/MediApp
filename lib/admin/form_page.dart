@@ -35,6 +35,8 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
   bool _isFormSubmitted = false;
   bool _isLoading = false; // Add this line
 
+  String? _username;
+
   final GlobalKey _educationKey = GlobalKey();
   final GlobalKey _fellowshipKey = GlobalKey();
   final GlobalKey _papersKey = GlobalKey();
@@ -48,6 +50,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
   bool _hasFellowships = false;
   bool _hasPapers = false;
   bool _hasWorkExperience = false;
+  bool _isActive = false;
 
   List<Course> pgCourses = [];
   List<Course> ssCourses = [];
@@ -62,7 +65,6 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
   // Scroll & Keys for Drawer navigation
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _personalKey = GlobalKey();
-  final _userIdController = TextEditingController();
 
   // Personal Details
   final _nameController = TextEditingController();
@@ -75,6 +77,14 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
 
   // Fellowships
   List<Fellowship> fellowships = [Fellowship()];
+
+  // Certificates Section
+  List<CertificateModel> certificates = [CertificateModel()];
+  bool _hasCertificates = false;
+
+  // Conference & CME Section
+  List<ConferenceModel> conferences = [ConferenceModel()];
+  bool _hasConferences = false;
 
   // Papers
   List<Paper> papers = [Paper()];
@@ -93,8 +103,6 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
   File? _resumeFile;
   String? _resumeFileName;
 
-  String _username = "Doctor";
-
   @override
   void dispose() {
     _scrollController.dispose();
@@ -107,8 +115,6 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
     _validityFromController.dispose();
     _validityToController.dispose();
     _registrationNumberController.dispose();
-    _userIdController.dispose();
-
     super.dispose();
   }
 
@@ -172,13 +178,19 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
     });
   }
 
-  void _saveForm() {
+  Future<void> _saveForm() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     final isValid = _formKey.currentState!.validate();
+    print("ERROR in form validation");
 
     // Check resume upload separately
     if (_resumeFile == null && _resumeBytes == null) {
       setState(() {
         _resumeError = true;
+        _isLoading = false;
       });
       _scrollToSection(_resumeKey);
       return;
@@ -189,6 +201,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
     }
 
     if (!isValid) {
+      setState(() => _isLoading = false); // <-- FIX HERE
       // Instead of checking all sections and scrolling multiple times,
       // check in order and scroll to the first invalid section and return immediately.
 
@@ -234,37 +247,25 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
       return;
     }
 
-    _formKey.currentState!.save();
-
     setState(() {
-      _isLoading = true; // Start loading spinner
-      _isFormSubmitted = false; // Hide success message during loading
+      _isLoading = true; // Start loading
     });
 
-    _submitToBackend()
-        .then((success) {
-          if (success) {
-            setState(() {
-              _isLoading = false; // Stop loading spinner
-              _isFormSubmitted = true; // Show success message
-              _isEditing = false; // Disable editing after submit
-            });
-          } else {
-            setState(() {
-              _isLoading = false;
-              _isFormSubmitted = false;
-            });
-          }
-        })
-        .catchError((error) {
-          setState(() {
-            _isLoading = false;
-            _isFormSubmitted = false;
-          });
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error saving form: $error')));
-        });
+    // If all valid
+    _formKey.currentState!.save();
+    // Submit to backend first, await completion
+    final success = await _submitToBackend();
+
+    setState(() {
+      _isLoading = false; // Stop loading
+    });
+
+    if (success) {
+      setState(() {
+        _isFormSubmitted = true;
+        _isEditing = false;
+      });
+    }
   }
 
   bool _hasErrorInSection(GlobalKey key) {
@@ -346,25 +347,16 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
   }
 
   Future<bool> _submitToBackend() async {
-    final userIdText = _userIdController.text.trim();
-    final userId = int.tryParse(userIdText) ?? 0;
-
     final payload = {
-      // Personal
-      // 'userid': userId,
       'name': _nameController.text,
       'phone': int.tryParse(_phoneController.text) ?? 0,
       'email': _emailController.text,
       'address': _addressController.text,
-
-      // Education
       'education': [
         ...educationDetails.map((e) => e.toJson()),
-        if (_hasPG) ...pgDetails.map((e) => e.toJson()) else ...[],
-        if (_hasSS) ...ssDetails.map((e) => e.toJson()) else ...[],
+        if (_hasPG) ...pgDetails.map((e) => e.toJson()),
+        if (_hasSS) ...ssDetails.map((e) => e.toJson()),
       ],
-
-      // Fellowships, Papers, Work Experience - pass empty lists if "No"
       'fellowships':
           _hasFellowships
               ? fellowships.map((f) => f.toJson()).toList()
@@ -375,8 +367,6 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
           _hasWorkExperience
               ? workExperiences.map((w) => w.toJson()).toList()
               : <dynamic>[],
-
-      // Certificate
       'certificate': {
         'counselName': _counselNameController.text,
         'courseName': _courseNameController.text,
@@ -384,6 +374,15 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
         'validTo': convertDateToBackendFormat(_validityToController.text),
         'registrationNumber': _registrationNumberController.text,
       },
+      'certificates':
+          _hasCertificates
+              ? certificates.map((c) => c.toJson()).toList()
+              : <dynamic>[],
+
+      'conferences':
+          _hasConferences
+              ? conferences.map((c) => c.toJson()).toList()
+              : <dynamic>[],
     };
 
     print(payload);
@@ -432,9 +431,18 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
           const SnackBar(content: Text('Submitted successfully!')),
         );
         return true;
+      } else if (response.statusCode == 400) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please enter registered Email only'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return false;
       } else {
-        // Show alert dialog when the email is already registered (non-200 response)
-        _showEmailAlreadyRegisteredDialog();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Submission failed: ${response.statusCode}')),
+        );
         return false;
       }
     } catch (e) {
@@ -443,26 +451,6 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
       ).showSnackBar(SnackBar(content: Text('Submission error: $e')));
       return false;
     }
-  }
-
-  void _showEmailAlreadyRegisteredDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Error'),
-          content: Text('${_emailController.text} already registered.'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   Future<String?> _showSearchableCourseDialog(
@@ -554,162 +542,61 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
     }
 
     final course = coursesList.firstWhere(
-      (c) => c.name == education.courseNameController.text,
+      (c) => c.name == education.courseName,
       orElse: () => Course(name: '', duration: 0),
     );
 
     return course.duration;
   }
 
-  void _logout(BuildContext context) {
-    signOutGoogle();
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => Index()),
-      (Route<dynamic> route) => false, // Remove all previous routes
-    );
+  Future<void> _updateStatus(bool isActive) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('userid') ?? 0;
+
+    final statusValue = isActive ? 1 : 0;
+    final uri = Uri.parse('$baseurl/userstatus');
+
+    print('Updating status to $statusValue for user $userId');
+
+    try {
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'status': statusValue, 'userid': userId}),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _isActive = isActive;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Status updated: ${isActive ? "Active" : "Inactive"}',
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update status: ${response.statusCode}'),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error updating status: $e')));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    const Color primaryBlue = Color(0xFF007FFF);
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: primaryBlue,
-        title: const Text('Admin Dashboard'),
-        automaticallyImplyLeading: true,
+        title: const Text('Medical Professional Application Form'),
+        actions: [],
       ),
-      drawer: Drawer(
-        child: SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                DrawerHeader(
-                  decoration: const BoxDecoration(color: primaryBlue),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Admin Menu',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Welcome, $_username',
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                ListTile(
-                  leading: Icon(Icons.home_filled, color: primaryBlue),
-                  title: const Text('Home'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => AdminHomePage()),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.group, color: primaryBlue),
-                  title: const Text('Manage Users'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => UserManagementPage(),
-                      ),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.school, color: primaryBlue),
-                  title: const Text('College Interests'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => InterestsPage()),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: Icon(
-                    Icons.format_align_left_sharp,
-                    color: primaryBlue,
-                  ),
-                  title: const Text('New Student Form'),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AdminApplicationForm(),
-                      ),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.school, color: primaryBlue),
-                  title: const Text('Search Student'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => SearchPage()),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
-                  title: const Text('Available Doctors'),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AdminCollegeDegreesScreen(),
-                      ),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.track_changes, color: primaryBlue),
-                  title: const Text('Login Tracks'),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => LoginLogsPage()),
-                    );
-                  },
-                ),
-                SizedBox(height: 24), // or whatever spacing you want
-                const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.logout, color: Colors.red),
-                  title: const Text(
-                    'Logout',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                  onTap: () {
-                    _logout(context);
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-
       body:
           _isLoading
               ? const Center(
@@ -729,7 +616,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Text(
-                              ' Form Submitted Successfully!',
+                              'Profile successfully created!',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -738,17 +625,22 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
                             ),
                             const SizedBox(height: 20),
                             ElevatedButton(
-                              onPressed: () {
+                              onPressed: () async {
+                                final prefs =
+                                    await SharedPreferences.getInstance();
+                                final userId = prefs.getInt('userid') ?? 0;
                                 Navigator.pop(context); // close drawer
 
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => AdminHomePage(),
+                                    builder:
+                                        (context) =>
+                                            EditForm(applicationId: userId),
                                   ),
                                 );
                               },
-                              child: const Text('Go Home'),
+                              child: const Text('View Profile'),
                             ),
                           ],
                         )
@@ -844,7 +736,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
 
                                 // Medical Course Certificate Section
                                 _buildSectionHeader(
-                                  'Currently Active Medical Council Certificate',
+                                  'Currently Active Medical Councel Certificate',
                                   'certificate',
                                 ),
                                 if (_isEditing)
@@ -852,6 +744,21 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
                                 else
                                   _buildMedicalCertificateView(),
 
+                                const SizedBox(height: 24),
+
+                                // Certificates Section
+                                _buildSectionHeader(
+                                  "Certificates",
+                                  "certificates",
+                                ),
+                                _buildCertificatesSection(),
+                                const SizedBox(height: 24),
+
+                                _buildSectionHeader(
+                                  "Conferences / CME",
+                                  "conferences",
+                                ),
+                                _buildConferencesSection(),
                                 const SizedBox(height: 24),
 
                                 // Resume Upload Section
@@ -893,6 +800,276 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
                           ),
                         ),
               ),
+    );
+  }
+
+  Widget _buildConferencesSection() {
+    return Container(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Have you attended Conferences / CME?"),
+          Row(
+            children: [
+              Expanded(
+                child: RadioListTile<bool>(
+                  title: const Text("Yes"),
+                  value: true,
+                  groupValue: _hasConferences,
+                  onChanged: (v) => setState(() => _hasConferences = v!),
+                ),
+              ),
+              Expanded(
+                child: RadioListTile<bool>(
+                  title: const Text("No"),
+                  value: false,
+                  groupValue: _hasConferences,
+                  onChanged: (v) {
+                    setState(() {
+                      _hasConferences = v!;
+                      if (!v) conferences.clear();
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+
+          if (_hasConferences) ...[
+            ...conferences.asMap().entries.map(
+              (e) => _buildConferenceItem(e.value, e.key),
+            ),
+            const SizedBox(height: 16),
+
+            if (_isEditing)
+              ElevatedButton.icon(
+                icon: const Icon(Icons.add),
+                label: const Text("Add Conference"),
+                onPressed: () {
+                  setState(() => conferences.add(ConferenceModel()));
+                },
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConferenceItem(ConferenceModel c, int index) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Conference ${index + 1}",
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+
+            const SizedBox(height: 16),
+
+            if (_isEditing) ...[
+              TextFormField(
+                initialValue: c.activityType,
+                decoration: const InputDecoration(labelText: "Activity Type"),
+                onChanged: (v) => c.activityType = v,
+                validator: (v) => (v == null || v.isEmpty) ? "Required" : null,
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                initialValue: c.title,
+                decoration: const InputDecoration(labelText: "Title"),
+                onChanged: (v) => c.title = v,
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                initialValue: c.organizer,
+                decoration: const InputDecoration(labelText: "Organizer"),
+                onChanged: (v) => c.organizer = v,
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                controller: c.dateController,
+                readOnly: true,
+                decoration: const InputDecoration(labelText: "Date"),
+                onTap: () => _pickDate(c.dateController),
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                initialValue: c.uploadLink,
+                decoration: const InputDecoration(
+                  labelText: "Certificate Upload Link",
+                ),
+                onChanged: (v) => c.uploadLink = v,
+              ),
+            ] else ...[
+              _buildInfoRow("Activity Type", c.activityType),
+              _buildInfoRow("Title", c.title),
+              _buildInfoRow("Organizer", c.organizer),
+              _buildInfoRow("Date", c.dateController.text),
+              _buildInfoRow("Upload Link", c.uploadLink),
+            ],
+
+            if (_isEditing)
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => setState(() => conferences.removeAt(index)),
+                  child: const Text("Remove"),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCertificatesSection() {
+    return Container(
+      key: _certificateKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Do you want to add Certificates?"),
+          Row(
+            children: [
+              Expanded(
+                child: RadioListTile<bool>(
+                  title: const Text("Yes"),
+                  value: true,
+                  groupValue: _hasCertificates,
+                  onChanged: (v) => setState(() => _hasCertificates = v!),
+                ),
+              ),
+              Expanded(
+                child: RadioListTile<bool>(
+                  title: const Text("No"),
+                  value: false,
+                  groupValue: _hasCertificates,
+                  onChanged: (v) {
+                    setState(() {
+                      _hasCertificates = v!;
+                      if (!v) certificates.clear();
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+
+          if (_hasCertificates) ...[
+            ...certificates.asMap().entries.map(
+              (e) => _buildCertificateItem(e.value, e.key),
+            ),
+            const SizedBox(height: 16),
+            if (_isEditing)
+              ElevatedButton.icon(
+                icon: const Icon(Icons.add),
+                label: const Text("Add Certificate"),
+                onPressed: () {
+                  setState(() => certificates.add(CertificateModel()));
+                },
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCertificateItem(CertificateModel c, int index) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Certificate ${index + 1}",
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+
+            if (_isEditing) ...[
+              TextFormField(
+                initialValue: c.certificateName,
+                decoration: const InputDecoration(
+                  labelText: "Certificate Name",
+                ),
+                onChanged: (v) => c.certificateName = v,
+                validator: (v) => (v == null || v.isEmpty) ? "Required" : null,
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                initialValue: c.issuingAuthority,
+                decoration: const InputDecoration(
+                  labelText: "Issuing Organization / Authority",
+                ),
+                onChanged: (v) => c.issuingAuthority = v,
+                validator: (v) => (v == null || v.isEmpty) ? "Required" : null,
+              ),
+              const SizedBox(height: 16),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: c.fromDateController,
+                      readOnly: true,
+                      decoration: const InputDecoration(labelText: "From Date"),
+                      onTap: () => _pickDate(c.fromDateController),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: TextFormField(
+                      controller: c.toDateController,
+                      readOnly: true,
+                      decoration: const InputDecoration(labelText: "To Date"),
+                      onTap: () => _pickDate(c.toDateController),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+              TextFormField(
+                initialValue: c.officialLink,
+                decoration: const InputDecoration(
+                  labelText: "Official Certificate Link",
+                ),
+                onChanged: (v) => c.officialLink = v,
+              ),
+            ] else ...[
+              _buildInfoRow("Certificate Name", c.certificateName),
+              _buildInfoRow("Issuing Authority", c.issuingAuthority),
+              _buildInfoRow(
+                "Period",
+                "${c.fromDateController.text} to ${c.toDateController.text}",
+              ),
+              _buildInfoRow("Official Link", c.officialLink),
+            ],
+
+            if (_isEditing)
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    setState(() => certificates.removeAt(index));
+                  },
+                  child: const Text("Remove"),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1264,11 +1441,11 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
                     }
                     final selected = await _showSearchableCourseDialog(
                       courses,
-                      education.courseNameController.text,
+                      education.courseName,
                     );
                     if (selected != null) {
                       setState(() {
-                        education.courseNameController.text = selected;
+                        education.courseName = selected;
                       });
                     }
                   },
@@ -1279,7 +1456,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
                         suffixIcon: const Icon(Icons.arrow_drop_down),
                       ),
                       controller: TextEditingController(
-                        text: education.courseNameController.text,
+                        text: education.courseName,
                       ),
                       validator:
                           (value) =>
@@ -1292,10 +1469,9 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
               ],
               const SizedBox(height: 16),
               TextFormField(
-                initialValue: education.collegeNameController.text,
+                initialValue: education.collegeName,
                 decoration: const InputDecoration(labelText: 'College Name'),
-                onChanged:
-                    (value) => education.collegeNameController.text = value,
+                onChanged: (value) => education.collegeName = value,
                 validator:
                     (value) =>
                         (value == null || value.isEmpty)
@@ -1387,8 +1563,8 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
                 ],
               ),
             ] else ...[
-              _buildInfoRow('Course', education.courseNameController.text),
-              _buildInfoRow('College', education.collegeNameController.text),
+              _buildInfoRow('Course', education.courseName),
+              _buildInfoRow('College', education.collegeName),
               _buildInfoRow(
                 'Period',
                 '${education.fromDateController.text} to ${education.toDateController.text}',
@@ -1888,7 +2064,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
           TextFormField(
             controller: _registrationNumberController,
             decoration: const InputDecoration(
-              labelText: 'Medical Council Registration Number',
+              labelText: 'Medical Course Registration Number',
             ),
             validator:
                 (v) =>
@@ -1965,7 +2141,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
           TextFormField(
             controller: _registrationNumberController,
             decoration: const InputDecoration(
-              labelText: 'Medical Council Registration Number',
+              labelText: 'Medical Course Registration Number',
             ),
             validator:
                 (v) =>
@@ -2067,17 +2243,18 @@ String convertDateToBackendFormat(String dateStr) {
 // Models
 class EducationDetail {
   String type;
-  final TextEditingController courseNameController = TextEditingController();
-  final TextEditingController collegeNameController = TextEditingController();
+  String courseName = '';
+  String collegeName = '';
   final TextEditingController fromDateController = TextEditingController();
   final TextEditingController toDateController = TextEditingController();
+  String location = '';
 
   EducationDetail({required this.type});
 
   Map<String, dynamic> toJson() => {
     'type': type,
-    'courseName': courseNameController.text,
-    'collegeName': collegeNameController.text,
+    'courseName': courseName,
+    'collegeName': collegeName,
     'fromDate': convertDateToBackendFormat(fromDateController.text),
     'toDate': convertDateToBackendFormat(toDateController.text),
   };
@@ -2131,4 +2308,36 @@ class Course {
   final double duration; // in years
 
   Course({required this.name, required this.duration});
+}
+
+class CertificateModel {
+  String certificateName = '';
+  String issuingAuthority = '';
+  final TextEditingController fromDateController = TextEditingController();
+  final TextEditingController toDateController = TextEditingController();
+  String officialLink = '';
+
+  Map<String, dynamic> toJson() => {
+    'certificateName': certificateName,
+    'issuingAuthority': issuingAuthority,
+    'from': convertDateToBackendFormat(fromDateController.text),
+    'to': convertDateToBackendFormat(toDateController.text),
+    'officialLink': officialLink,
+  };
+}
+
+class ConferenceModel {
+  String activityType = '';
+  String title = '';
+  String organizer = '';
+  final TextEditingController dateController = TextEditingController();
+  String uploadLink = '';
+
+  Map<String, dynamic> toJson() => {
+    'activityType': activityType,
+    'title': title,
+    'organizer': organizer,
+    'date': convertDateToBackendFormat(dateController.text),
+    'uploadLink': uploadLink,
+  };
 }

@@ -538,7 +538,7 @@ class _StudentDetailScreenState extends State<EditForm> {
   // Licenses & Certifications
   Widget buildLicensesSection(dynamic certificate) {
     return buildLinkedInSection(
-      title: 'Licenses & Certifications',
+      title: 'Medical Counsel Certificate',
       onEdit: _navigateToEdit,
       content: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -810,6 +810,266 @@ class _StudentDetailScreenState extends State<EditForm> {
       );
     }
 
+    Widget buildGeneralCertificatesSection(List<dynamic> certificates) {
+      return buildLinkedInSection(
+        title: 'Licenses & Certifications',
+        onEdit: () {
+          // Edit general certificates
+        },
+        content: Column(
+          children:
+              certificates.asMap().entries.map((entry) {
+                final cert = entry.value;
+                final isLast = entry.key == certificates.length - 1;
+                return Column(
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Icon(
+                            Icons.card_membership,
+                            color: Colors.green.shade700,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                cert['certificateName'] ?? '',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                cert['issuingAuthority'] ?? '',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Valid: ${cert['from'] ?? ''} - ${cert['to'] ?? ''}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                              if (cert['officialLink'] != null &&
+                                  cert['officialLink']
+                                      .toString()
+                                      .isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                InkWell(
+                                  onTap: () async {
+                                    final url = cert['officialLink'];
+                                    final uri = Uri.parse(url);
+                                    if (await canLaunchUrl(uri)) {
+                                      await launchUrl(
+                                        uri,
+                                        mode: LaunchMode.externalApplication,
+                                      );
+                                    } else {
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Could not open link',
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.link,
+                                        size: 16,
+                                        color: Colors.blue.shade700,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Flexible(
+                                        child: Text(
+                                          'View Certificate',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.blue.shade700,
+                                            decoration:
+                                                TextDecoration.underline,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (!isLast) ...[
+                      const SizedBox(height: 20),
+                      Divider(color: Colors.grey.shade300),
+                      const SizedBox(height: 20),
+                    ],
+                  ],
+                );
+              }).toList(),
+        ),
+      );
+    }
+
+    // Conferences Section
+    Widget buildConferencesSection(List<dynamic> conferences) {
+      return buildLinkedInSection(
+        title: 'CONFERENCES AND CME',
+        onEdit: () {
+          // Edit conferences
+        },
+        content: Column(
+          children:
+              conferences.asMap().entries.map((entry) {
+                final conference = entry.value;
+                final isLast = entry.key == conferences.length - 1;
+                return Column(
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Icon(
+                            Icons.event,
+                            color: Colors.purple.shade700,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                conference['title'] ?? '',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                conference['activityType'] ?? '',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey.shade700,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Organized by: ${conference['organizer'] ?? ''}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Date: ${conference['date'] ?? ''}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                              if (conference['uploadLink'] != null &&
+                                  conference['uploadLink']
+                                      .toString()
+                                      .isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                InkWell(
+                                  onTap: () async {
+                                    final url = conference['uploadLink'];
+                                    final uri = Uri.parse(url);
+                                    if (await canLaunchUrl(uri)) {
+                                      await launchUrl(
+                                        uri,
+                                        mode: LaunchMode.externalApplication,
+                                      );
+                                    } else {
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Could not open link',
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.open_in_new,
+                                        size: 16,
+                                        color: Colors.blue.shade700,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Flexible(
+                                        child: Text(
+                                          'View Details',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.blue.shade700,
+                                            decoration:
+                                                TextDecoration.underline,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (!isLast) ...[
+                      const SizedBox(height: 20),
+                      Divider(color: Colors.grey.shade300),
+                      const SizedBox(height: 20),
+                    ],
+                  ],
+                );
+              }).toList(),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
@@ -849,6 +1109,13 @@ class _StudentDetailScreenState extends State<EditForm> {
                       buildEducationSection(data!['education']),
                     if (data?['certificate'] != null)
                       buildLicensesSection(data!['certificate']),
+                    if (data?['certificates'] != null &&
+                        (data!['certificates'] as List).isNotEmpty)
+                      buildGeneralCertificatesSection(data!['certificates']),
+                    // NEW: Conferences Section
+                    if (data?['conferences'] != null &&
+                        (data!['conferences'] as List).isNotEmpty)
+                      buildConferencesSection(data!['conferences']),
                     if (data?['papers'] != null &&
                         (data!['papers'] as List).isNotEmpty)
                       buildPublicationsSection(data!['papers']),

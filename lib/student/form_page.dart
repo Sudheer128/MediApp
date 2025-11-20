@@ -73,6 +73,14 @@ class _ApplicationFormState extends State<ApplicationForm> {
   // Fellowships
   List<Fellowship> fellowships = [Fellowship()];
 
+  // Certificates Section
+  List<CertificateModel> certificates = [CertificateModel()];
+  bool _hasCertificates = false;
+
+  // Conference & CME Section
+  List<ConferenceModel> conferences = [ConferenceModel()];
+  bool _hasConferences = false;
+
   // Papers
   List<Paper> papers = [Paper()];
 
@@ -171,6 +179,7 @@ class _ApplicationFormState extends State<ApplicationForm> {
     });
 
     final isValid = _formKey.currentState!.validate();
+    print("ERROR in form validation");
 
     // Check resume upload separately
     if (_resumeFile == null && _resumeBytes == null) {
@@ -187,6 +196,7 @@ class _ApplicationFormState extends State<ApplicationForm> {
     }
 
     if (!isValid) {
+      setState(() => _isLoading = false); // <-- FIX HERE
       // Instead of checking all sections and scrolling multiple times,
       // check in order and scroll to the first invalid section and return immediately.
 
@@ -363,7 +373,18 @@ class _ApplicationFormState extends State<ApplicationForm> {
         'validTo': convertDateToBackendFormat(_validityToController.text),
         'registrationNumber': _registrationNumberController.text,
       },
+      'certificates':
+          _hasCertificates
+              ? certificates.map((c) => c.toJson()).toList()
+              : <dynamic>[],
+
+      'conferences':
+          _hasConferences
+              ? conferences.map((c) => c.toJson()).toList()
+              : <dynamic>[],
     };
+
+    print(payload);
 
     final uri = Uri.parse('$baseurl/counsel');
     late http.Response response;
@@ -833,6 +854,21 @@ class _ApplicationFormState extends State<ApplicationForm> {
 
                                 const SizedBox(height: 24),
 
+                                // Certificates Section
+                                _buildSectionHeader(
+                                  "Certificates",
+                                  "certificates",
+                                ),
+                                _buildCertificatesSection(),
+                                const SizedBox(height: 24),
+
+                                _buildSectionHeader(
+                                  "Conferences / CME",
+                                  "conferences",
+                                ),
+                                _buildConferencesSection(),
+                                const SizedBox(height: 24),
+
                                 // Resume Upload Section
                                 _buildSectionHeader('Resume Upload', 'resume'),
                                 if (_isEditing)
@@ -872,6 +908,276 @@ class _ApplicationFormState extends State<ApplicationForm> {
                           ),
                         ),
               ),
+    );
+  }
+
+  Widget _buildConferencesSection() {
+    return Container(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Have you attended Conferences / CME?"),
+          Row(
+            children: [
+              Expanded(
+                child: RadioListTile<bool>(
+                  title: const Text("Yes"),
+                  value: true,
+                  groupValue: _hasConferences,
+                  onChanged: (v) => setState(() => _hasConferences = v!),
+                ),
+              ),
+              Expanded(
+                child: RadioListTile<bool>(
+                  title: const Text("No"),
+                  value: false,
+                  groupValue: _hasConferences,
+                  onChanged: (v) {
+                    setState(() {
+                      _hasConferences = v!;
+                      if (!v) conferences.clear();
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+
+          if (_hasConferences) ...[
+            ...conferences.asMap().entries.map(
+              (e) => _buildConferenceItem(e.value, e.key),
+            ),
+            const SizedBox(height: 16),
+
+            if (_isEditing)
+              ElevatedButton.icon(
+                icon: const Icon(Icons.add),
+                label: const Text("Add Conference"),
+                onPressed: () {
+                  setState(() => conferences.add(ConferenceModel()));
+                },
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConferenceItem(ConferenceModel c, int index) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Conference ${index + 1}",
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+
+            const SizedBox(height: 16),
+
+            if (_isEditing) ...[
+              TextFormField(
+                initialValue: c.activityType,
+                decoration: const InputDecoration(labelText: "Activity Type"),
+                onChanged: (v) => c.activityType = v,
+                validator: (v) => (v == null || v.isEmpty) ? "Required" : null,
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                initialValue: c.title,
+                decoration: const InputDecoration(labelText: "Title"),
+                onChanged: (v) => c.title = v,
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                initialValue: c.organizer,
+                decoration: const InputDecoration(labelText: "Organizer"),
+                onChanged: (v) => c.organizer = v,
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                controller: c.dateController,
+                readOnly: true,
+                decoration: const InputDecoration(labelText: "Date"),
+                onTap: () => _pickDate(c.dateController),
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                initialValue: c.uploadLink,
+                decoration: const InputDecoration(
+                  labelText: "Certificate Upload Link",
+                ),
+                onChanged: (v) => c.uploadLink = v,
+              ),
+            ] else ...[
+              _buildInfoRow("Activity Type", c.activityType),
+              _buildInfoRow("Title", c.title),
+              _buildInfoRow("Organizer", c.organizer),
+              _buildInfoRow("Date", c.dateController.text),
+              _buildInfoRow("Upload Link", c.uploadLink),
+            ],
+
+            if (_isEditing)
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => setState(() => conferences.removeAt(index)),
+                  child: const Text("Remove"),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCertificatesSection() {
+    return Container(
+      key: _certificateKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Do you want to add Certificates?"),
+          Row(
+            children: [
+              Expanded(
+                child: RadioListTile<bool>(
+                  title: const Text("Yes"),
+                  value: true,
+                  groupValue: _hasCertificates,
+                  onChanged: (v) => setState(() => _hasCertificates = v!),
+                ),
+              ),
+              Expanded(
+                child: RadioListTile<bool>(
+                  title: const Text("No"),
+                  value: false,
+                  groupValue: _hasCertificates,
+                  onChanged: (v) {
+                    setState(() {
+                      _hasCertificates = v!;
+                      if (!v) certificates.clear();
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+
+          if (_hasCertificates) ...[
+            ...certificates.asMap().entries.map(
+              (e) => _buildCertificateItem(e.value, e.key),
+            ),
+            const SizedBox(height: 16),
+            if (_isEditing)
+              ElevatedButton.icon(
+                icon: const Icon(Icons.add),
+                label: const Text("Add Certificate"),
+                onPressed: () {
+                  setState(() => certificates.add(CertificateModel()));
+                },
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCertificateItem(CertificateModel c, int index) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Certificate ${index + 1}",
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+
+            if (_isEditing) ...[
+              TextFormField(
+                initialValue: c.certificateName,
+                decoration: const InputDecoration(
+                  labelText: "Certificate Name",
+                ),
+                onChanged: (v) => c.certificateName = v,
+                validator: (v) => (v == null || v.isEmpty) ? "Required" : null,
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                initialValue: c.issuingAuthority,
+                decoration: const InputDecoration(
+                  labelText: "Issuing Organization / Authority",
+                ),
+                onChanged: (v) => c.issuingAuthority = v,
+                validator: (v) => (v == null || v.isEmpty) ? "Required" : null,
+              ),
+              const SizedBox(height: 16),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: c.fromDateController,
+                      readOnly: true,
+                      decoration: const InputDecoration(labelText: "From Date"),
+                      onTap: () => _pickDate(c.fromDateController),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: TextFormField(
+                      controller: c.toDateController,
+                      readOnly: true,
+                      decoration: const InputDecoration(labelText: "To Date"),
+                      onTap: () => _pickDate(c.toDateController),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+              TextFormField(
+                initialValue: c.officialLink,
+                decoration: const InputDecoration(
+                  labelText: "Official Certificate Link",
+                ),
+                onChanged: (v) => c.officialLink = v,
+              ),
+            ] else ...[
+              _buildInfoRow("Certificate Name", c.certificateName),
+              _buildInfoRow("Issuing Authority", c.issuingAuthority),
+              _buildInfoRow(
+                "Period",
+                "${c.fromDateController.text} to ${c.toDateController.text}",
+              ),
+              _buildInfoRow("Official Link", c.officialLink),
+            ],
+
+            if (_isEditing)
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    setState(() => certificates.removeAt(index));
+                  },
+                  child: const Text("Remove"),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -2110,4 +2416,36 @@ class Course {
   final double duration; // in years
 
   Course({required this.name, required this.duration});
+}
+
+class CertificateModel {
+  String certificateName = '';
+  String issuingAuthority = '';
+  final TextEditingController fromDateController = TextEditingController();
+  final TextEditingController toDateController = TextEditingController();
+  String officialLink = '';
+
+  Map<String, dynamic> toJson() => {
+    'certificateName': certificateName,
+    'issuingAuthority': issuingAuthority,
+    'from': convertDateToBackendFormat(fromDateController.text),
+    'to': convertDateToBackendFormat(toDateController.text),
+    'officialLink': officialLink,
+  };
+}
+
+class ConferenceModel {
+  String activityType = '';
+  String title = '';
+  String organizer = '';
+  final TextEditingController dateController = TextEditingController();
+  String uploadLink = '';
+
+  Map<String, dynamic> toJson() => {
+    'activityType': activityType,
+    'title': title,
+    'organizer': organizer,
+    'date': convertDateToBackendFormat(dateController.text),
+    'uploadLink': uploadLink,
+  };
 }
