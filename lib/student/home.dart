@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/edit_formAfterSave.dart';
+import 'package:medicalapp/extranew/alljobs.dart';
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
 import 'package:medicalapp/student/form_page.dart';
@@ -17,15 +18,13 @@ class DoctorDashboardApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Doctor Dashboard',
       theme: ThemeData(
-        useMaterial3: true, // optional but recommended for latest versions
+        useMaterial3: true,
         primarySwatch: Colors.blue,
         fontFamily: 'Roboto',
         cardTheme: CardThemeData(
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          margin: const EdgeInsets.all(8),
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          margin: const EdgeInsets.all(0),
         ),
       ),
       home: const DoctorDashboard(),
@@ -43,11 +42,12 @@ class DoctorDashboard extends StatefulWidget {
 class _DoctorDashboardState extends State<DoctorDashboard> {
   bool _isActive = false;
   String? _username;
+  int _currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    _loadStatus(); // Load status when the page loads
+    _loadStatus();
     _loadUsername();
   }
 
@@ -58,7 +58,6 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
     });
   }
 
-  // Fetch the current status from the API
   Future<void> _loadStatus() async {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('userid') ?? 0;
@@ -66,9 +65,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
     final uri = Uri.parse('$baseurl/getuserstatus?userid=$userId');
 
     try {
-      final response = await http.get(
-        uri,
-      ); // GET request to get the user status
+      final response = await http.get(uri);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -78,10 +75,8 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
           _isActive = status;
         });
 
-        // Store the status locally
         await prefs.setBool('isActive', _isActive);
       } else {
-        // Handle error if status fetch fails
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Failed to fetch status')));
@@ -93,7 +88,6 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
     }
   }
 
-  // Update status when toggle changes
   Future<void> _updateStatus(bool isActive) async {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('userid') ?? 0;
@@ -102,9 +96,9 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
     final uri = Uri.parse(
       '$baseurl/userstatus?user_id=$userId&status=$statusValue',
     );
-    print('userId: $userId, status: $statusValue'); // Debugging line
+
     try {
-      final response = await http.get(uri); // changed to GET
+      final response = await http.get(uri);
 
       if (response.statusCode == 200) {
         setState(() {
@@ -149,121 +143,145 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
     Color iconColor = Colors.blue,
     bool enabled = true,
   }) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: iconColor.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(icon, color: iconColor, size: 24),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Color(0xFFE0E0E0)),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.1),
+                  shape: BoxShape.circle,
                 ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                child: Icon(icon, color: iconColor, size: 24),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 18,
+                    color: Colors.black87,
                   ),
                 ),
-              ],
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.only(left: 46),
+            child: Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade700,
+                height: 1.5,
+              ),
             ),
-            SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.only(left: 46),
+          ),
+          SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: enabled ? onPressed : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    enabled ? Color(0xFF0A66C2) : Colors.grey.shade300,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                padding: EdgeInsets.symmetric(vertical: 12),
+                elevation: 0,
+              ),
               child: Text(
-                subtitle,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                  height: 1.4,
-                ),
+                buttonText,
+                style: TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
-            SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: enabled ? onPressed : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: enabled ? iconColor : Colors.grey.shade300,
-                  foregroundColor: enabled ? Colors.white : Colors.grey,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                ),
-                child: Text(buttonText),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildCompleteProfileSection(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.check_circle_outline, color: Colors.blue),
-                SizedBox(width: 8),
-                Text(
-                  "Complete Your Profile",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Color(0xFFE0E0E0)),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.check_circle_outline, color: Color(0xFF0A66C2)),
+              SizedBox(width: 8),
+              Text(
+                "Complete Your Profile",
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                  color: Colors.black87,
                 ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          Text(
+            "A complete profile helps you stand out to potential employers. Make sure to include:",
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+          ),
+          SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: Column(
+              children: [
+                _buildProfileItem("Educational background"),
+                _buildProfileItem("Professional experience"),
+                _buildProfileItem("Specialties and skills"),
+                _buildProfileItem("Certifications and credentials"),
               ],
             ),
-            SizedBox(height: 12),
-            Text(
-              "A complete profile helps you stand out to potential employers. Make sure to include:",
-              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-            ),
-            SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: Column(
-                children: [
-                  _buildProfileItem("Educational background"),
-                  _buildProfileItem("Professional experience"),
-                  _buildProfileItem("Specialties and skills"),
-                  _buildProfileItem("Certifications and credentials"),
-                ],
-              ),
-            ),
-            SizedBox(height: 16),
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => ApplicationForm()),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          ),
+          SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ApplicationForm()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF0A66C2),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
                 ),
-                child: Text("Create Profile"),
+                padding: EdgeInsets.symmetric(vertical: 12),
+                elevation: 0,
+              ),
+              child: Text(
+                "Create Profile",
+                style: TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -274,230 +292,578 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.circle, size: 8, color: Colors.blue),
-          SizedBox(width: 8),
-          Expanded(child: Text(text, style: TextStyle(fontSize: 14))),
+          Container(
+            margin: EdgeInsets.only(top: 6),
+            width: 4,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.black87,
+              shape: BoxShape.circle,
+            ),
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(fontSize: 14, color: Colors.black87),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildHomePage() {
+    final isWeb = MediaQuery.of(context).size.width > 900;
+
+    Widget content = RefreshIndicator(
+      onRefresh: () async {
+        await _loadStatus();
+        await _loadUsername();
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.all(isWeb ? 0 : 16),
+        child: Column(
+          children: [
+            _buildCard(
+              icon: Icons.person_outline,
+              title: "Your Profile",
+              subtitle:
+                  "Complete and manage your professional profile to increase visibility to medical institutions.",
+              buttonText: "Edit Profile",
+              iconColor: Color(0xFF0A66C2),
+              onPressed: () async {
+                final prefs = await SharedPreferences.getInstance();
+                final userId = prefs.getInt('userid') ?? 0;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditForm(applicationId: userId),
+                  ),
+                );
+              },
+            ),
+            SizedBox(height: 16),
+            _buildCompleteProfileSection(context),
+            SizedBox(height: 16),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Color(0xFFE0E0E0)),
+              ),
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.visibility, color: Color(0xFF0A66C2)),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          "Enable Profile Visibility",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  Text(
+                    "If you are looking for new opportunities or wish for your profile to be visible to potential employers or institutions, enabling this setting will allow your profile to be shown to colleges and organizations actively seeking candidates.",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade700,
+                      height: 1.5,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFF3F2EF),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _isActive
+                              ? Icons.check_circle
+                              : Icons.circle_outlined,
+                          color: _isActive ? Colors.green : Colors.grey,
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Active Status',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              Text(
+                                _isActive
+                                    ? 'Your profile is visible'
+                                    : 'Your profile is hidden',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Switch(
+                          value: _isActive,
+                          onChanged: (bool value) {
+                            _updateStatus(value);
+                          },
+                          activeColor: Colors.green,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (isWeb) {
+      return Center(
+        child: Container(
+          constraints: BoxConstraints(maxWidth: 1128),
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: content,
+        ),
+      );
+    }
+
+    return content;
+  }
+
+  Widget _buildJobsPage() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.work_outline, size: 64, color: Colors.grey),
+          SizedBox(height: 16),
+          Text(
+            'Jobs',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+          ),
+          Text('Coming soon', style: TextStyle(color: Colors.grey)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationsPage() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.notifications_outlined, size: 64, color: Colors.grey),
+          SizedBox(height: 16),
+          Text(
+            'Notifications',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+          ),
+          Text('No notifications yet', style: TextStyle(color: Colors.grey)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfilePage() {
+    final isWeb = MediaQuery.of(context).size.width > 900;
+
+    Widget content = SingleChildScrollView(
+      padding: EdgeInsets.all(isWeb ? 0 : 16),
+      child: Column(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Color(0xFFE0E0E0)),
+            ),
+            child: Column(
+              children: [
+                // Profile header with background
+                Container(
+                  height: 100,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF0A66C2), Color(0xFF004182)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      topRight: Radius.circular(8),
+                    ),
+                  ),
+                ),
+                Transform.translate(
+                  offset: Offset(0, -40),
+                  child: Column(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 4),
+                        ),
+                        child: CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Colors.grey[200],
+                          child: Icon(
+                            Icons.person,
+                            size: 50,
+                            color: Color(0xFF0A66C2),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        _username ?? 'Doctor',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      Text(
+                        'Medical Professional',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  child: Column(
+                    children: [
+                      _buildProfileOption(
+                        Icons.person_outline,
+                        'Edit Profile',
+                        'Update your professional information',
+                        () async {
+                          final prefs = await SharedPreferences.getInstance();
+                          final userId = prefs.getInt('userid') ?? 0;
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => EditForm(applicationId: userId),
+                            ),
+                          );
+                        },
+                      ),
+                      Divider(height: 1),
+                      _buildProfileOption(
+                        Icons.settings_outlined,
+                        'Settings',
+                        'Manage your account settings',
+                        () {},
+                      ),
+                      Divider(height: 1),
+                      _buildProfileOption(
+                        Icons.help_outline,
+                        'Help & Support',
+                        'Get help with your account',
+                        () {},
+                      ),
+                      Divider(height: 1),
+                      _buildProfileOption(
+                        Icons.logout,
+                        'Log Out',
+                        'Sign out of your account',
+                        () {
+                          signOutGoogle();
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (context) => Index()),
+                            (Route<dynamic> route) => false,
+                          );
+                        },
+                        textColor: Colors.red,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (isWeb) {
+      return Center(
+        child: Container(
+          constraints: BoxConstraints(maxWidth: 600),
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: content,
+        ),
+      );
+    }
+
+    return content;
+  }
+
+  Widget _buildProfileOption(
+    IconData icon,
+    String title,
+    String subtitle,
+    VoidCallback onTap, {
+    Color? textColor,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Row(
+          children: [
+            Icon(icon, color: textColor ?? Colors.grey.shade700),
+            SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: textColor ?? Colors.black87,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: Colors.grey.shade400),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileTitle() {
+    return Row(
+      children: [
+        Container(
+          padding: EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Color(0xFF0A66C2),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Icon(Icons.medical_services, color: Colors.white, size: 20),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWebNavBar() {
+    return Container(
+      constraints: BoxConstraints(maxWidth: 1128),
+      child: Row(
+        children: [
+          // Logo
+          Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Color(0xFF0A66C2),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Icon(Icons.medical_services, color: Colors.white, size: 20),
+          ),
+          SizedBox(width: 12),
+          // Search bar
+          Container(
+            width: 280,
+            height: 36,
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Search',
+                hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                prefixIcon: Icon(
+                  Icons.search,
+                  size: 20,
+                  color: Colors.grey.shade600,
+                ),
+                filled: true,
+                fillColor: Color(0xFFEEF3F8),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(4),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: EdgeInsets.symmetric(vertical: 0),
+              ),
+            ),
+          ),
+          SizedBox(width: 24),
+          // Navigation items
+          Expanded(
+            child: Row(
+              children: [
+                _buildNavItem(Icons.home, 'Home', 0),
+                _buildNavItem(Icons.work_outline, 'Jobs', 1),
+                _buildNavItem(Icons.notifications_outlined, 'Notifications', 2),
+                _buildNavItem(Icons.person_outline, 'Me', 3),
+                Spacer(),
+                // Right side icons
+                IconButton(
+                  icon: Icon(
+                    Icons.chat_bubble_outline,
+                    color: Colors.grey.shade700,
+                    size: 22,
+                  ),
+                  onPressed: () {},
+                  tooltip: 'Messaging',
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, int index) {
+    final isSelected = _currentIndex == index;
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _currentIndex = index;
+        });
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? Colors.black87 : Colors.grey.shade600,
+              size: 24,
+            ),
+            SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: isSelected ? Colors.black87 : Colors.grey.shade600,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+            if (isSelected)
+              Container(
+                margin: EdgeInsets.only(top: 4),
+                height: 2,
+                width: 40,
+                color: Colors.black87,
+              ),
+          ],
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final isWeb = MediaQuery.of(context).size.width > 900;
+
     return Scaffold(
-      drawer: Drawer(
-        child: Column(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.blue,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Colors.blue.shade700, Colors.blue.shade400],
-                ),
-              ),
-              padding: EdgeInsets.only(top: 40, left: 16, bottom: 16),
-              alignment: Alignment.bottomLeft,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.person, size: 30, color: Colors.blue),
-                  ),
-                  SizedBox(height: 2),
-                  Text(
-                    'Doctor Dashboard',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    _username != null
-                        ? 'Hello, $_username'
-                        : 'Doctor Dashboard',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  ListTile(
-                    leading: Icon(Icons.home, color: Colors.blue),
-                    title: Text('Home'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DoctorDashboardApp(),
-                        ),
-                      );
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.person, color: Colors.blue),
-                    title: Text('Profile'),
-                    onTap: () async {
-                      final prefs = await SharedPreferences.getInstance();
-                      final userId = prefs.getInt('userid') ?? 0;
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EditForm(applicationId: userId),
-                        ),
-                      );
-                    },
-                  ),
-                  SwitchListTile(
-                    title: Text('Active Status'),
-                    value: _isActive,
-                    onChanged: (bool value) {
-                      _updateStatus(value);
-                    },
-                    secondary: Icon(
-                      Icons.toggle_on,
-                      color: _isActive ? Colors.green : Colors.grey,
-                    ),
-                    activeColor: Colors.green,
-                  ),
-                  Divider(height: 1, thickness: 1),
-                  ListTile(
-                    leading: Icon(Icons.logout, color: Colors.blue),
-                    title: Text('Log Out'),
-                    onTap: () {
-                      signOutGoogle();
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (context) => Index()),
-                        (Route<dynamic> route) =>
-                            false, // Remove all previous routes
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+      backgroundColor: Color(0xFFF3F2EF),
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Welcome back, Doctor',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              "Your professional dashboard",
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.white.withOpacity(0.9),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
         elevation: 0,
-        toolbarHeight: 80,
-        centerTitle: false,
-        iconTheme: IconThemeData(color: Colors.white),
+        automaticallyImplyLeading: false,
+        title: isWeb ? _buildWebNavBar() : _buildMobileTitle(),
+        actions: isWeb ? [] : null,
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Container(color: Colors.grey[300], height: 1),
+        ),
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await _loadStatus();
-          await _loadUsername();
-          // You can add other refresh methods here if needed
-        },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              _buildCard(
-                icon: Icons.person_outline,
-                title: "Your Profile",
-                subtitle:
-                    "Complete and manage your professional profile to increase visibility to medical institutions.",
-                buttonText: "Edit Profile",
-                iconColor: Colors.blue,
-                onPressed: () async {
-                  final prefs = await SharedPreferences.getInstance();
-                  final userId = prefs.getInt('userid') ?? 0;
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => EditForm(applicationId: userId),
-                    ),
-                  );
-                },
-              ),
-              SizedBox(height: 16),
-              _buildCompleteProfileSection(context),
-              SizedBox(height: 16),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.notifications, color: Colors.blue),
-                          SizedBox(width: 8),
-                          Text(
-                            "Enable Profile Visibility",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          _buildHomePage(),
+          AllJobsPage(),
+          _buildNotificationsPage(),
+          _buildProfilePage(),
+        ],
+      ),
+      bottomNavigationBar:
+          isWeb
+              ? null
+              : Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(top: BorderSide(color: Color(0xFFE0E0E0))),
+                ),
+                child: SafeArea(
+                  child: BottomNavigationBar(
+                    currentIndex: _currentIndex,
+                    onTap: (index) {
+                      setState(() {
+                        _currentIndex = index;
+                      });
+                    },
+                    type: BottomNavigationBarType.fixed,
+                    backgroundColor: Colors.white,
+                    selectedItemColor: Colors.black87,
+                    unselectedItemColor: Colors.grey.shade600,
+                    selectedFontSize: 12,
+                    unselectedFontSize: 12,
+                    elevation: 0,
+                    items: [
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.home_outlined),
+                        activeIcon: Icon(Icons.home),
+                        label: 'Home',
                       ),
-                      SizedBox(height: 12),
-                      Text(
-                        "If you are looking for new opportunities or wish for your profile to be visible to potential employers or institutions, enabling this setting will allow your profile to be shown to colleges and organizations actively seeking candidates.",
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
-                        ),
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.work_outline),
+                        activeIcon: Icon(Icons.work),
+                        label: 'Jobs',
                       ),
-                      SizedBox(height: 12),
-                      SwitchListTile(
-                        title: Text('Active Status'),
-                        value: _isActive,
-                        onChanged: (bool value) {
-                          _updateStatus(value);
-                        },
-                        secondary: Icon(
-                          Icons.toggle_on,
-                          color: _isActive ? Colors.green : Colors.grey,
-                        ),
-                        activeColor: Colors.green,
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.notifications_outlined),
+                        activeIcon: Icon(Icons.notifications),
+                        label: 'Notifications',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.person_outline),
+                        activeIcon: Icon(Icons.person),
+                        label: 'Me',
                       ),
                     ],
                   ),
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
