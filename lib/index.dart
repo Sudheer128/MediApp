@@ -83,7 +83,7 @@ class _IndexState extends State<Index> {
               destinationPage = UserHomePage();
               break;
             case 'myrank_cm':
-              destinationPage = CmHomePage();
+              destinationPage = MyRankCMHomePage();
               break;
             default:
               destinationPage = ApprovalScreen();
@@ -189,7 +189,7 @@ class _HomePageState extends State<HomePage> {
             destinationPage = UserHomePage();
             break;
           case 'myrank_cm':
-            destinationPage = CmHomePage();
+            destinationPage = MyRankCMHomePage();
             break;
           default:
             destinationPage = ApprovalScreen();

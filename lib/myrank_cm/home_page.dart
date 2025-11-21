@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:medicalapp/admin/form_page.dart';
+import 'package:medicalapp/extranew/alljobs.dart';
+import 'package:medicalapp/extranew/mainlayout.dart';
 import 'package:medicalapp/myrank_cm/CmusersTable.dart';
 import 'package:medicalapp/myrank_cm/cmCollegeDocList.dart';
 import 'package:medicalapp/myrank_cm/cmForm.dart';
@@ -101,7 +102,6 @@ class _UserHomePageState extends State<CmHomePage> {
     const Color primaryBlue = Color.fromARGB(255, 250, 110, 110);
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: primaryBlue,
         title: const Text('Admin Dashboard'),
         automaticallyImplyLeading: true,
       ),
@@ -288,6 +288,27 @@ class _UserHomePageState extends State<CmHomePage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class MyRankCMHomePage extends StatelessWidget {
+  const MyRankCMHomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MainLayout(
+      title: "College Dashboard",
+
+      pages: [
+        CmHomePage(),
+        AllJobsPage(),
+        // AdminCollegeDegreesScreen(), // Page 2
+        // // CollegeDegreesScreen(), // Page 1
+        // // AdminHomePage(),
+        // // StudentListPage(),          // Page 3
+        // HospitalProfilePage(), // Page 4 (optional)
+      ],
     );
   }
 }
