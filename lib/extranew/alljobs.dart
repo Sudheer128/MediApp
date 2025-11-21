@@ -299,50 +299,55 @@ class _AllJobsPageState extends State<AllJobsPage> {
   Widget _buildJobsList() {
     final displayJobs = filteredJobs;
 
-    if (displayJobs.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.work_outline, size: 64, color: Colors.grey.shade400),
-            SizedBox(height: 16),
-            Text(
-              'No jobs found',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
+    return RefreshIndicator(
+      onRefresh: fetchJobs, // 👈 this calls your API again
+      child:
+          displayJobs.isEmpty
+              ? ListView(
+                children: [
+                  SizedBox(height: 200),
+                  Center(
+                    child: Column(
+                      children: [
+                        Icon(Icons.work_outline, size: 64, color: Colors.grey),
+                        SizedBox(height: 16),
+                        Text(
+                          'No jobs found',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Try adjusting your search or filters',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              )
+              : ListView.builder(
+                padding: EdgeInsets.all(16),
+                itemCount: displayJobs.length,
+                itemBuilder: (context, index) {
+                  final job = displayJobs[index];
+                  return JobCard(
+                    job: job,
+                    isSaved: savedJobs.contains(job['id']),
+                    onSave: () {
+                      setState(() {
+                        if (savedJobs.contains(job['id'])) {
+                          savedJobs.remove(job['id']);
+                        } else {
+                          savedJobs.add(job['id']);
+                        }
+                      });
+                    },
+                  );
+                },
               ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Try adjusting your search or filters',
-              style: TextStyle(color: Colors.grey.shade600),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: EdgeInsets.all(16),
-      itemCount: displayJobs.length,
-      itemBuilder: (context, index) {
-        final job = displayJobs[index];
-        return JobCard(
-          job: job,
-          isSaved: savedJobs.contains(job['id']),
-          onSave: () {
-            setState(() {
-              if (savedJobs.contains(job['id'])) {
-                savedJobs.remove(job['id']);
-              } else {
-                savedJobs.add(job['id']);
-              }
-            });
-          },
-        );
-      },
     );
   }
 }
