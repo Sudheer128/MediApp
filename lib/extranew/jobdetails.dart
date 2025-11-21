@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:medicalapp/url.dart';
 
@@ -16,6 +17,8 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
   Map<String, dynamic>? job;
   bool loading = true;
   bool isSaved = false;
+  bool isApplied = false;
+  String Roleee = "";
 
   @override
   void initState() {
@@ -23,15 +26,75 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
     fetchJobDetails();
   }
 
-  Future<void> fetchJobDetails() async {
-    final response = await http.get(
-      Uri.parse("$baseurl/getJobDetails?id=${widget.jobId}"),
+  Future<void> loadRole() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final role = prefs.getString('role') ?? "";
+    setState(() {
+      Roleee = role;
+    });
+  }
+
+  Future<int?> getUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('userid');
+  }
+
+  Future<void> applyJob() async {
+    final userId = await getUserId();
+    final jobId = widget.jobId;
+
+    if (userId == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("User not logged in")));
+      return;
+    }
+
+    final response = await http.post(
+      Uri.parse("$baseurl/applyJob"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "job_id": jobId, // int
+        "user_id": userId, // int
+      }),
     );
 
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body)["data"];
+      setState(() {
+        isApplied = true;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Applied successfully"),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Failed to apply")));
+    }
+  }
+
+  Future<void> fetchJobDetails() async {
+    final userId = await getUserId();
+
+    final response = await http.get(
+      Uri.parse("$baseurl/getJobDetails?id=${widget.jobId}&user_id=$userId"),
+    );
+
+    if (response.statusCode == 200) {
+      final body = jsonDecode(response.body);
+
+      final data = body["data"]; // job details
+      final applied = body["applied"]; // 0 or 1
+
+      print("Applied Status = $applied");
+
       setState(() {
         job = data;
+        isApplied = applied == 1; // <-- USE THIS (correct)
         loading = false;
       });
     }
@@ -153,7 +216,7 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
                 children: [
                   _buildCompanyCard(),
                   SizedBox(height: 16),
-                  _buildApplyCard(isBottomBar: false),
+                  if (Roleee == 'doctor') _buildApplyCard(isBottomBar: false),
                 ],
               ),
             ),
@@ -179,6 +242,7 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
             ],
           ),
         ),
+        // if (Roleee == 'doctor')
         Positioned(
           bottom: 0,
           left: 0,
@@ -649,19 +713,14 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
                 ),
               ),
               SizedBox(width: 12),
+
+              /// APPLY BUTTON (BOTTOM BAR)
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () async {
-                    final link = job!["application_link"];
-                    if (await canLaunchUrl(Uri.parse(link))) {
-                      await launchUrl(
-                        Uri.parse(link),
-                        mode: LaunchMode.externalApplication,
-                      );
-                    }
-                  },
+                  onPressed: isApplied ? null : applyJob,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF0A66C2),
+                    backgroundColor:
+                        isApplied ? Colors.green : Color(0xFF0A66C2),
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
@@ -670,7 +729,7 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
                     padding: EdgeInsets.symmetric(vertical: 12),
                   ),
                   child: Text(
-                    'Apply',
+                    isApplied ? 'Applied' : 'Apply',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -681,6 +740,7 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
       );
     }
 
+    // ---------- WEB SIDEBAR CARD ----------
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -690,20 +750,13 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
       padding: EdgeInsets.all(20),
       child: Column(
         children: [
+          /// APPLY BUTTON (WEB)
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () async {
-                final link = job!["application_link"];
-                if (await canLaunchUrl(Uri.parse(link))) {
-                  await launchUrl(
-                    Uri.parse(link),
-                    mode: LaunchMode.externalApplication,
-                  );
-                }
-              },
+              onPressed: isApplied ? null : applyJob,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF0A66C2),
+                backgroundColor: isApplied ? Colors.green : Color(0xFF0A66C2),
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -712,12 +765,15 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
                 padding: EdgeInsets.symmetric(vertical: 12),
               ),
               child: Text(
-                'Apply',
+                isApplied ? 'Applied' : 'Apply',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
             ),
           ),
+
           SizedBox(height: 12),
+
+          /// SAVE BUTTON
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
