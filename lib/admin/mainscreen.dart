@@ -8,8 +8,11 @@ import 'package:medicalapp/admin/form_page.dart';
 import 'package:medicalapp/admin/search.dart';
 import 'package:medicalapp/admin/searchstudent.dart';
 import 'package:medicalapp/admin/userstable.dart';
+import 'package:medicalapp/college/collegeintrests.dart';
+import 'package:medicalapp/extranew/alljobs.dart';
 import 'package:medicalapp/extranew/jobdetails.dart';
 import 'package:medicalapp/extranew/jobnotification.dart';
+import 'package:medicalapp/extranew/mainlayout.dart';
 import 'package:medicalapp/index.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -109,144 +112,143 @@ class _AdminHomePageState extends State<AdminHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: primaryBlue,
-        title: const Text('Admin Dashboard'),
-        automaticallyImplyLeading: true,
-      ),
-      drawer: Drawer(
-        child: SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                DrawerHeader(
-                  decoration: const BoxDecoration(color: primaryBlue),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Admin Menu',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Welcome, $_username',
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                ListTile(
-                  leading: Icon(Icons.home_filled, color: primaryBlue),
-                  title: const Text('Home'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => AdminHomePage()),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.group, color: primaryBlue),
-                  title: const Text('Manage Users'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => UserManagementPage(),
-                      ),
-                    );
-                  },
-                ),
+      // appBar: AppBar(
+      //   backgroundColor: primaryBlue,
+      //   title: const Text('Admin Dashboard'),
+      //   automaticallyImplyLeading: true,
+      // ),
+      // drawer: Drawer(
+      //   child: SafeArea(
+      //     child: SingleChildScrollView(
+      //       child: Column(
+      //         crossAxisAlignment: CrossAxisAlignment.stretch,
+      //         children: [
+      //           DrawerHeader(
+      //             decoration: const BoxDecoration(color: primaryBlue),
+      //             child: Column(
+      //               crossAxisAlignment: CrossAxisAlignment.start,
+      //               children: [
+      //                 const Text(
+      //                   'Admin Menu',
+      //                   style: TextStyle(
+      //                     color: Colors.white,
+      //                     fontSize: 28,
+      //                     fontWeight: FontWeight.bold,
+      //                   ),
+      //                 ),
+      //                 const SizedBox(height: 8),
+      //                 Text(
+      //                   'Welcome, $_username',
+      //                   style: const TextStyle(
+      //                     color: Colors.white70,
+      //                     fontSize: 18,
+      //                   ),
+      //                 ),
+      //               ],
+      //             ),
+      //           ),
+      //           ListTile(
+      //             leading: Icon(Icons.home_filled, color: primaryBlue),
+      //             title: const Text('Home'),
+      //             onTap: () {
+      //               Navigator.pop(context);
+      //               Navigator.push(
+      //                 context,
+      //                 MaterialPageRoute(builder: (context) => AdminHomePage()),
+      //               );
+      //             },
+      //           ),
+      //           ListTile(
+      //             leading: Icon(Icons.group, color: primaryBlue),
+      //             title: const Text('Manage Users'),
+      //             onTap: () {
+      //               Navigator.pop(context);
+      //               Navigator.push(
+      //                 context,
+      //                 MaterialPageRoute(
+      //                   builder: (context) => UserManagementPage(),
+      //                 ),
+      //               );
+      //             },
+      //           ),
 
-                ListTile(
-                  leading: Icon(Icons.school, color: primaryBlue),
-                  title: const Text('College Interests'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => InterestsPage()),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.school, color: primaryBlue),
-                  title: const Text('Search Student'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => SearchPage()),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: Icon(
-                    Icons.format_align_left_sharp,
-                    color: primaryBlue,
-                  ),
-                  title: const Text('New Student Form'),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AdminApplicationForm(),
-                      ),
-                    );
-                  },
-                ),
+      //           ListTile(
+      //             leading: Icon(Icons.school, color: primaryBlue),
+      //             title: const Text('College Interests'),
+      //             onTap: () {
+      //               Navigator.pop(context);
+      //               Navigator.push(
+      //                 context,
+      //                 MaterialPageRoute(builder: (context) => InterestsPage()),
+      //               );
+      //             },
+      //           ),
+      //           ListTile(
+      //             leading: Icon(Icons.school, color: primaryBlue),
+      //             title: const Text('Search Student'),
+      //             onTap: () {
+      //               Navigator.pop(context);
+      //               Navigator.push(
+      //                 context,
+      //                 MaterialPageRoute(builder: (context) => SearchPage()),
+      //               );
+      //             },
+      //           ),
+      //           ListTile(
+      //             leading: Icon(
+      //               Icons.format_align_left_sharp,
+      //               color: primaryBlue,
+      //             ),
+      //             title: const Text('New Student Form'),
+      //             onTap: () {
+      //               Navigator.push(
+      //                 context,
+      //                 MaterialPageRoute(
+      //                   builder: (context) => AdminApplicationForm(),
+      //                 ),
+      //               );
+      //             },
+      //           ),
 
-                ListTile(
-                  leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
-                  title: const Text('Available Doctors'),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AdminCollegeDegreesScreen(),
-                      ),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.track_changes, color: primaryBlue),
-                  title: const Text('Login Tracks'),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => LoginLogsPage()),
-                    );
-                  },
-                ),
-                SizedBox(height: 24), // or whatever spacing you want
-                const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.logout, color: Colors.red),
-                  title: const Text(
-                    'Logout',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                  onTap: () {
-                    _logout(context);
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-
+      //           ListTile(
+      //             leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
+      //             title: const Text('Available Doctors'),
+      //             onTap: () {
+      //               Navigator.push(
+      //                 context,
+      //                 MaterialPageRoute(
+      //                   builder: (context) => AdminCollegeDegreesScreen(),
+      //                 ),
+      //               );
+      //             },
+      //           ),
+      //           ListTile(
+      //             leading: Icon(Icons.track_changes, color: primaryBlue),
+      //             title: const Text('Login Tracks'),
+      //             onTap: () {
+      //               Navigator.push(
+      //                 context,
+      //                 MaterialPageRoute(builder: (context) => LoginLogsPage()),
+      //               );
+      //             },
+      //           ),
+      //           SizedBox(height: 24), // or whatever spacing you want
+      //           const Divider(),
+      //           ListTile(
+      //             leading: const Icon(Icons.logout, color: Colors.red),
+      //             title: const Text(
+      //               'Logout',
+      //               style: TextStyle(color: Colors.red),
+      //             ),
+      //             onTap: () {
+      //               _logout(context);
+      //             },
+      //           ),
+      //         ],
+      //       ),
+      //     ),
+      //   ),
+      // ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -319,22 +321,85 @@ class _AdminHomePageState extends State<AdminHomePage> {
               const SizedBox(height: 30),
               _buildCard(
                 context,
-                title: 'Job Details',
+                title: 'User Management',
                 icon: Icons.analytics,
-                subtitle: 'View Job Details',
+                subtitle: 'Manage useres',
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => JobDetailsPage(jobId: 2),
+                      builder: (context) => UserManagementPage(),
                     ),
                   );
                 },
               ),
+
+              const SizedBox(height: 30),
+              _buildCard(
+                context,
+                title: 'College Interests',
+                icon: Icons.analytics,
+                subtitle: 'College Interests',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => InterestsPage()),
+                  );
+                },
+              ),
+              const SizedBox(height: 30),
+              _buildCard(
+                context,
+                title: 'Manage Login Tracks',
+                icon: Icons.analytics,
+                subtitle: 'Manage logins',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginLogsPage()),
+                  );
+                },
+              ),
+              //               const SizedBox(height: 30),
+              // _buildCard(
+              //   context,
+              //   title: 'User Management',
+              //   icon: Icons.analytics,
+              //   subtitle: 'Manage useres',
+              //   onTap: () {
+              //     Navigator.push(
+              //       context,
+              //       MaterialPageRoute(
+              //         builder: (context) => InterestsPage(),
+              //       ),
+              //     );
+              //   },
+              // ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class AdminDashboard extends StatelessWidget {
+  const AdminDashboard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MainLayout(
+      title: "College Dashboard",
+
+      pages: [
+        AdminHomePage(), // Page 1
+        AllJobsPage(),
+        AdminCollegeDegreesScreen(), // Page 2
+        // CollegeDegreesScreen(), // Page 1
+        AdminHomePage(),
+        // StudentListPage(),          // Page 3
+        // CollegeProfilePage(),       // Page 4 (optional)
+      ],
     );
   }
 }

@@ -692,7 +692,7 @@ class _EditApplicationFormState extends State<AdminEditApplicationForm> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => AdminHomePage(),
+                            builder: (context) => AdminDashboard(),
                           ),
                         );
                       },

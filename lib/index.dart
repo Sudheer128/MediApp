@@ -71,7 +71,7 @@ class _IndexState extends State<Index> {
           Widget destinationPage;
           switch (role) {
             case 'admin':
-              destinationPage = AdminHomePage();
+              destinationPage = AdminDashboard();
               break;
             case 'college':
               destinationPage = CollegeDashboard();
@@ -177,7 +177,7 @@ class _HomePageState extends State<HomePage> {
 
         switch (role) {
           case 'admin':
-            destinationPage = AdminHomePage();
+            destinationPage = AdminDashboard();
             break;
           case 'college':
             destinationPage = CollegeDashboard();

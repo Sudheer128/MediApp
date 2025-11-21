@@ -54,7 +54,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
         switch (role) {
           case 'admin':
-            destinationPage = AdminHomePage();
+            destinationPage = AdminDashboard();
             break;
           case 'college':
             destinationPage = CollegeDashboard();
