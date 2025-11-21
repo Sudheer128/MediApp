@@ -44,6 +44,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
   bool _isActive = false;
   String? _username;
   int _currentIndex = 0;
+  String _statusValue = "0"; // store exact status from backend
 
   @override
   void initState() {
@@ -70,13 +71,14 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final status = data['status'] == "1";
+
+        final statusValue = data['status']?.toString() ?? "0";
 
         setState(() {
-          _isActive = status;
+          _statusValue = statusValue;
         });
 
-        await prefs.setBool('isActive', _isActive);
+        await prefs.setString('statusValue', statusValue);
       } else {
         ScaffoldMessenger.of(
           context,
@@ -345,8 +347,15 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
                 );
               },
             ),
+
             SizedBox(height: 16),
-            _buildCompleteProfileSection(context),
+
+            // 🚀 SHOW ONLY IF STATUS != 0 and != 1
+            if (!(_statusValue == "0" || _statusValue == "1"))
+              _buildCompleteProfileSection(context),
+
+            SizedBox(height: 16),
+
             SizedBox(height: 16),
             Container(
               decoration: BoxDecoration(
