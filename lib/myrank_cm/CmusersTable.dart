@@ -297,10 +297,7 @@ class _CmManagementPageState extends State<CmManagementPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Manage Users'),
-        backgroundColor: primaryBlue,
-      ),
+      appBar: AppBar(title: const Text('Manage Users')),
       body: FutureBuilder<UserResponse>(
         future: futureUserData,
         builder: (context, snapshot) {

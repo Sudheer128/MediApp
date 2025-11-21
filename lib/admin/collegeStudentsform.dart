@@ -362,23 +362,23 @@ class _StudentDetailScreenState extends State<AdminStudentDetailScreen> {
                 ),
               ),
               // Edit Cover Button
-              Positioned(
-                top: 12,
-                right: 12,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.camera_alt, size: 20),
-                    onPressed: () {
-                      // Edit cover photo
-                    },
-                    tooltip: 'Edit cover photo',
-                  ),
-                ),
-              ),
+              // Positioned(
+              //   top: 12,
+              //   right: 12,
+              //   child: Container(
+              //     decoration: BoxDecoration(
+              //       color: Colors.white,
+              //       borderRadius: BorderRadius.circular(20),
+              //     ),
+              //     child: IconButton(
+              //       icon: const Icon(Icons.camera_alt, size: 20),
+              //       onPressed: () {
+              //         // Edit cover photo
+              //       },
+              //       tooltip: 'Edit cover photo',
+              //     ),
+              //   ),
+              // ),
               // Profile Picture
               Positioned(
                 bottom: -50,
@@ -401,24 +401,24 @@ class _StudentDetailScreenState extends State<AdminStudentDetailScreen> {
                         ),
                       ),
                     ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.grey.shade300),
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.camera_alt, size: 18),
-                          onPressed: () {
-                            // Edit profile picture
-                          },
-                          tooltip: 'Edit profile picture',
-                        ),
-                      ),
-                    ),
+                    // Positioned(
+                    //   bottom: 0,
+                    //   right: 0,
+                    //   child: Container(
+                    //     decoration: BoxDecoration(
+                    //       color: Colors.white,
+                    //       shape: BoxShape.circle,
+                    //       border: Border.all(color: Colors.grey.shade300),
+                    //     ),
+                    //     child: IconButton(
+                    //       icon: const Icon(Icons.camera_alt, size: 18),
+                    //       onPressed: () {
+                    //         // Edit profile picture
+                    //       },
+                    //       tooltip: 'Edit profile picture',
+                    //     ),
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
@@ -569,12 +569,12 @@ class _StudentDetailScreenState extends State<AdminStudentDetailScreen> {
                     color: Colors.black87,
                   ),
                 ),
-                if (onEdit != null)
-                  IconButton(
-                    icon: const Icon(Icons.edit, size: 20),
-                    onPressed: onEdit,
-                    color: Colors.grey.shade700,
-                  ),
+                // if (onEdit != null)
+                //   IconButton(
+                //     icon: const Icon(Icons.edit, size: 20),
+                //     onPressed: onEdit,
+                //     color: Colors.grey.shade700,
+                //   ),
               ],
             ),
             const SizedBox(height: 16),

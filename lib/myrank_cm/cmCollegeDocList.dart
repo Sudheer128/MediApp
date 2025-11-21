@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/admin/adminintreststatus.dart';
+import 'package:medicalapp/admin/studentsList.dart';
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
 import 'package:medicalapp/myrank_cm/CmusersTable.dart';
@@ -21,427 +22,402 @@ class CmCollegeDegreesScreen extends StatefulWidget {
 class _DegreesScreenState extends State<CmCollegeDegreesScreen>
     with SingleTickerProviderStateMixin {
   late Future<List<dynamic>> degreesFuture;
-  late AnimationController _animationController;
-  late Animation<double> _fadeInAnimation;
 
-  static const Color primaryBlue = Color.fromARGB(255, 250, 110, 110);
-
-  // Track selected status: 1 = Active, 0 = Inactive
-  int _selectedStatus = 1;
-
-  String? userName;
+  String searchQuery = '';
+  int _selectedStatus = 1; // 1 = Active, 0 = Inactive
 
   @override
   void initState() {
     super.initState();
-    _loadUserName();
-    degreesFuture = fetchDegrees(status: _selectedStatus);
-    _animationController = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 600),
-    );
-    _fadeInAnimation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeIn,
-    );
+    degreesFuture = fetchDegrees();
   }
 
-  Future<void> _loadUserName() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedName = prefs.getString('name') ?? 'Admin'; // key matches here
-    setState(() {
-      userName = savedName;
-    });
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  Future<List<dynamic>> fetchDegrees({required int status}) async {
+  Future<List<dynamic>> fetchDegrees() async {
     final prefs = await SharedPreferences.getInstance();
     final savedName = prefs.getString('name') ?? '';
     final uri = Uri.parse('$baseurl/degreecoursecountsbycmname').replace(
-      queryParameters: {'status': status.toString(), 'name': savedName},
+      queryParameters: {
+        'status': _selectedStatus.toString(),
+        'name': savedName,
+      },
     );
+
     final response = await http.get(uri);
 
     if (response.statusCode == 200) {
-      _animationController.forward();
-      final decoded = json.decode(response.body);
-      // If server returns null, treat it as an empty list
-      return (decoded as List<dynamic>?) ?? <dynamic>[];
+      return json.decode(response.body);
     } else {
       throw Exception('Failed to load degrees');
     }
   }
 
-  void _logout(BuildContext context) {
-    signOutGoogle();
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => Index()),
-      (Route<dynamic> route) => false, // Remove all previous routes
-    );
+  List<dynamic> filterCourses(List<dynamic> data) {
+    if (searchQuery.isEmpty) return data;
+
+    return data
+        .map((degree) {
+          final courses =
+              (degree['courses'] as List<dynamic>)
+                  .where(
+                    (course) => (course['course_name'] ?? '')
+                        .toString()
+                        .toLowerCase()
+                        .contains(searchQuery.toLowerCase()),
+                  )
+                  .toList();
+
+          return {'degree': degree['degree'], 'courses': courses};
+        })
+        .where((degree) => (degree['courses'] as List).isNotEmpty)
+        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
+    final isWeb = MediaQuery.of(context).size.width > 900;
+
     return Scaffold(
-      backgroundColor: Color(0xFFF5F7FA),
-      appBar: AppBar(
-        backgroundColor: primaryBlue,
-        elevation: 4,
-        centerTitle: true,
-        title: Text(
-          'Degrees & Courses',
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1.1,
-            fontSize: 22,
-          ),
-        ),
-      ),
-      drawer: Drawer(
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              DrawerHeader(
-                decoration: const BoxDecoration(color: primaryBlue),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'MyRank CM',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Welcome, $userName',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 18,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              ListTile(
-                leading: Icon(Icons.home_filled, color: primaryBlue),
-                title: const Text('Home'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => CmHomePage()),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(
-                  Icons.manage_accounts_outlined,
-                  color: primaryBlue,
-                ),
-                title: const Text('Manage Users'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => CmManagementPage()),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.group, color: primaryBlue),
-                title: const Text('College Interests'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => CmInterestsPage()),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.person, color: primaryBlue),
-                title: const Text('Search Students'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => CmSearchPage()),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(
-                  Icons.format_align_left_sharp,
-                  color: primaryBlue,
-                ),
-                title: const Text('New Student Form'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => CmApplicationForm()),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.person_pin_sharp, color: primaryBlue),
-                title: const Text('Available Doctors'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => CmCollegeDegreesScreen()),
-                  );
-                },
-              ),
-              const Spacer(),
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text(
-                  'Logout',
-                  style: TextStyle(color: Colors.red),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _logout(context);
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
+      backgroundColor: Color(0xFFF3F2EF),
+      appBar: AppBar(title: Text("Degrees & Courses"), centerTitle: true),
       body: Column(
         children: [
-          // Dropdown at top-right of page
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: DropdownButton<int>(
-                value: _selectedStatus,
-                dropdownColor: Colors.white,
-                underline: const SizedBox(),
-                icon: Icon(Icons.arrow_drop_down, color: primaryBlue),
-                items: [
-                  DropdownMenuItem(child: Text('Active'), value: 1),
-                  DropdownMenuItem(child: Text('Inactive'), value: 0),
-                ],
-                onChanged: (value) {
-                  if (value == null) return;
-                  setState(() {
-                    _selectedStatus = value;
-                    degreesFuture = fetchDegrees(status: _selectedStatus);
-                  });
+          _buildSearchAndFilterBar(),
+
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                setState(() => degreesFuture = fetchDegrees());
+                await degreesFuture;
+              },
+              child: FutureBuilder<List<dynamic>>(
+                future: degreesFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation(Color(0xFF0A66C2)),
+                      ),
+                    );
+                  }
+
+                  if (snapshot.hasError) {
+                    return _buildErrorUI(snapshot.error);
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return _buildEmptyUI();
+                  }
+
+                  final filteredData = filterCourses(snapshot.data!);
+
+                  if (filteredData.isEmpty) {
+                    return _buildEmptySearchUI();
+                  }
+
+                  return _buildContent(filteredData, isWeb);
                 },
               ),
-            ),
-          ),
-
-          // The list (or loader / error / empty state)
-          Expanded(
-            child: FutureBuilder<List<dynamic>>(
-              future: degreesFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                    child: SizedBox(
-                      width: 48,
-                      height: 48,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 4.2,
-                        color: primaryBlue,
-                      ),
-                    ),
-                  );
-                } else if (snapshot.hasError) {
-                  return Center(
-                    child: Text(
-                      'Error: ${snapshot.error}',
-                      style: TextStyle(
-                        color: Colors.red.shade700,
-                        fontSize: 16,
-                      ),
-                    ),
-                  );
-                } else if (snapshot.connectionState == ConnectionState.done &&
-                    (snapshot.data == null || snapshot.data!.isEmpty)) {
-                  // page‐level empty state
-                  return Center(
-                    child: Text(
-                      'No Data Available',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  );
-                }
-
-                final data = snapshot.data!;
-                return FadeTransition(
-                  opacity: _fadeInAnimation,
-                  child: ListView.builder(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: data.length,
-                    itemBuilder: (context, index) {
-                      final degree = data[index]['degree'];
-                      final courses = data[index]['courses'] as List<dynamic>;
-
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 20, bottom: 28),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Degree heading with underline accent
-                            Container(
-                              padding: EdgeInsets.only(bottom: 6),
-                              decoration: BoxDecoration(
-                                border: Border(
-                                  bottom: BorderSide(
-                                    color: primaryBlue.withOpacity(0.5),
-                                    width: 3,
-                                  ),
-                                ),
-                              ),
-                              child: Text(
-                                degree,
-                                style: TextStyle(
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 12),
-
-                            if (courses.isEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 12),
-                                child: Text(
-                                  "No Data available for $degree Degree",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.grey.shade700,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                              )
-                            else
-                              Wrap(
-                                spacing: 12,
-                                runSpacing: 12,
-                                children:
-                                    courses.map<Widget>((course) {
-                                      final courseName =
-                                          (course['course_name'] ?? '').trim();
-                                      final studentCount =
-                                          course['student_count'] ?? 0;
-
-                                      return InkWell(
-                                        borderRadius: BorderRadius.circular(14),
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder:
-                                                  (_) => CmCourseDetailsScreen(
-                                                    degree: degree,
-                                                    courseName: courseName,
-                                                    status: _selectedStatus,
-                                                  ),
-                                            ),
-                                          );
-                                        },
-                                        child: Container(
-                                          constraints: BoxConstraints(
-                                            minWidth: 120,
-                                            maxWidth: 180,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                primaryBlue.withOpacity(0.7),
-                                                primaryBlue,
-                                              ],
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              14,
-                                            ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: primaryBlue.withOpacity(
-                                                  0.4,
-                                                ),
-                                                offset: Offset(0, 4),
-                                                blurRadius: 8,
-                                              ),
-                                            ],
-                                          ),
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 14,
-                                          ),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                courseName,
-                                                style: TextStyle(
-                                                  fontSize: 17,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.white,
-                                                ),
-                                                maxLines: 2,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                              SizedBox(height: 6),
-                                              Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons.people,
-                                                    size: 18,
-                                                    color: Colors.white70,
-                                                  ),
-                                                  SizedBox(width: 6),
-                                                  Text(
-                                                    '$studentCount students',
-                                                    style: TextStyle(
-                                                      fontSize: 14,
-                                                      color: Colors.white70,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    }).toList(),
-                              ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------------------------------------------
+  //  SEARCH + STATUS DROPDOWN
+  // ------------------------------------------------------------------------------------------------
+  Widget _buildSearchAndFilterBar() {
+    return Container(
+      color: Colors.white,
+      padding: EdgeInsets.all(16),
+      child: Row(
+        children: [
+          /// Search box
+          Expanded(
+            child: Container(
+              height: 44,
+              decoration: BoxDecoration(
+                color: Color(0xFFEEF3F8),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: TextField(
+                onChanged: (value) {
+                  setState(() {
+                    searchQuery = value;
+                  });
+                },
+                decoration: InputDecoration(
+                  hintText: 'Search courses',
+                  border: InputBorder.none,
+                  prefixIcon: Icon(Icons.search, color: Colors.grey.shade600),
+                  hintStyle: TextStyle(color: Colors.grey.shade600),
+                ),
+              ),
+            ),
+          ),
+
+          SizedBox(width: 12),
+
+          /// Active/Inactive dropdown
+          DropdownButton<int>(
+            value: _selectedStatus,
+            underline: SizedBox(),
+            items: const [
+              DropdownMenuItem(value: 1, child: Text("Active")),
+              DropdownMenuItem(value: 0, child: Text("Inactive")),
+            ],
+            onChanged: (value) {
+              if (value == null) return;
+              setState(() {
+                _selectedStatus = value;
+                degreesFuture = fetchDegrees();
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------------------------------------------
+  // EMPTY STATES / ERROR STATES
+  // ------------------------------------------------------------------------------------------------
+  Widget _buildErrorUI(error) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 64, color: Colors.grey.shade400),
+          SizedBox(height: 16),
+          Text(
+            "Error loading data",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+          SizedBox(height: 8),
+          Text("$error", style: TextStyle(color: Colors.grey.shade600)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyUI() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.school_outlined, size: 64, color: Colors.grey.shade400),
+          SizedBox(height: 16),
+          Text(
+            "No degrees available",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptySearchUI() {
+    return Center(
+      child: Column(
+        children: [
+          Icon(Icons.search_off, size: 64, color: Colors.grey.shade400),
+          SizedBox(height: 16),
+          Text(
+            "No courses found",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------------------------------------------
+  // MAIN CONTENT (same as CollegeDegreesScreen)
+  // ------------------------------------------------------------------------------------------------
+  Widget _buildContent(List<dynamic> data, bool isWeb) {
+    final content = ListView(
+      padding: EdgeInsets.symmetric(horizontal: isWeb ? 0 : 16, vertical: 20),
+      children: [
+        Padding(
+          padding: EdgeInsets.only(bottom: 20),
+          child: Text(
+            "Available Doctors",
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+
+        ...data.map((degreeData) {
+          final degree = degreeData['degree'];
+          final courses = degreeData['courses'] as List<dynamic>;
+
+          return Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: _buildDegreeCard(degree, courses),
+          );
+        }),
+      ],
+    );
+
+    if (isWeb) {
+      return Center(
+        child: Container(
+          constraints: BoxConstraints(maxWidth: 1128),
+          padding: EdgeInsets.symmetric(horizontal: 24),
+          child: content,
+        ),
+      );
+    }
+
+    return content;
+  }
+
+  // -----------------------------------------------------------------------------------------------
+  // DEGREE CARD (same as College UI)
+  // -----------------------------------------------------------------------------------------------
+  Widget _buildDegreeCard(String degree, List<dynamic> courses) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Color(0xFFE0E0E0)),
+      ),
+      padding: EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.school, color: Color(0xFF0A66C2), size: 24),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  degree,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          SizedBox(height: 16),
+          Divider(),
+          SizedBox(height: 16),
+
+          if (courses.isEmpty)
+            Center(
+              child: Text(
+                "No courses for $degree",
+                style: TextStyle(color: Colors.grey.shade600),
+              ),
+            )
+          else
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children:
+                  courses.map<Widget>((course) {
+                    final courseName = (course['course_name'] ?? "").trim();
+                    final studentCount = course['student_count'] ?? 0;
+
+                    return _buildCourseCard(degree, courseName, studentCount);
+                  }).toList(),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // -----------------------------------------------------------------------------------------------
+  // COURSE CARD (same as college UI)
+  // -----------------------------------------------------------------------------------------------
+  Widget _buildCourseCard(String degree, String courseName, int studentCount) {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (_) => CmCourseDetailsScreen(
+                  degree: degree,
+                  courseName: courseName,
+                  status: _selectedStatus,
+                ),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        constraints: BoxConstraints(minWidth: 140, maxWidth: 200),
+        decoration: BoxDecoration(
+          color: Color(0xFFF3F2EF),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Color(0xFFE0E0E0)),
+        ),
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Color(0xFFE7F3FF),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(Icons.menu_book, size: 20, color: Color(0xFF0A66C2)),
+            ),
+            SizedBox(height: 12),
+
+            Text(
+              courseName,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                height: 1.3,
+              ),
+            ),
+
+            SizedBox(height: 8),
+
+            Row(
+              children: [
+                Icon(Icons.people_outline, size: 16),
+                SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    "$studentCount students",
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                  ),
+                ),
+              ],
+            ),
+
+            SizedBox(height: 12),
+            Row(
+              children: [
+                Text(
+                  "View details",
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF0A66C2),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(width: 4),
+                Icon(Icons.arrow_forward, size: 14, color: Color(0xFF0A66C2)),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

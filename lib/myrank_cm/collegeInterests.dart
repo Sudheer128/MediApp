@@ -211,10 +211,7 @@ class _CmInterestsPageState extends State<CmInterestsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('College Interests'),
-        backgroundColor: primaryBlue,
-      ),
+      appBar: AppBar(title: const Text('College Interests')),
       body:
           _isLoading
               ? const Center(child: CircularProgressIndicator())
