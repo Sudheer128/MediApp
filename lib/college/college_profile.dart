@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:medicalapp/extranew/jobdetails.dart';
 import 'package:medicalapp/extranew/jobnotification.dart';
 import 'package:medicalapp/url.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -809,7 +810,12 @@ class _HospitalProfilePageState extends State<HospitalProfilePage> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                // Handle apply action
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => JobDetailsPage(jobId: job.id),
+                  ),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF0A66C2),

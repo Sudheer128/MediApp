@@ -8,6 +8,7 @@ import 'package:medicalapp/admin/form_page.dart';
 import 'package:medicalapp/admin/search.dart';
 import 'package:medicalapp/admin/searchstudent.dart';
 import 'package:medicalapp/admin/userstable.dart';
+import 'package:medicalapp/college/college_profile.dart';
 import 'package:medicalapp/college/collegeintrests.dart';
 import 'package:medicalapp/extranew/alljobs.dart';
 import 'package:medicalapp/extranew/jobdetails.dart';
@@ -250,132 +251,143 @@ class _AdminHomePageState extends State<AdminHomePage> {
       //   ),
       // ),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Welcome, Admin!',
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 30),
-              _buildCard(
-                context,
-                title: 'Create New Student Form',
-                icon: Icons.analytics,
-                subtitle: 'Add new student application',
-                onTap: () {
-                  Navigator.push(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: 720, // You can adjust the width: 600–900 is ideal
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Welcome, Admin!',
+                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 30),
+                  _buildCard(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => AdminApplicationForm(),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
-              _buildCard(
-                context,
-                title: 'Search and Find Student Details',
-                icon: Icons.search,
-                subtitle: 'Locate student information',
-                onTap: () {
-                  Navigator.push(
+                    title: 'Create New Student Form',
+                    icon: Icons.analytics,
+                    subtitle: 'Add new student application',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AdminApplicationForm(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  _buildCard(
                     context,
-                    MaterialPageRoute(builder: (context) => SearchPage()),
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
-              _buildCard(
-                context,
-                title: 'Available Doctors',
-                icon: Icons.medical_services_outlined,
-                subtitle: 'List of Doctors in Particular Courses',
-                onTap: () {
-                  Navigator.push(
+                    title: 'Search and Find Student Details',
+                    icon: Icons.search,
+                    subtitle: 'Locate student information',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => SearchPage()),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  _buildCard(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => AdminCollegeDegreesScreen(),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 30),
-              _buildCard(
-                context,
-                title: 'Add New Job Notification',
-                icon: Icons.analytics,
-                subtitle: 'Add here',
-                onTap: () {
-                  Navigator.push(
+                    title: 'Available Doctors',
+                    icon: Icons.medical_services_outlined,
+                    subtitle: 'List of Doctors in Particular Courses',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AdminCollegeDegreesScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 30),
+                  _buildCard(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => JobNotificationForm(),
-                    ),
-                  );
-                },
-              ),
+                    title: 'Add New Job Notification',
+                    icon: Icons.analytics,
+                    subtitle: 'Add here',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => JobNotificationForm(),
+                        ),
+                      );
+                    },
+                  ),
 
-              const SizedBox(height: 30),
-              _buildCard(
-                context,
-                title: 'User Management',
-                icon: Icons.analytics,
-                subtitle: 'Manage useres',
-                onTap: () {
-                  Navigator.push(
+                  const SizedBox(height: 30),
+                  _buildCard(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => UserManagementPage(),
-                    ),
-                  );
-                },
-              ),
+                    title: 'User Management',
+                    icon: Icons.analytics,
+                    subtitle: 'Manage useres',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => UserManagementPage(),
+                        ),
+                      );
+                    },
+                  ),
 
-              const SizedBox(height: 30),
-              _buildCard(
-                context,
-                title: 'College Interests',
-                icon: Icons.analytics,
-                subtitle: 'College Interests',
-                onTap: () {
-                  Navigator.push(
+                  const SizedBox(height: 30),
+                  _buildCard(
                     context,
-                    MaterialPageRoute(builder: (context) => InterestsPage()),
-                  );
-                },
-              ),
-              const SizedBox(height: 30),
-              _buildCard(
-                context,
-                title: 'Manage Login Tracks',
-                icon: Icons.analytics,
-                subtitle: 'Manage logins',
-                onTap: () {
-                  Navigator.push(
+                    title: 'College Interests',
+                    icon: Icons.analytics,
+                    subtitle: 'College Interests',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => InterestsPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 30),
+                  _buildCard(
                     context,
-                    MaterialPageRoute(builder: (context) => LoginLogsPage()),
-                  );
-                },
+                    title: 'Manage Login Tracks',
+                    icon: Icons.analytics,
+                    subtitle: 'Manage logins',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => LoginLogsPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  //               const SizedBox(height: 30),
+                  // _buildCard(
+                  //   context,
+                  //   title: 'User Management',
+                  //   icon: Icons.analytics,
+                  //   subtitle: 'Manage useres',
+                  //   onTap: () {
+                  //     Navigator.push(
+                  //       context,
+                  //       MaterialPageRoute(
+                  //         builder: (context) => InterestsPage(),
+                  //       ),
+                  //     );
+                  //   },
+                  // ),
+                ],
               ),
-              //               const SizedBox(height: 30),
-              // _buildCard(
-              //   context,
-              //   title: 'User Management',
-              //   icon: Icons.analytics,
-              //   subtitle: 'Manage useres',
-              //   onTap: () {
-              //     Navigator.push(
-              //       context,
-              //       MaterialPageRoute(
-              //         builder: (context) => InterestsPage(),
-              //       ),
-              //     );
-              //   },
-              // ),
-            ],
+            ),
           ),
         ),
       ),
@@ -396,9 +408,9 @@ class AdminDashboard extends StatelessWidget {
         AllJobsPage(),
         AdminCollegeDegreesScreen(), // Page 2
         // CollegeDegreesScreen(), // Page 1
-        AdminHomePage(),
+        // AdminHomePage(),
         // StudentListPage(),          // Page 3
-        // CollegeProfilePage(),       // Page 4 (optional)
+        HospitalProfilePage(), // Page 4 (optional)
       ],
     );
   }
