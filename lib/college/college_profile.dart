@@ -192,7 +192,7 @@ class HospitalProfilePage extends StatefulWidget {
 }
 
 class _HospitalProfilePageState extends State<HospitalProfilePage> {
-  bool _isEditingAbout = true;
+  bool _isEditingAbout = false;
 
   ProfileData? profileData;
   bool loading = true;

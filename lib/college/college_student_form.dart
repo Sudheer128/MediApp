@@ -1114,49 +1114,25 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                                       .toString()
                                       .isNotEmpty) ...[
                                 const SizedBox(height: 8),
-                                InkWell(
-                                  onTap: () async {
-                                    final url = conference['uploadLink'];
-                                    final uri = Uri.parse(url);
-                                    if (await canLaunchUrl(uri)) {
-                                      await launchUrl(
-                                        uri,
-                                        mode: LaunchMode.externalApplication,
-                                      );
+                                TextButton.icon(
+                                  onPressed: () {
+                                    final url = conference['uploadLink'] ?? '';
+                                    if (url.isNotEmpty) {
+                                      _launchURL(context, url);
                                     } else {
-                                      if (mounted) {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              'Could not open link',
-                                            ),
-                                          ),
-                                        );
-                                      }
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('No URL provided'),
+                                        ),
+                                      );
                                     }
                                   },
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.open_in_new,
-                                        size: 16,
-                                        color: Colors.blue.shade700,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Flexible(
-                                        child: Text(
-                                          'View Details',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            color: Colors.blue.shade700,
-                                            decoration:
-                                                TextDecoration.underline,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                                  icon: const Icon(Icons.visibility, size: 18),
+                                  label: const Text('View'),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Colors.blue.shade700,
                                   ),
                                 ),
                               ],

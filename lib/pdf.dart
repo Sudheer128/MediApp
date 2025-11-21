@@ -11,7 +11,7 @@ class PdfViewerPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('PDF Viewer'), backgroundColor: color),
+      appBar: AppBar(title: Text('File Viewer'), backgroundColor: color),
       body: SfPdfViewer.network(
         url,
         onDocumentLoaded: (details) {
