@@ -257,8 +257,8 @@ class _AllJobsPageState extends State<AllJobsPage> {
             child: Row(
               children: [
                 _buildFilterChip('All'),
-                _buildFilterChip('Full-time'),
-                _buildFilterChip('Part-time'),
+                _buildFilterChip('Full Time'),
+                _buildFilterChip('Part Time'),
                 _buildFilterChip('Contract'),
                 _buildFilterChip('Internship'),
               ],

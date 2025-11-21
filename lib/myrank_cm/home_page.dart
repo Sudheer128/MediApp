@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:medicalapp/admin/form_page.dart';
 import 'package:medicalapp/myrank_cm/CmusersTable.dart';
 import 'package:medicalapp/myrank_cm/cmCollegeDocList.dart';
 import 'package:medicalapp/myrank_cm/cmForm.dart';
@@ -249,7 +250,7 @@ class _UserHomePageState extends State<CmHomePage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => CmApplicationForm(),
+                      builder: (context) => AdminApplicationForm(),
                     ),
                   );
                 },

@@ -35,7 +35,7 @@ android {
 
    signingConfigs {
         create("release") {
-            storeFile = file("E:/medicalll/MediApp/android/testkey")
+            storeFile = file("D:/MedicalApp-main/MedicalApp-main/android/testkey")
             storePassword = "123456"
             keyAlias = "my-key-alias"
             keyPassword = "123456"

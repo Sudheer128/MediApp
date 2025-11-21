@@ -261,11 +261,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Welcome, Admin!',
-                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 30),
                   _buildCard(
                     context,
                     title: 'Create New Student Form',
@@ -401,7 +396,7 @@ class AdminDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MainLayout(
-      title: "College Dashboard",
+      title: "Admin Dashboard",
 
       pages: [
         AdminHomePage(), // Page 1
