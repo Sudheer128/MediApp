@@ -383,7 +383,7 @@ class _AdminDegreesScreenState extends State<AdminCollegeDegreesScreen> {
                 SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    "$studentCount students",
+                    "$studentCount Persons",
                     style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                   ),
                 ),

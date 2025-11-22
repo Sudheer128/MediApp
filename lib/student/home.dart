@@ -73,7 +73,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
         final data = jsonDecode(response.body);
 
         final statusValue = data['status']?.toString() ?? "0";
-
+        _isActive = statusValue == "1";
         setState(() {
           _statusValue = statusValue;
         });

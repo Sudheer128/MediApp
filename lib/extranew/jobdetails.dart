@@ -216,7 +216,7 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
                 children: [
                   _buildCompanyCard(),
                   SizedBox(height: 16),
-                  if (Roleee == 'doctor') _buildApplyCard(isBottomBar: false),
+                  _buildApplyCard(isBottomBar: false),
                 ],
               ),
             ),

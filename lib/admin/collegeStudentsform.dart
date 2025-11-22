@@ -324,12 +324,19 @@ class _StudentDetailScreenState extends State<AdminStudentDetailScreen> {
     return MediaQuery.of(context).size.width >= 800 || kIsWeb;
   }
 
-  // LinkedIn-style Profile Card with Cover and Profile Picture
+  String? encodeUrl(String? url) {
+    if (url == null || url.isEmpty) return null;
+    return Uri.encodeFull(url);
+  }
+
+  // LinkedIn-style Profile Header with Cover and Profile Picture
   Widget buildProfileHeader(Map<String, dynamic> data) {
     final name = data['name'] ?? '';
     final email = data['email'] ?? '';
     final phone = data['phone']?.toString() ?? '';
     final address = data['address'] ?? '';
+    final profileImageUrl = encodeUrl(data['profile_url']);
+    final coverImageUrl = encodeUrl(data['cover_url']);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -354,13 +361,63 @@ class _StudentDetailScreenState extends State<AdminStudentDetailScreen> {
                     topLeft: Radius.circular(8),
                     topRight: Radius.circular(8),
                   ),
-                  gradient: LinearGradient(
-                    colors: [Colors.blue.shade700, Colors.blue.shade400],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  gradient:
+                      coverImageUrl == null || coverImageUrl.toString().isEmpty
+                          ? LinearGradient(
+                            colors: [
+                              Colors.blue.shade700,
+                              Colors.blue.shade400,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                          : null,
                 ),
+                child:
+                    coverImageUrl != null && coverImageUrl.toString().isNotEmpty
+                        ? ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(8),
+                            topRight: Radius.circular(8),
+                          ),
+                          child: Image.network(
+                            coverImageUrl,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.blue.shade700,
+                                      Colors.blue.shade400,
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        )
+                        : null,
               ),
+              // Loading overlay
+              // if (_uploadingImage)
+              //   Container(
+              //     height: 200,
+              //     width: double.infinity,
+              //     decoration: BoxDecoration(
+              //       color: Colors.black.withOpacity(0.5),
+              //       borderRadius: const BorderRadius.only(
+              //         topLeft: Radius.circular(8),
+              //         topRight: Radius.circular(8),
+              //       ),
+              //     ),
+              //     child: const Center(
+              //       child: CircularProgressIndicator(color: Colors.white),
+              //     ),
+              //   ),
               // Edit Cover Button
               // Positioned(
               //   top: 12,
@@ -372,9 +429,10 @@ class _StudentDetailScreenState extends State<AdminStudentDetailScreen> {
               //     ),
               //     child: IconButton(
               //       icon: const Icon(Icons.camera_alt, size: 20),
-              //       onPressed: () {
-              //         // Edit cover photo
-              //       },
+              //       onPressed:
+              //           _uploadingImage
+              //               ? null
+              //               : () => _showImageOptionsDialog(false),
               //       tooltip: 'Edit cover photo',
               //     ),
               //   ),
@@ -384,7 +442,11 @@ class _StudentDetailScreenState extends State<AdminStudentDetailScreen> {
                 bottom: -50,
                 left: 24,
                 child: Stack(
+                  clipBehavior: Clip.none,
                   children: [
+                    // --------------------
+                    // PROFILE IMAGE (clickable)
+                    // --------------------
                     Container(
                       width: 150,
                       height: 150,
@@ -394,28 +456,50 @@ class _StudentDetailScreenState extends State<AdminStudentDetailScreen> {
                         color: Colors.grey.shade300,
                       ),
                       child: ClipOval(
-                        child: Icon(
-                          Icons.person,
-                          size: 80,
-                          color: Colors.grey.shade600,
-                        ),
+                        child:
+                            (profileImageUrl != null &&
+                                    profileImageUrl.isNotEmpty)
+                                ? Image.network(
+                                  profileImageUrl!,
+                                  fit: BoxFit.cover,
+                                )
+                                : Icon(
+                                  Icons.person,
+                                  size: 80,
+                                  color: Colors.grey.shade600,
+                                ),
                       ),
                     ),
+
+                    // --------------------
+                    // CAMERA ICON BUTTON
+                    // --------------------
                     // Positioned(
                     //   bottom: 0,
                     //   right: 0,
-                    //   child: Container(
-                    //     decoration: BoxDecoration(
-                    //       color: Colors.white,
-                    //       shape: BoxShape.circle,
-                    //       border: Border.all(color: Colors.grey.shade300),
-                    //     ),
-                    //     child: IconButton(
-                    //       icon: const Icon(Icons.camera_alt, size: 18),
-                    //       onPressed: () {
-                    //         // Edit profile picture
-                    //       },
-                    //       tooltip: 'Edit profile picture',
+                    //   child: GestureDetector(
+                    //     // onTap: () => _showImageOptionsDialog(true),
+                    //     child: Tooltip(
+                    //       message: "Change Profile Photo",
+                    //       child: Container(
+                    //         padding: const EdgeInsets.all(6),
+                    //         decoration: BoxDecoration(
+                    //           color: Colors.white,
+                    //           borderRadius: BorderRadius.circular(30),
+                    //           boxShadow: [
+                    //             BoxShadow(
+                    //               color: Colors.black26,
+                    //               blurRadius: 6,
+                    //               offset: Offset(0, 2),
+                    //             ),
+                    //           ],
+                    //         ),
+                    //         child: const Icon(
+                    //           Icons.camera_alt,
+                    //           size: 20,
+                    //           color: Colors.black87,
+                    //         ),
+                    //       ),
                     //     ),
                     //   ),
                     // ),
@@ -448,7 +532,7 @@ class _StudentDetailScreenState extends State<AdminStudentDetailScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            widget.degree,
+                            'Medical Professional',
                             style: TextStyle(
                               fontSize: 16,
                               color: Colors.grey.shade700,
@@ -483,51 +567,6 @@ class _StudentDetailScreenState extends State<AdminStudentDetailScreen> {
                             ),
                           ),
                         ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                // Action Buttons
-                Row(
-                  children: [
-                    ElevatedButton(
-                      onPressed: showExpressInterestDialog,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue.shade700,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                      child: const Text(
-                        'Express Interest',
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    OutlinedButton(
-                      onPressed: () {
-                        // Message action
-                      },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.blue.shade700,
-                        side: BorderSide(color: Colors.blue.shade700),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                      child: const Text(
-                        'Message',
-                        style: TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ),
                   ],

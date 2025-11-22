@@ -1,12 +1,17 @@
+import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb, Uint8List;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:medicalapp/pdf.dart';
 import 'package:medicalapp/student/edit.dart';
 import 'package:medicalapp/url.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:html' as html;
 
 class EditForm extends StatefulWidget {
   final int applicationId;
@@ -21,11 +26,18 @@ class _StudentDetailScreenState extends State<EditForm> {
   Map<String, dynamic>? data;
   bool loading = true;
   String? error;
+  final ImagePicker _picker = ImagePicker();
+  bool _uploadingImage = false;
 
   @override
   void initState() {
     super.initState();
     fetchStudentData();
+  }
+
+  String? encodeUrl(String? url) {
+    if (url == null || url.isEmpty) return null;
+    return Uri.encodeFull(url);
   }
 
   Future<void> fetchStudentData() async {
@@ -56,12 +68,325 @@ class _StudentDetailScreenState extends State<EditForm> {
     }
   }
 
+  Future<XFile?> pickImageWeb() async {
+    final completer = Completer<XFile?>();
+
+    // Create a NEW input element each time
+    final input = html.FileUploadInputElement()..accept = 'image/*';
+
+    // Set up the listener BEFORE clicking
+    input.onChange.listen((event) {
+      print("📂 File input changed");
+
+      if (input.files == null || input.files!.isEmpty) {
+        print("❌ No files selected");
+        completer.complete(null);
+        return;
+      }
+
+      final file = input.files!.first;
+      print("✅ File selected: ${file.name}, size: ${file.size} bytes");
+
+      final reader = html.FileReader();
+      reader.readAsArrayBuffer(file);
+
+      reader.onLoadEnd.listen((event) {
+        print("✅ File read complete");
+        final data = reader.result as Uint8List;
+        completer.complete(XFile.fromData(data, name: file.name));
+      });
+
+      reader.onError.listen((event) {
+        print("❌ File read error");
+        completer.complete(null);
+      });
+    });
+
+    // Trigger the file picker
+    print("🖱️ Triggering file picker...");
+    input.click();
+
+    return completer.future;
+  }
+
+  Future<void> _showImageOptionsDialog(bool isProfileImage) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(isProfileImage ? 'Profile Photo' : 'Cover Photo'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('View Photo'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _viewImage(isProfileImage);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Change Photo'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickAndUploadImage(isProfileImage);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _viewImage(bool isProfileImage) {
+    final imageUrl =
+        isProfileImage
+            ? encodeUrl(data?['profile_url'])
+            : encodeUrl(data?['cover_url']);
+
+    if (imageUrl != null && imageUrl.toString().isNotEmpty) {
+      showDialog(
+        context: context,
+        builder:
+            (dialogContext) => Dialog(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AppBar(
+                    title: Text(
+                      isProfileImage ? 'Profile Photo' : 'Cover Photo',
+                    ),
+                    leading: IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(dialogContext),
+                    ),
+                  ),
+                  Flexible(
+                    child: InteractiveViewer(
+                      child: Image.network(
+                        imageUrl.toString(),
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Padding(
+                            padding: EdgeInsets.all(32.0),
+                            child: Text('Failed to load image'),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'No ${isProfileImage ? 'profile' : 'cover'} photo available',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _pickAndUploadImage(bool isProfileImage) async {
+    try {
+      XFile? pickedFile;
+
+      if (kIsWeb) {
+        pickedFile = await pickImageWeb();
+      } else {
+        pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+      }
+
+      if (pickedFile == null) {
+        print("❌ No image selected");
+        return;
+      }
+
+      print("✅ Image picked: ${pickedFile.name}");
+
+      // Show preview dialog before uploading
+      if (mounted) {
+        await _showPreviewDialog(pickedFile, isProfileImage);
+      }
+    } catch (e) {
+      print("❌ Error picking image: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error picking image: $e")));
+      }
+    }
+  }
+
+  Future<void> _showPreviewDialog(XFile file, bool isProfileImage) async {
+    try {
+      print("📸 Loading preview for: ${file.name}");
+
+      // Read bytes (works on web & mobile)
+      final Uint8List bytes = await file.readAsBytes();
+
+      print("✅ Image bytes loaded: ${bytes.length} bytes");
+
+      if (!mounted) {
+        print("❌ Widget not mounted, cannot show dialog");
+        return;
+      }
+
+      showDialog(
+        context: context,
+        barrierDismissible: false, // Prevent accidental dismissal
+        builder: (dialogContext) {
+          return AlertDialog(
+            title: const Text("Preview Image"),
+            content: SizedBox(
+              width: 300,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 400),
+                child: Image.memory(
+                  bytes,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    print("❌ Image display error: $error");
+                    return const Center(child: Text("Failed to display image"));
+                  },
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  print("❌ Upload cancelled");
+                  Navigator.of(dialogContext).pop();
+                },
+                child: const Text("Cancel"),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  print("✅ Upload confirmed");
+                  Navigator.of(dialogContext).pop(); // close preview
+                  await _uploadImage(
+                    file,
+                    isProfileImage,
+                  ); // upload original file
+                },
+                child: const Text("Upload"),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      print("❌ Failed to load image preview: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to load image preview: $e")),
+        );
+      }
+    }
+  }
+
+  Future<void> _uploadImage(XFile file, bool isProfileImage) async {
+    setState(() {
+      _uploadingImage = true;
+    });
+
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseurl/upload/profile-or-cover'),
+      );
+
+      // Add user_id
+      request.fields['user_id'] = widget.applicationId.toString();
+
+      // Add the image file
+      if (kIsWeb) {
+        // Web version
+        final bytes = await file.readAsBytes();
+
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            isProfileImage ? "profile_url" : "cover_url",
+            bytes,
+            filename: file.name,
+          ),
+        );
+      } else {
+        // Mobile version
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            isProfileImage ? "profile_url" : "cover_url",
+            file.path, // <==== FIX: Using XFile path (not cropped file)
+          ),
+        );
+      }
+
+      // SEND REQUEST
+      final response = await request.send();
+      final responseData = await response.stream.bytesToString();
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(responseData);
+
+        // Update image URL locally
+        setState(() {
+          if (isProfileImage) {
+            data?['profile_url'] = jsonResponse['profile_url'];
+          } else {
+            data?['cover_url'] = jsonResponse['cover_url'];
+          }
+        });
+
+        // REFRESH FULL DATA (so UI updates instantly)
+        await fetchStudentData();
+
+        setState(() {
+          _uploadingImage = false;
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '${isProfileImage ? "Profile" : "Cover"} photo updated successfully!',
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        throw Exception("Failed to upload image: $responseData");
+      }
+    } catch (e) {
+      setState(() {
+        _uploadingImage = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error uploading image: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   // LinkedIn-style Profile Header with Cover and Profile Picture
   Widget buildProfileHeader(Map<String, dynamic> data) {
     final name = data['name'] ?? '';
     final email = data['email'] ?? '';
     final phone = data['phone']?.toString() ?? '';
     final address = data['address'] ?? '';
+    final profileImageUrl = encodeUrl(data['profile_url']);
+    final coverImageUrl = encodeUrl(data['cover_url']);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -86,13 +411,63 @@ class _StudentDetailScreenState extends State<EditForm> {
                     topLeft: Radius.circular(8),
                     topRight: Radius.circular(8),
                   ),
-                  gradient: LinearGradient(
-                    colors: [Colors.blue.shade700, Colors.blue.shade400],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+                  gradient:
+                      coverImageUrl == null || coverImageUrl.toString().isEmpty
+                          ? LinearGradient(
+                            colors: [
+                              Colors.blue.shade700,
+                              Colors.blue.shade400,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                          : null,
+                ),
+                child:
+                    coverImageUrl != null && coverImageUrl.toString().isNotEmpty
+                        ? ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(8),
+                            topRight: Radius.circular(8),
+                          ),
+                          child: Image.network(
+                            coverImageUrl,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.blue.shade700,
+                                      Colors.blue.shade400,
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        )
+                        : null,
+              ),
+              // Loading overlay
+              if (_uploadingImage)
+                Container(
+                  height: 200,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      topRight: Radius.circular(8),
+                    ),
+                  ),
+                  child: const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
                   ),
                 ),
-              ),
               // Edit Cover Button
               Positioned(
                 top: 12,
@@ -104,10 +479,10 @@ class _StudentDetailScreenState extends State<EditForm> {
                   ),
                   child: IconButton(
                     icon: const Icon(Icons.camera_alt, size: 20),
-                    onPressed: () {
-                      // Edit cover photo
-                      _navigateToEdit();
-                    },
+                    onPressed:
+                        _uploadingImage
+                            ? null
+                            : () => _showImageOptionsDialog(false),
                     tooltip: 'Edit cover photo',
                   ),
                 ),
@@ -117,53 +492,76 @@ class _StudentDetailScreenState extends State<EditForm> {
                 bottom: -50,
                 left: 24,
                 child: Stack(
+                  clipBehavior: Clip.none,
                   children: [
-                    Container(
-                      width: 150,
-                      height: 150,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 4),
-                        color: Colors.grey.shade300,
-                      ),
-                      child: ClipOval(
-                        child:
-                            data['profile_image'] != null &&
-                                    data['profile_image'].toString().isNotEmpty
-                                ? Image.network(
-                                  data['profile_image'],
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Icon(
+                    // --------------------
+                    // PROFILE IMAGE (clickable)
+                    // --------------------
+                    GestureDetector(
+                      onTap: () => _showImageOptionsDialog(true),
+                      child: Tooltip(
+                        message: "View / Change Profile Photo",
+                        child: Container(
+                          width: 150,
+                          height: 150,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 4),
+                            color: Colors.grey.shade300,
+                          ),
+                          child: ClipOval(
+                            child:
+                                _uploadingImage
+                                    ? Center(
+                                      child: CircularProgressIndicator(
+                                        color: Colors.blue.shade700,
+                                      ),
+                                    )
+                                    : (profileImageUrl != null &&
+                                        profileImageUrl!.isNotEmpty)
+                                    ? Image.network(
+                                      profileImageUrl!,
+                                      fit: BoxFit.cover,
+                                    )
+                                    : Icon(
                                       Icons.person,
                                       size: 80,
                                       color: Colors.grey.shade600,
-                                    );
-                                  },
-                                )
-                                : Icon(
-                                  Icons.person,
-                                  size: 80,
-                                  color: Colors.grey.shade600,
-                                ),
+                                    ),
+                          ),
+                        ),
                       ),
                     ),
+
+                    // --------------------
+                    // CAMERA ICON BUTTON
+                    // --------------------
                     Positioned(
                       bottom: 0,
                       right: 0,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.grey.shade300),
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.camera_alt, size: 18),
-                          onPressed: () {
-                            // Edit profile picture
-                            _navigateToEdit();
-                          },
-                          tooltip: 'Edit profile picture',
+                      child: GestureDetector(
+                        onTap: () => _showImageOptionsDialog(true),
+                        child: Tooltip(
+                          message: "Change Profile Photo",
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(30),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 6,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.camera_alt,
+                              size: 20,
+                              color: Colors.black87,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -738,6 +1136,7 @@ class _StudentDetailScreenState extends State<EditForm> {
   }
 
   void _navigateToEdit() {
+    print(data);
     if (data != null) {
       Navigator.push(
         context,
@@ -763,7 +1162,7 @@ class _StudentDetailScreenState extends State<EditForm> {
       );
     }
 
-    if (loading) {
+    if (error != null) {
       return Scaffold(
         backgroundColor: Colors.grey.shade100,
         appBar: AppBar(
@@ -813,9 +1212,7 @@ class _StudentDetailScreenState extends State<EditForm> {
     Widget buildGeneralCertificatesSection(List<dynamic> certificates) {
       return buildLinkedInSection(
         title: 'Licenses & Certifications',
-        onEdit: () {
-          // Edit general certificates
-        },
+        onEdit: _navigateToEdit,
         content: Column(
           children:
               certificates.asMap().entries.map((entry) {
@@ -939,9 +1336,7 @@ class _StudentDetailScreenState extends State<EditForm> {
     Widget buildConferencesSection(List<dynamic> conferences) {
       return buildLinkedInSection(
         title: 'CONFERENCES AND CME',
-        onEdit: () {
-          // Edit conferences
-        },
+        onEdit: _navigateToEdit,
         content: Column(
           children:
               conferences.asMap().entries.map((entry) {
@@ -1112,7 +1507,6 @@ class _StudentDetailScreenState extends State<EditForm> {
                     if (data?['certificates'] != null &&
                         (data!['certificates'] as List).isNotEmpty)
                       buildGeneralCertificatesSection(data!['certificates']),
-                    // NEW: Conferences Section
                     if (data?['conferences'] != null &&
                         (data!['conferences'] as List).isNotEmpty)
                       buildConferencesSection(data!['conferences']),
@@ -1188,9 +1582,7 @@ Widget linkedInProfileShimmer() {
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 60),
-
                       // Profile Info
                       Padding(
                         padding: const EdgeInsets.all(24),
@@ -1199,13 +1591,10 @@ Widget linkedInProfileShimmer() {
                           children: [
                             shimmerBox(height: 25, width: 200),
                             const SizedBox(height: 12),
-
                             shimmerBox(height: 18, width: 150),
                             const SizedBox(height: 12),
-
                             shimmerBox(height: 14, width: 250),
                             const SizedBox(height: 8),
-
                             shimmerBox(height: 14, width: 180),
                           ],
                         ),
@@ -1213,18 +1602,13 @@ Widget linkedInProfileShimmer() {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 16),
-
                 // ABOUT SECTION
                 shimmerSection(),
-
                 // EXPERIENCE SECTION
                 shimmerSection(),
-
                 // EDUCATION SECTION
                 shimmerSection(),
-
                 //RESUME SECTION
                 shimmerSection(),
               ],

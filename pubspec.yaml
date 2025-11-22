@@ -45,6 +45,12 @@ dependencies:
   url_launcher: ^6.3.1
   syncfusion_flutter_pdfviewer: ^29.2.5
   shimmer: ^3.0.0
+  image_picker: ^1.2.1
+  image_cropper: ^11.0.0
+  image_picker_for_web: ^3.1.1
+  html: ^0.15.6
+  image_editor_plus: ^1.0.8
+  crop_your_image: ^2.0.0
 
 dev_dependencies:
   flutter_test:

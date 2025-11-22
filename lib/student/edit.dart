@@ -117,86 +117,113 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
   }
 
   void _populateFormWithExistingData(Map<String, dynamic> data) {
-    // Personal details
+    // ---------------- PERSONAL DETAILS ----------------
     _nameController.text = data['name'] ?? '';
     _phoneController.text = (data['phone'] ?? '').toString();
     _emailController.text = data['email'] ?? '';
     _addressController.text = data['address'] ?? '';
 
-    // Clear existing lists before populating
+    // ---------------- EDUCATION ----------------
     educationDetails.clear();
     pgDetails.clear();
     ssDetails.clear();
 
-    List<dynamic> educations = data['education'] ?? [];
+    List<dynamic>? educations = data['education'];
 
-    for (var edu in educations) {
-      final type = edu['type'] ?? 'MBBS';
-      final ed = EducationDetail(
-        type: type,
-        courseName: edu['courseName'] ?? '',
-        collegeName: edu['collegeName'] ?? '',
-      );
-      ed.fromDateController.text = _formatDateForController(edu['fromDate']);
-      ed.toDateController.text = _formatDateForController(edu['toDate']);
-      ed.collegeNameController.text = ed.collegeName; // sync controller
+    if (educations == null || educations.isEmpty) {
+      // Default MBBS entry
+      educationDetails.add(EducationDetail(type: 'MBBS'));
+    } else {
+      for (var edu in educations) {
+        final type = edu['type'] ?? 'MBBS';
+        final ed = EducationDetail(
+          type: type,
+          courseName: edu['courseName'] ?? '',
+          collegeName: edu['collegeName'] ?? '',
+        );
 
-      if (type == 'MBBS') {
-        educationDetails.add(ed);
-      } else if (type == 'PG') {
-        pgDetails.add(ed);
-        _hasPG = true;
-      } else if (type == 'SS') {
-        ssDetails.add(ed);
-        _hasSS = true;
+        ed.fromDateController.text = _formatDateForController(edu['fromDate']);
+        ed.toDateController.text = _formatDateForController(edu['toDate']);
+        ed.collegeNameController.text = ed.collegeName;
+
+        if (type == 'MBBS') {
+          educationDetails.add(ed);
+        } else if (type == 'PG') {
+          pgDetails.add(ed);
+          _hasPG = true;
+        } else if (type == 'SS') {
+          ssDetails.add(ed);
+          _hasSS = true;
+        }
       }
     }
 
-    // Fellowships
+    // ---------------- FELLOWSHIPS ----------------
     fellowships.clear();
-    List<dynamic> fellows = data['fellowships'] ?? [];
-    _hasFellowships = fellows.isNotEmpty;
-    for (var f in fellows) {
-      final fellowship = Fellowship();
-      fellowship.courseName = f['courseName'] ?? '';
-      fellowship.collegeName = f['collegeName'] ?? '';
-      fellowship.fromDateController.text = _formatDateForController(
-        f['fromDate'],
-      );
-      fellowship.toDateController.text = _formatDateForController(f['toDate']);
-      fellowships.add(fellowship);
+    List<dynamic>? fellows = data['fellowships'];
+
+    if (fellows == null || fellows.isEmpty) {
+      _hasFellowships = false;
+      // keep one empty entry for UI
+      fellowships.add(Fellowship());
+    } else {
+      _hasFellowships = true;
+      for (var f in fellows) {
+        final fellowship = Fellowship();
+        fellowship.courseName = f['courseName'] ?? '';
+        fellowship.collegeName = f['collegeName'] ?? '';
+        fellowship.fromDateController.text = _formatDateForController(
+          f['fromDate'],
+        );
+        fellowship.toDateController.text = _formatDateForController(
+          f['toDate'],
+        );
+        fellowships.add(fellowship);
+      }
     }
 
-    // Papers
+    // ---------------- PAPERS ----------------
     papers.clear();
-    List<dynamic> papersData = data['papers'] ?? [];
-    _hasPapers = papersData.isNotEmpty;
-    for (var p in papersData) {
-      final paper = Paper();
-      paper.name = p['name'] ?? '';
-      paper.description = p['description'] ?? '';
-      paper.submittedDateController.text = _formatDateForController(
-        p['submittedOn'],
-      );
-      papers.add(paper);
+    List<dynamic>? papersData = data['papers'];
+
+    if (papersData == null || papersData.isEmpty) {
+      _hasPapers = false;
+      papers.add(Paper());
+    } else {
+      _hasPapers = true;
+      for (var p in papersData) {
+        final paper = Paper();
+        paper.name = p['name'] ?? '';
+        paper.description = p['description'] ?? '';
+        paper.submittedDateController.text = _formatDateForController(
+          p['submittedOn'],
+        );
+        papers.add(paper);
+      }
     }
 
-    // Work Experience
+    // ---------------- WORK EXPERIENCE ----------------
     workExperiences.clear();
-    List<dynamic> workData = data['workExperiences'] ?? [];
-    _hasWorkExperience = workData.isNotEmpty;
-    for (var w in workData) {
-      final work = WorkExperience();
-      work.role = w['role'] ?? '';
-      work.name = w['name'] ?? '';
-      work.fromDateController.text = _formatDateForController(w['from']);
-      work.toDateController.text = _formatDateForController(w['to']);
-      work.place = w['place'] ?? '';
-      work.description = w['description'] ?? '';
-      workExperiences.add(work);
+    List<dynamic>? workData = data['workExperiences'];
+
+    if (workData == null || workData.isEmpty) {
+      _hasWorkExperience = false;
+      workExperiences.add(WorkExperience());
+    } else {
+      _hasWorkExperience = true;
+      for (var w in workData) {
+        final work = WorkExperience();
+        work.role = w['role'] ?? '';
+        work.name = w['name'] ?? '';
+        work.fromDateController.text = _formatDateForController(w['from']);
+        work.toDateController.text = _formatDateForController(w['to']);
+        work.place = w['place'] ?? '';
+        work.description = w['description'] ?? '';
+        workExperiences.add(work);
+      }
     }
 
-    // Certificate
+    // ---------------- MEDICAL CERTIFICATE ----------------
     final cert = data['certificate'] ?? {};
     _counselNameController.text = cert['counselName'] ?? '';
     _courseNameController.text = cert['courseName'] ?? '';
@@ -204,36 +231,49 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
     _validityToController.text = _formatDateForController(cert['validTo']);
     _registrationNumberController.text = cert['registrationNumber'] ?? '';
 
+    // ---------------- CERTIFICATES ----------------
     certificates.clear();
-    List<dynamic> certs = data['certificates'] ?? [];
-    _hasCertificates = certs.isNotEmpty;
+    List<dynamic>? certs = data['certificates'];
 
-    for (var c in certs) {
-      final cert = CertificateModel();
-      cert.certificateName = c['certificateName'] ?? '';
-      cert.issuingAuthority = c['issuingAuthority'] ?? '';
-      cert.fromDateController.text = _formatDateForController(c['from']);
-      cert.toDateController.text = _formatDateForController(c['to']);
-      cert.officialLink = c['officialLink'] ?? '';
-      certificates.add(cert);
+    if (certs == null || certs.isEmpty) {
+      _hasCertificates = false;
+      certificates.add(CertificateModel());
+    } else {
+      _hasCertificates = true;
+      for (var c in certs) {
+        final certModel = CertificateModel();
+        certModel.certificateName = c['certificateName'] ?? '';
+        certModel.issuingAuthority = c['issuingAuthority'] ?? '';
+        certModel.fromDateController.text = _formatDateForController(c['from']);
+        certModel.toDateController.text = _formatDateForController(c['to']);
+        certModel.officialLink = c['officialLink'] ?? '';
+        certificates.add(certModel);
+      }
     }
 
+    // ---------------- CONFERENCES ----------------
     conferences.clear();
-    List<dynamic> confs = data['conferences'] ?? [];
-    _hasConferences = confs.isNotEmpty;
+    List<dynamic>? confs = data['conferences'];
 
-    for (var c in confs) {
-      final conf = ConferenceModel();
-      conf.activityType = c['activityType'] ?? '';
-      conf.title = c['title'] ?? '';
-      conf.organizer = c['organizer'] ?? '';
-      conf.dateController.text = _formatDateForController(c['date']);
-      conf.uploadLink = c['uploadLink'] ?? '';
-      conferences.add(conf);
+    if (confs == null || confs.isEmpty) {
+      _hasConferences = false;
+      conferences.add(ConferenceModel());
+    } else {
+      _hasConferences = true;
+      for (var c in confs) {
+        final conf = ConferenceModel();
+        conf.activityType = c['activityType'] ?? '';
+        conf.title = c['title'] ?? '';
+        conf.organizer = c['organizer'] ?? '';
+        conf.dateController.text = _formatDateForController(c['date']);
+        conf.uploadLink = c['uploadLink'] ?? '';
+        conferences.add(conf);
+      }
     }
 
+    // ---------------- SET STATE ----------------
     setState(() {
-      _isEditing = true; // open form in edit mode
+      _isEditing = true;
     });
   }
 

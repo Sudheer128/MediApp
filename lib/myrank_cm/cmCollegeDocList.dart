@@ -394,7 +394,7 @@ class _DegreesScreenState extends State<CmCollegeDegreesScreen>
                 SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    "$studentCount students",
+                    "$studentCount Persons",
                     style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                   ),
                 ),
