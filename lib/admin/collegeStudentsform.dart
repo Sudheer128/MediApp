@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/myrankUser/studentList.dart';
 import 'package:medicalapp/pdf.dart';
+import 'package:medicalapp/student/edit.dart';
 import 'package:medicalapp/url.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
@@ -401,6 +402,43 @@ class _StudentDetailScreenState extends State<AdminStudentDetailScreen> {
                           ),
                         )
                         : null,
+              ),
+
+              // Edit Button (Top Right)
+              Positioned(
+                top: 12,
+                right: 12,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    print(data);
+                    if (data != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) =>
+                                  EditApplicationForm(existingData: data),
+                        ),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.blue.shade700,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  icon: const Icon(Icons.edit, size: 18),
+                  label: const Text(
+                    'Edit Profile',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
               ),
               // Loading overlay
               // if (_uploadingImage)

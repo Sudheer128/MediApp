@@ -11,7 +11,7 @@ import 'package:medicalapp/student/edit.dart';
 import 'package:medicalapp/url.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:html' as html;
+import 'image_picker_stub.dart' if (dart.library.html) 'image_picker_web.dart';
 
 class EditForm extends StatefulWidget {
   final int applicationId;
@@ -68,46 +68,46 @@ class _StudentDetailScreenState extends State<EditForm> {
     }
   }
 
-  Future<XFile?> pickImageWeb() async {
-    final completer = Completer<XFile?>();
+  // Future<XFile?> pickImageWeb() async {
+  //   final completer = Completer<XFile?>();
 
-    // Create a NEW input element each time
-    final input = html.FileUploadInputElement()..accept = 'image/*';
+  //   // Create a NEW input element each time
+  //   final input = html.FileUploadInputElement()..accept = 'image/*';
 
-    // Set up the listener BEFORE clicking
-    input.onChange.listen((event) {
-      print("📂 File input changed");
+  //   // Set up the listener BEFORE clicking
+  //   input.onChange.listen((event) {
+  //     print("📂 File input changed");
 
-      if (input.files == null || input.files!.isEmpty) {
-        print("❌ No files selected");
-        completer.complete(null);
-        return;
-      }
+  //     if (input.files == null || input.files!.isEmpty) {
+  //       print("❌ No files selected");
+  //       completer.complete(null);
+  //       return;
+  //     }
 
-      final file = input.files!.first;
-      print("✅ File selected: ${file.name}, size: ${file.size} bytes");
+  //     final file = input.files!.first;
+  //     print("✅ File selected: ${file.name}, size: ${file.size} bytes");
 
-      final reader = html.FileReader();
-      reader.readAsArrayBuffer(file);
+  //     final reader = html.FileReader();
+  //     reader.readAsArrayBuffer(file);
 
-      reader.onLoadEnd.listen((event) {
-        print("✅ File read complete");
-        final data = reader.result as Uint8List;
-        completer.complete(XFile.fromData(data, name: file.name));
-      });
+  //     reader.onLoadEnd.listen((event) {
+  //       print("✅ File read complete");
+  //       final data = reader.result as Uint8List;
+  //       completer.complete(XFile.fromData(data, name: file.name));
+  //     });
 
-      reader.onError.listen((event) {
-        print("❌ File read error");
-        completer.complete(null);
-      });
-    });
+  //     reader.onError.listen((event) {
+  //       print("❌ File read error");
+  //       completer.complete(null);
+  //     });
+  //   });
 
-    // Trigger the file picker
-    print("🖱️ Triggering file picker...");
-    input.click();
+  //   // Trigger the file picker
+  //   print("🖱️ Triggering file picker...");
+  //   input.click();
 
-    return completer.future;
-  }
+  //   return completer.future;
+  // }
 
   Future<void> _showImageOptionsDialog(bool isProfileImage) async {
     showDialog(
