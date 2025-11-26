@@ -5,12 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
-import 'package:medicalapp/admin/mainscreen.dart';
-import 'package:medicalapp/college/homepage.dart';
-import 'package:medicalapp/myrankUser/homepage.dart';
-import 'package:medicalapp/myrank_cm/home_page.dart';
-import 'package:medicalapp/newUser.dart';
-import 'package:medicalapp/student/home.dart';
 import 'package:medicalapp/url.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -38,99 +32,67 @@ class _IndexState extends State<Index> {
 
   Future<void> _checkIfLoggedIn() async {
     final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final email = user.email ?? '';
+      if (email.isEmpty) {
+        setState(() => _isCheckingAuth = false);
+        return;
+      }
 
-    if (user == null) {
+      try {
+        // Fetch role and user info from backend
+        final response = await http.post(
+          Uri.parse(
+            '$baseurl/api/user/check-or-insert',
+          ), // or your role endpoint
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'email': email, 'name': user.displayName ?? ''}),
+        );
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+
+          final prefs = await SharedPreferences.getInstance();
+          final userId = data['userid'];
+          final userName = data['name'];
+          final role = data['role'];
+
+          await prefs.setString('name', userName ?? '');
+          await prefs.setString('role', role ?? '');
+          if (userId != null) {
+            await prefs.setInt('userid', userId);
+          }
+
+          final route = switch (role) {
+            'admin' => '/admin',
+            'college' => '/college',
+            'doctor' => '/doctor',
+            'myrank_user' => '/user',
+            'myrank_cm' => '/cm',
+            _ => '/approval',
+          };
+
+          if (mounted) context.go(route);
+        } else {
+          setState(() => _isCheckingAuth = false);
+        }
+      } catch (e) {
+        print('Error fetching user role: $e');
+        setState(() => _isCheckingAuth = false);
+      }
+    } else {
+      // No user logged in, show login screen
       setState(() => _isCheckingAuth = false);
-      return;
     }
-
-    setState(() => _isCheckingAuth = false);
-
-    // DO NOT navigate. GoRouter redirect() will handle everything.
   }
-
-  // Future<void> _checkIfLoggedIn() async {
-  //   final user = FirebaseAuth.instance.currentUser;
-  //   if (user != null) {
-  //     final email = user.email ?? '';
-  //     if (email.isEmpty) {
-  //       setState(() => _isCheckingAuth = false);
-  //       return;
-  //     }
-
-  //     try {
-  //       // Fetch role and user info from backend
-  //       final response = await http.post(
-  //         Uri.parse(
-  //           '$baseurl/api/user/check-or-insert',
-  //         ), // or your role endpoint
-  //         headers: {'Content-Type': 'application/json'},
-  //         body: jsonEncode({'email': email, 'name': user.displayName ?? ''}),
-  //       );
-
-  //       if (response.statusCode == 200) {
-  //         final data = jsonDecode(response.body);
-
-  //         final prefs = await SharedPreferences.getInstance();
-  //         final userId = data['userid'];
-  //         final userName = data['name'];
-  //         final role = data['role'];
-
-  //         await prefs.setString('name', userName ?? '');
-  //         await prefs.setString('role', role ?? '');
-  //         if (userId != null) {
-  //           await prefs.setInt('userid', userId);
-  //         }
-
-  //         Widget destinationPage;
-  //         switch (role) {
-  //           case 'admin':
-  //             destinationPage = AdminDashboard();
-  //             break;
-  //           case 'college':
-  //             destinationPage = CollegeDashboard();
-  //             break;
-  //           case 'doctor':
-  //             destinationPage = DoctorDashboardApp();
-  //             break;
-  //           case 'myrank_user':
-  //             destinationPage = UserHomePage();
-  //             break;
-  //           case 'myrank_cm':
-  //             destinationPage = MyRankCMHomePage();
-  //             break;
-  //           default:
-  //             destinationPage = ApprovalScreen();
-  //         }
-
-  //         if (mounted) {
-  //           Navigator.of(context).pushReplacement(
-  //             MaterialPageRoute(builder: (_) => destinationPage),
-  //           );
-  //         }
-  //       } else {
-  //         setState(() => _isCheckingAuth = false);
-  //       }
-  //     } catch (e) {
-  //       print('Error fetching user role: $e');
-  //       setState(() => _isCheckingAuth = false);
-  //     }
-  //   } else {
-  //     // No user logged in, show login screen
-  //     setState(() => _isCheckingAuth = false);
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {
     if (_isCheckingAuth) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    } else {
+      return const HomePage();
     }
-
-    // ❌ DO NOT return HomePage()
-    // Let GoRouter redirect based on auth/role
-
-    return const HomePage();
   }
 }
 
@@ -148,31 +110,68 @@ class _HomePageState extends State<HomePage> {
   Future<void> _handleSignIn() async {
     setState(() => _isLoading = true);
 
+    // Step 1: Google Sign-In
     User? user = await signInWithGoogle();
     if (user == null) {
       setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Google sign-in cancelled or failed')),
+      );
       return;
     }
 
     final email = user.email ?? "";
     final name = user.displayName ?? "";
+    final photourl = user.photoURL ?? "";
 
-    final response = await http.post(
-      Uri.parse('$baseurl/api/user/check-or-insert'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'name': name}),
-    );
+    // Step 2: Save profile photo locally
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('photourl', photourl);
 
-    if (response.statusCode == 200) {
-      // DO NOT navigate manually
-      // GoRouter redirect() will navigate automatically
+    try {
+      // Step 3: Call backend to insert/check role
+      final response = await http.post(
+        Uri.parse('$baseurl/api/user/check-or-insert'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'name': name}),
+      );
 
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        // Step 4: Save user details to SharedPreferences
+        await prefs.setString('name', data['name']);
+        await prefs.setString('role', data['role']);
+        if (data['userid'] != null) {
+          await prefs.setInt('userid', data['userid']);
+        }
+
+        final role = data['role'];
+        print("User role: $role");
+
+        // Step 5: Determine route based on role
+        final route = switch (role) {
+          'admin' => '/admin',
+          'college' => '/college',
+          'doctor' => '/doctor',
+          'myrank_user' => '/user',
+          'myrank_cm' => '/cm',
+          _ => '/approval',
+        };
+
+        setState(() => _isLoading = false);
+        context.go(route);
+      } else {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('API failed: ${response.body}')));
+      }
+    } catch (e) {
       setState(() => _isLoading = false);
-
-      // Force router to refresh
-      if (context.mounted) context.go('/');
-    } else {
-      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 

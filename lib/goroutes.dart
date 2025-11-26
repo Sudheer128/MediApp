@@ -1,14 +1,7 @@
-import 'dart:convert';
-
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:http/http.dart' as http;
 import 'package:medicalapp/auth.dart';
 import 'package:medicalapp/myrank_cm/home_page.dart';
-import 'package:medicalapp/url.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:medicalapp/index.dart';
 import 'package:medicalapp/admin/mainscreen.dart';
 import 'package:medicalapp/college/homepage.dart';

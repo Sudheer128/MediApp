@@ -397,34 +397,34 @@ class _AllJobsPageState extends State<AllJobsPage> {
                     ),
                   ),
                 ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: fetchSavedJobs,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor:
-                          activeView == 'saved'
-                              ? Colors.white
-                              : Color(0xFF0A66C2),
-                      backgroundColor:
-                          activeView == 'saved'
-                              ? Color(0xFF0A66C2)
-                              : Colors.white,
-                      side: BorderSide(color: Color(0xFF0A66C2)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    child: Text(
-                      'Saved Jobs',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
+                // SizedBox(width: 8),
+                // Expanded(
+                //   child: OutlinedButton(
+                //     onPressed: fetchSavedJobs,
+                //     style: OutlinedButton.styleFrom(
+                //       foregroundColor:
+                //           activeView == 'saved'
+                //               ? Colors.white
+                //               : Color(0xFF0A66C2),
+                //       backgroundColor:
+                //           activeView == 'saved'
+                //               ? Color(0xFF0A66C2)
+                //               : Colors.white,
+                //       side: BorderSide(color: Color(0xFF0A66C2)),
+                //       shape: RoundedRectangleBorder(
+                //         borderRadius: BorderRadius.circular(4),
+                //       ),
+                //       padding: EdgeInsets.symmetric(vertical: 12),
+                //     ),
+                //     child: Text(
+                //       'Saved Jobs',
+                //       style: TextStyle(
+                //         fontSize: 13,
+                //         fontWeight: FontWeight.w600,
+                //       ),
+                //     ),
+                //   ),
+                // ),
               ],
             ],
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MainLayout extends StatefulWidget {
   final List<Widget> pages;
@@ -120,12 +121,7 @@ class _MainLayoutState extends State<MainLayout> {
                 onTap: () {
                   Navigator.pop(context);
                   signOutGoogle();
-                  // Navigator.pushAndRemoveUntil(
-                  //   context,
-                  //   MaterialPageRoute(builder: (context) => Index()),
-                  //   (route) => false,
-                  // );
-                  context.go('/login');
+                  context.go('/');
                 },
               ),
             ],
@@ -169,28 +165,29 @@ class _MainLayoutState extends State<MainLayout> {
     );
   }
 
-  /// ---------------------- "ME" MENU WITH LOGOUT ----------------------
   Widget _meMenu() {
     return PopupMenuButton<int>(
       tooltip: "Me",
       position: PopupMenuPosition.under,
       offset: const Offset(0, 10),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      onSelected: (value) {
+
+      // 👇 make callback async
+      onSelected: (value) async {
         if (value == 1) {
           // Profile
           setState(() => currentIndex = 3);
         } else if (value == 2) {
           // Logout
-          signOutGoogle();
-          // Navigator.pushAndRemoveUntil(
-          //   context,
-          //   MaterialPageRoute(builder: (context) => Index()),
-          //   (route) => false,
-          // );
-          context.go('/login');
+          await signOutGoogle();
+
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.clear();
+
+          if (mounted) context.go('/');
         }
       },
+
       child: Column(
         children: [
           Icon(
@@ -217,6 +214,7 @@ class _MainLayoutState extends State<MainLayout> {
             ),
         ],
       ),
+
       itemBuilder:
           (context) => [
             const PopupMenuItem(

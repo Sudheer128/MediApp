@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/admin/studentsList.dart';
 import 'package:medicalapp/googlesignin.dart';
@@ -330,18 +331,14 @@ class _AdminDegreesScreenState extends State<AdminCollegeDegreesScreen> {
   Widget _buildCourseCard(String degree, String courseName, int studentCount) {
     return InkWell(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (_) => AdminCourseDetailsScreen(
-                  degree: degree,
-                  courseName: courseName,
-                  status: _selectedStatus,
-                ),
-          ),
+        context.go(
+          '/course-details/'
+          '${Uri.encodeComponent(degree)}/'
+          '${Uri.encodeComponent(courseName)}/'
+          '$_selectedStatus',
         );
       },
+
       borderRadius: BorderRadius.circular(8),
       child: Container(
         constraints: BoxConstraints(minWidth: 140, maxWidth: 200),

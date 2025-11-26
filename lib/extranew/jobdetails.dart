@@ -621,6 +621,35 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
     );
   }
 
+  Future<void> openApplicationLink(String url) async {
+    final uri = Uri.parse(url);
+
+    // For Web: open in new tab
+    if (Theme.of(context).platform == TargetPlatform.linux ||
+        Theme.of(context).platform == TargetPlatform.fuchsia ||
+        Theme.of(context).platform == TargetPlatform.windows ||
+        Theme.of(context).platform == TargetPlatform.macOS) {
+      // Desktop also opens new tab
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+      return;
+    }
+
+    // Mobile + Web (official way)
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication, // forces new tab on Web
+        webOnlyWindowName: '_blank', // **critical for Web**
+      );
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Cannot open link")));
+    }
+  }
+
   Widget _buildCompanyCard() {
     return Container(
       decoration: BoxDecoration(
@@ -648,7 +677,17 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
-              onPressed: () {},
+              onPressed: () {
+                final link = job!["application_link"]; // <-- from JSON
+                if (link != null && link.toString().isNotEmpty) {
+                  openApplicationLink(link);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("No application link available")),
+                  );
+                }
+              },
+
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: Color(0xFF0A66C2)),
                 shape: RoundedRectangleBorder(
@@ -657,7 +696,7 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
                 padding: EdgeInsets.symmetric(vertical: 10),
               ),
               child: Text(
-                'View company page',
+                'View organization page',
                 style: TextStyle(
                   color: Color(0xFF0A66C2),
                   fontWeight: FontWeight.w600,

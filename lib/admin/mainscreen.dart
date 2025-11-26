@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:medicalapp/admin/adminCollegedocList.dart';
 import 'package:medicalapp/admin/adminintreststatus.dart';
@@ -295,12 +297,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     icon: Icons.medical_services_outlined,
                     subtitle: 'List of Doctors in Particular Courses',
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AdminCollegeDegreesScreen(),
-                        ),
-                      );
+                      if (kIsWeb) {
+                        context.go('/available-doctors');
+                      } else {
+                        context.push('/available-doctors');
+                      }
                     },
                   ),
                   const SizedBox(height: 30),
