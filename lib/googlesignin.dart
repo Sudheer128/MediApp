@@ -126,6 +126,7 @@ Future<User?> signInWithGoogle() async {
     );
     print(userCredential.user?.email);
     print(userCredential.user?.displayName);
+    print(userCredential.user?.phoneNumber);
     return userCredential.user;
   } catch (e) {
     print('Error with Google sign-in: $e');

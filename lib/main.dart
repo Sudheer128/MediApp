@@ -1,18 +1,19 @@
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:medicalapp/firebase_options.dart';
-import 'package:medicalapp/index.dart';
+import 'firebase_options.dart';
+import 'router/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   if (kIsWeb) {
-    // Ensure Firebase Authentication persistence is set
     await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
   }
-  runApp(MedApp());
+
+  runApp(const MedApp());
 }
 
 class MedApp extends StatelessWidget {
@@ -20,6 +21,9 @@ class MedApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(debugShowCheckedModeBanner: false, home: Index());
+    return MaterialApp.router(
+      routerConfig: appRouter,
+      debugShowCheckedModeBanner: false,
+    );
   }
 }

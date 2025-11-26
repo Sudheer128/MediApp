@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/admin/mainscreen.dart';
@@ -68,32 +69,16 @@ class _IndexState extends State<Index> {
             await prefs.setInt('userid', userId);
           }
 
-          Widget destinationPage;
-          switch (role) {
-            case 'admin':
-              destinationPage = AdminDashboard();
-              break;
-            case 'college':
-              destinationPage = CollegeDashboard();
-              break;
-            case 'doctor':
-              destinationPage = DoctorDashboardApp();
-              break;
-            case 'myrank_user':
-              destinationPage = UserHomePage();
-              break;
-            case 'myrank_cm':
-              destinationPage = MyRankCMHomePage();
-              break;
-            default:
-              destinationPage = ApprovalScreen();
-          }
+          final route = switch (role) {
+            'admin' => '/admin',
+            'college' => '/college',
+            'doctor' => '/doctor',
+            'myrank_user' => '/user',
+            'myrank_cm' => '/cm',
+            _ => '/approval',
+          };
 
-          if (mounted) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => destinationPage),
-            );
-          }
+          if (mounted) context.go(route);
         } else {
           setState(() => _isCheckingAuth = false);
         }
@@ -131,6 +116,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _handleSignIn() async {
     setState(() => _isLoading = true);
 
+    // Step 1: Google Sign-In
     User? user = await signInWithGoogle();
     if (user == null) {
       setState(() => _isLoading = false);
@@ -142,14 +128,14 @@ class _HomePageState extends State<HomePage> {
 
     final email = user.email ?? "";
     final name = user.displayName ?? "";
-
-    final prefs = await SharedPreferences.getInstance();
     final photourl = user.photoURL ?? "";
+
+    // Step 2: Save profile photo locally
+    final prefs = await SharedPreferences.getInstance();
     await prefs.setString('photourl', photourl);
 
-    print("photourlssssss$photourl");
-
     try {
+      // Step 3: Call backend to insert/check role
       final response = await http.post(
         Uri.parse('$baseurl/api/user/check-or-insert'),
         headers: {'Content-Type': 'application/json'},
@@ -158,49 +144,29 @@ class _HomePageState extends State<HomePage> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final prefs = await SharedPreferences.getInstance();
-        final userId = data['userid'];
-        final userName = data['name'];
+
+        // Step 4: Save user details to SharedPreferences
+        await prefs.setString('name', data['name']);
+        await prefs.setString('role', data['role']);
+        if (data['userid'] != null) {
+          await prefs.setInt('userid', data['userid']);
+        }
+
         final role = data['role'];
-        await prefs.setString('name', userName);
-        await prefs.setString('role', role); // ← Add this
-        if (userId != null) {
-          await prefs.setInt('userid', userId);
-        }
-        await prefs.setString('name', userName);
-        if (userId != null) {
-          await prefs.setInt('userid', userId);
-        }
+        print("User role: $role");
 
-        print(role);
-        Widget destinationPage;
-
-        switch (role) {
-          case 'admin':
-            destinationPage = AdminDashboard();
-            break;
-          case 'college':
-            destinationPage = CollegeDashboard();
-            break;
-          case 'doctor':
-            destinationPage = DoctorDashboardApp();
-            break;
-          case 'myrank_user':
-            destinationPage = UserHomePage();
-            break;
-          case 'myrank_cm':
-            destinationPage = MyRankCMHomePage();
-            break;
-          default:
-            destinationPage = ApprovalScreen();
-        }
+        // Step 5: Determine route based on role
+        final route = switch (role) {
+          'admin' => '/admin',
+          'college' => '/college',
+          'doctor' => '/doctor',
+          'myrank_user' => '/user',
+          'myrank_cm' => '/cm',
+          _ => '/approval',
+        };
 
         setState(() => _isLoading = false);
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => destinationPage),
-          (Route<dynamic> route) => false,
-        );
+        context.go(route);
       } else {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(
