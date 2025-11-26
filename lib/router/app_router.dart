@@ -51,16 +51,14 @@ final GoRouter appRouter = GoRouter(
 
     final allowedRoutes = roleAccess[role] ?? ['/'];
 
+    // Allow dynamic course-details route
+    if (path.startsWith('/course-details')) return null;
+
     final isAllowed = allowedRoutes.any((allowed) => path.startsWith(allowed));
 
-    // ❌ Prevents blocking dynamic parameter routes
-    if (!isAllowed && !path.startsWith('/course-details')) {
-      return allowedRoutes.first;
-    }
+    if (!isAllowed) return allowedRoutes.first;
 
-    if (path == '/' && role != 'guest') {
-      return allowedRoutes.first;
-    }
+    if (path == '/' && role != 'guest') return allowedRoutes.first;
 
     return null;
   },
