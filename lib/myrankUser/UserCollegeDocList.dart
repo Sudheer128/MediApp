@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/admin/adminintreststatus.dart';
 import 'package:medicalapp/googlesignin.dart';
@@ -76,11 +77,12 @@ class _DegreesScreenState extends State<UserCollegeDegreesScreen>
 
   void _logout(BuildContext context) {
     signOutGoogle();
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => Index()),
-      (Route<dynamic> route) => false, // Remove all previous routes
-    );
+    // Navigator.pushAndRemoveUntil(
+    //   context,
+    //   MaterialPageRoute(builder: (context) => Index()),
+    //   (Route<dynamic> route) => false, // Remove all previous routes
+    // );
+    context.go('/login');
   }
 
   @override

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/edit_formAfterSave.dart';
 import 'package:medicalapp/extranew/alljobs.dart';
@@ -607,11 +608,12 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
                         'Sign out of your account',
                         () {
                           signOutGoogle();
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(builder: (context) => Index()),
-                            (Route<dynamic> route) => false,
-                          );
+                          // Navigator.pushAndRemoveUntil(
+                          //   context,
+                          //   MaterialPageRoute(builder: (context) => Index()),
+                          //   (Route<dynamic> route) => false,
+                          // );
+                          context.go('/login');
                         },
                         textColor: Colors.red,
                       ),

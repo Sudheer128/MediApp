@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/admin/mainscreen.dart';
@@ -37,83 +38,99 @@ class _IndexState extends State<Index> {
 
   Future<void> _checkIfLoggedIn() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final email = user.email ?? '';
-      if (email.isEmpty) {
-        setState(() => _isCheckingAuth = false);
-        return;
-      }
 
-      try {
-        // Fetch role and user info from backend
-        final response = await http.post(
-          Uri.parse(
-            '$baseurl/api/user/check-or-insert',
-          ), // or your role endpoint
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'email': email, 'name': user.displayName ?? ''}),
-        );
-
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-
-          final prefs = await SharedPreferences.getInstance();
-          final userId = data['userid'];
-          final userName = data['name'];
-          final role = data['role'];
-
-          await prefs.setString('name', userName ?? '');
-          await prefs.setString('role', role ?? '');
-          if (userId != null) {
-            await prefs.setInt('userid', userId);
-          }
-
-          Widget destinationPage;
-          switch (role) {
-            case 'admin':
-              destinationPage = AdminDashboard();
-              break;
-            case 'college':
-              destinationPage = CollegeDashboard();
-              break;
-            case 'doctor':
-              destinationPage = DoctorDashboardApp();
-              break;
-            case 'myrank_user':
-              destinationPage = UserHomePage();
-              break;
-            case 'myrank_cm':
-              destinationPage = MyRankCMHomePage();
-              break;
-            default:
-              destinationPage = ApprovalScreen();
-          }
-
-          if (mounted) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => destinationPage),
-            );
-          }
-        } else {
-          setState(() => _isCheckingAuth = false);
-        }
-      } catch (e) {
-        print('Error fetching user role: $e');
-        setState(() => _isCheckingAuth = false);
-      }
-    } else {
-      // No user logged in, show login screen
+    if (user == null) {
       setState(() => _isCheckingAuth = false);
+      return;
     }
+
+    setState(() => _isCheckingAuth = false);
+
+    // DO NOT navigate. GoRouter redirect() will handle everything.
   }
+
+  // Future<void> _checkIfLoggedIn() async {
+  //   final user = FirebaseAuth.instance.currentUser;
+  //   if (user != null) {
+  //     final email = user.email ?? '';
+  //     if (email.isEmpty) {
+  //       setState(() => _isCheckingAuth = false);
+  //       return;
+  //     }
+
+  //     try {
+  //       // Fetch role and user info from backend
+  //       final response = await http.post(
+  //         Uri.parse(
+  //           '$baseurl/api/user/check-or-insert',
+  //         ), // or your role endpoint
+  //         headers: {'Content-Type': 'application/json'},
+  //         body: jsonEncode({'email': email, 'name': user.displayName ?? ''}),
+  //       );
+
+  //       if (response.statusCode == 200) {
+  //         final data = jsonDecode(response.body);
+
+  //         final prefs = await SharedPreferences.getInstance();
+  //         final userId = data['userid'];
+  //         final userName = data['name'];
+  //         final role = data['role'];
+
+  //         await prefs.setString('name', userName ?? '');
+  //         await prefs.setString('role', role ?? '');
+  //         if (userId != null) {
+  //           await prefs.setInt('userid', userId);
+  //         }
+
+  //         Widget destinationPage;
+  //         switch (role) {
+  //           case 'admin':
+  //             destinationPage = AdminDashboard();
+  //             break;
+  //           case 'college':
+  //             destinationPage = CollegeDashboard();
+  //             break;
+  //           case 'doctor':
+  //             destinationPage = DoctorDashboardApp();
+  //             break;
+  //           case 'myrank_user':
+  //             destinationPage = UserHomePage();
+  //             break;
+  //           case 'myrank_cm':
+  //             destinationPage = MyRankCMHomePage();
+  //             break;
+  //           default:
+  //             destinationPage = ApprovalScreen();
+  //         }
+
+  //         if (mounted) {
+  //           Navigator.of(context).pushReplacement(
+  //             MaterialPageRoute(builder: (_) => destinationPage),
+  //           );
+  //         }
+  //       } else {
+  //         setState(() => _isCheckingAuth = false);
+  //       }
+  //     } catch (e) {
+  //       print('Error fetching user role: $e');
+  //       setState(() => _isCheckingAuth = false);
+  //     }
+  //   } else {
+  //     // No user logged in, show login screen
+  //     setState(() => _isCheckingAuth = false);
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
     if (_isCheckingAuth) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    } else {
-      return const HomePage();
     }
+
+    // ❌ DO NOT return HomePage()
+    // Let GoRouter redirect based on auth/role
+
+    return const HomePage();
   }
 }
 
@@ -134,84 +151,28 @@ class _HomePageState extends State<HomePage> {
     User? user = await signInWithGoogle();
     if (user == null) {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Google sign-in cancelled or failed')),
-      );
       return;
     }
 
     final email = user.email ?? "";
     final name = user.displayName ?? "";
 
-    final prefs = await SharedPreferences.getInstance();
-    final photourl = user.photoURL ?? "";
-    await prefs.setString('photourl', photourl);
+    final response = await http.post(
+      Uri.parse('$baseurl/api/user/check-or-insert'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'name': name}),
+    );
 
-    print("photourlssssss$photourl");
+    if (response.statusCode == 200) {
+      // DO NOT navigate manually
+      // GoRouter redirect() will navigate automatically
 
-    try {
-      final response = await http.post(
-        Uri.parse('$baseurl/api/user/check-or-insert'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'name': name}),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final prefs = await SharedPreferences.getInstance();
-        final userId = data['userid'];
-        final userName = data['name'];
-        final role = data['role'];
-        await prefs.setString('name', userName);
-        await prefs.setString('role', role); // ← Add this
-        if (userId != null) {
-          await prefs.setInt('userid', userId);
-        }
-        await prefs.setString('name', userName);
-        if (userId != null) {
-          await prefs.setInt('userid', userId);
-        }
-
-        print(role);
-        Widget destinationPage;
-
-        switch (role) {
-          case 'admin':
-            destinationPage = AdminDashboard();
-            break;
-          case 'college':
-            destinationPage = CollegeDashboard();
-            break;
-          case 'doctor':
-            destinationPage = DoctorDashboardApp();
-            break;
-          case 'myrank_user':
-            destinationPage = UserHomePage();
-            break;
-          case 'myrank_cm':
-            destinationPage = MyRankCMHomePage();
-            break;
-          default:
-            destinationPage = ApprovalScreen();
-        }
-
-        setState(() => _isLoading = false);
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => destinationPage),
-          (Route<dynamic> route) => false,
-        );
-      } else {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('API failed: ${response.body}')));
-      }
-    } catch (e) {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+
+      // Force router to refresh
+      if (context.mounted) context.go('/');
+    } else {
+      setState(() => _isLoading = false);
     }
   }
 

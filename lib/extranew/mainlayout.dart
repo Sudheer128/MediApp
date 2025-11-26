@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
 
@@ -119,11 +120,12 @@ class _MainLayoutState extends State<MainLayout> {
                 onTap: () {
                   Navigator.pop(context);
                   signOutGoogle();
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => Index()),
-                    (route) => false,
-                  );
+                  // Navigator.pushAndRemoveUntil(
+                  //   context,
+                  //   MaterialPageRoute(builder: (context) => Index()),
+                  //   (route) => false,
+                  // );
+                  context.go('/login');
                 },
               ),
             ],
@@ -181,11 +183,12 @@ class _MainLayoutState extends State<MainLayout> {
         } else if (value == 2) {
           // Logout
           signOutGoogle();
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => Index()),
-            (route) => false,
-          );
+          // Navigator.pushAndRemoveUntil(
+          //   context,
+          //   MaterialPageRoute(builder: (context) => Index()),
+          //   (route) => false,
+          // );
+          context.go('/login');
         }
       },
       child: Column(
