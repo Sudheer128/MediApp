@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:medicalapp/admin/form_page.dart';
 import 'package:medicalapp/college/college_profile.dart';
 import 'package:medicalapp/extranew/alljobs.dart';
@@ -41,11 +42,12 @@ class _UserHomePageState extends State<CmHomePage> {
 
   void _logout(BuildContext context) {
     signOutGoogle();
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => Index()),
-      (Route<dynamic> route) => false, // Remove all previous routes
-    );
+    // Navigator.pushAndRemoveUntil(
+    //   context,
+    //   MaterialPageRoute(builder: (context) => Index()),
+    //   (Route<dynamic> route) => false, // Remove all previous routes
+    // );
+    context.go('/login');
   }
 
   Widget _buildCard(

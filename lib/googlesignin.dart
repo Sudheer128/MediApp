@@ -2,9 +2,11 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/admin/mainscreen.dart';
+import 'package:medicalapp/auth.dart';
 import 'package:medicalapp/college/homepage.dart';
 import 'package:medicalapp/myrankUser/homepage.dart';
 import 'package:medicalapp/newUser.dart';
@@ -22,12 +24,27 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-  void _handleSignIn() async {
-    User? user = await signInWithGoogle();
-    if (user != null) {
-      final email = user.email ?? "";
-      final name = user.displayName ?? "";
+  Future<void> _handleSignIn() async {
+    bool _isLoading = false;
+    setState(() => _isLoading = true);
 
+    User? user = await signInWithGoogle();
+    if (user == null) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Google sign-in failed')));
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+
+    final email = user.email ?? "";
+    final name = user.displayName ?? "";
+    final photourl = user.photoURL ?? "";
+    await prefs.setString('photourl', photourl);
+
+    try {
       final response = await http.post(
         Uri.parse('$baseurl/api/user/check-or-insert'),
         headers: {'Content-Type': 'application/json'},
@@ -36,49 +53,50 @@ class _SignInScreenState extends State<SignInScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        await authState.refreshUser(); // refresh role → triggers redirect
+        if (context.mounted) context.go('/');
 
-        // Save user_id to SharedPreferences
-        final prefs = await SharedPreferences.getInstance();
-        final userId = data['userid']; // Adjust key as per your API response
+        final userId = data['userid'];
         final userName = data['name'];
-        await prefs.setString('name', userName);
-        print('Saved user_id: $userId');
-        if (userId != null) {
-          await prefs.setInt('userid', userId);
-          print('Saved user_id: $userId');
-        }
-
         final role = data['role'];
 
-        Widget destinationPage;
+        await prefs.setString('name', userName);
+        await prefs.setString('role', role);
+        if (userId != null) await prefs.setInt('userid', userId);
 
+        setState(() => _isLoading = false);
+
+        // Use GoRouter navigation
         switch (role) {
           case 'admin':
-            destinationPage = AdminDashboard();
+            context.go('/admin');
             break;
           case 'college':
-            destinationPage = CollegeDashboard();
+            context.go('/college');
             break;
           case 'doctor':
-            destinationPage = DoctorDashboardApp();
+            context.go('/doctor');
             break;
           case 'myrank_user':
-            destinationPage = UserHomePage();
+            context.go('/user');
             break;
-          case 'notassigned':
+          case 'myrank_cm':
+            context.go('/myrank_cm');
+            break;
           default:
-            destinationPage = ApprovalScreen();
+            context.go('/approval');
         }
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => destinationPage),
-        );
       } else {
-        print("API failed: ${response.body}");
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('API failed')));
       }
-    } else {
-      print('Sign in failed or cancelled');
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 

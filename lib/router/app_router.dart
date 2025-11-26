@@ -47,6 +47,7 @@ final GoRouter appRouter = GoRouter(
     final role = await _getRole() ?? 'guest';
     final path = state.matchedLocation;
 
+    // Not logged in
     if (user == null && path != '/') return '/';
 
     final allowedRoutes = roleAccess[role] ?? ['/'];
@@ -54,13 +55,13 @@ final GoRouter appRouter = GoRouter(
     // Allow dynamic course-details route
     if (path.startsWith('/course-details')) return null;
 
-    final isAllowed = allowedRoutes.any((allowed) => path.startsWith(allowed));
+    // Allow navigation if already inside allowed area
+    if (allowedRoutes.any((allowed) => path.startsWith(allowed))) {
+      return null; // <-- DO NOT REDIRECT
+    }
 
-    if (!isAllowed) return allowedRoutes.first;
-
-    if (path == '/' && role != 'guest') return allowedRoutes.first;
-
-    return null;
+    // Only block when accessing forbidden route manually
+    return allowedRoutes.first;
   },
 
   routes: [

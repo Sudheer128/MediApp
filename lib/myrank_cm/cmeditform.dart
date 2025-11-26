@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
@@ -632,11 +633,12 @@ class _EditApplicationFormState extends State<CmEditApplicationForm> {
 
   void _logout(BuildContext context) {
     signOutGoogle();
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => Index()),
-      (Route<dynamic> route) => false, // Remove all previous routes
-    );
+    // Navigator.pushAndRemoveUntil(
+    //   context,
+    //   MaterialPageRoute(builder: (context) => Index()),
+    //   (Route<dynamic> route) => false, // Remove all previous routes
+    // );
+    context.go('/login');
   }
 
   @override

@@ -25,6 +25,7 @@ class ApprovalScreen extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => Index()),
                   (Route<dynamic> route) => false, // Remove all previous routes
                 );
+                // context.go('/login');
               },
               child: const Text('Logout'),
             ),
