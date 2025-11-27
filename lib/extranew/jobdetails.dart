@@ -141,10 +141,10 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         toolbarHeight: 56,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
-        ),
+        // leading: IconButton(
+        //   icon: Icon(Icons.arrow_back, color: Colors.black87),
+        //   onPressed: () => Navigator.pop(context),
+        // ),
         title: Text(
           'Job Details',
           style: TextStyle(

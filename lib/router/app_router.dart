@@ -51,6 +51,7 @@ final Map<String, List<String>> roleAccess = {
     '/manage_users',
     '/college_interests',
     '/login-tracks',
+    '/job-details/',
   ],
 
   'college': [
