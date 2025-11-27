@@ -631,19 +631,19 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
                             const SizedBox(height: 20),
                             ElevatedButton(
                               onPressed: () async {
-                                final prefs =
-                                    await SharedPreferences.getInstance();
-                                final userId = prefs.getInt('userid') ?? 0;
-                                Navigator.pop(context); // close drawer
+                                // final prefs =
+                                //     await SharedPreferences.getInstance();
+                                // final userId = prefs.getInt('userid') ?? 0;
+                                // Navigator.pop(context); // close drawer
 
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (context) =>
-                                            EditForm(applicationId: userId),
-                                  ),
-                                );
+                                // Navigator.push(
+                                //   context,
+                                //   MaterialPageRoute(
+                                //     builder:
+                                //         (context) =>
+                                //             EditForm(applicationId: userId),
+                                //   ),
+                                // );
                               },
                               child: const Text('View Profile'),
                             ),

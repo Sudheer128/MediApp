@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/myrankUser/studentList.dart';
 import 'package:medicalapp/pdf.dart';
@@ -412,14 +413,11 @@ class _StudentDetailScreenState extends State<AdminStudentDetailScreen> {
                   onPressed: () {
                     print(data);
                     if (data != null) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) =>
-                                  EditApplicationForm(existingData: data),
-                        ),
-                      );
+                      if (kIsWeb) {
+                        context.go('/edit-application', extra: data);
+                      } else {
+                        context.push('/edit-application', extra: data);
+                      }
                     }
                   },
                   style: ElevatedButton.styleFrom(

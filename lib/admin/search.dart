@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/admin/searchstudent.dart';
 import 'package:medicalapp/url.dart';
@@ -102,6 +104,14 @@ class _SearchPageState extends State<SearchPage>
     );
   }
 
+  void navigateToAdminEdit(BuildContext context, String userId) {
+    if (kIsWeb) {
+      context.go('/doctor_profile/$userId');
+    } else {
+      context.push('/doctor_profile/$userId');
+    }
+  }
+
   Widget _buildProfileCard(dynamic student) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -113,12 +123,7 @@ class _SearchPageState extends State<SearchPage>
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AdminEditForm(userId: student['user_id']),
-            ),
-          );
+          navigateToAdminEdit(context, student['user_id'].toString());
         },
         child: Padding(
           padding: const EdgeInsets.all(16),

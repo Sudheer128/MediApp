@@ -2,13 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:medicalapp/admin/adminCollegedocList.dart';
+import 'package:medicalapp/admin/adminintreststatus.dart';
+import 'package:medicalapp/admin/adminloginlogs.dart';
+import 'package:medicalapp/admin/collegeStudentsform.dart';
+import 'package:medicalapp/admin/form_page.dart';
 import 'package:medicalapp/admin/mainscreen.dart';
+import 'package:medicalapp/admin/search.dart';
+import 'package:medicalapp/admin/searchstudent.dart';
 import 'package:medicalapp/admin/studentsList.dart';
+import 'package:medicalapp/admin/userstable.dart';
 import 'package:medicalapp/college/collegedashboard.dart';
+import 'package:medicalapp/extranew/jobnotification.dart';
 import 'package:medicalapp/index.dart';
 import 'package:medicalapp/myrankUser/homepage.dart';
 import 'package:medicalapp/myrank_cm/home_page.dart';
 import 'package:medicalapp/newUser.dart';
+import 'package:medicalapp/pdf.dart';
+import 'package:medicalapp/student/edit.dart';
+import 'package:medicalapp/student/form_page.dart';
 import 'package:medicalapp/student/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -22,10 +33,20 @@ final Map<String, List<String>> roleAccess = {
   'admin': [
     '/admin',
     '/available-doctors',
+    '/student-details',
     '/doctor',
     '/college',
     '/user',
     '/course-details', // <-- FIXED
+    '/edit-application',
+    '/create-student-form',
+    '/search-doctors',
+    '/doctor_profile',
+    '/pdf-viewer',
+    '/add_job',
+    '/manage_users',
+    '/college_interests',
+    '/login-tracks',
   ],
 
   'college': ['/college', '/available-doctors', '/doctor'],
@@ -75,10 +96,22 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/approval', builder: (_, __) => ApprovalScreen()),
 
     GoRoute(
+      path: '/create-student-form',
+      builder: (_, __) => ApplicationForm(),
+    ),
+
+    GoRoute(path: '/search-doctors', builder: (_, __) => SearchPage()),
+    GoRoute(
       path: '/available-doctors',
       builder: (_, __) => AdminCollegeDegreesScreen(),
     ),
+    GoRoute(path: '/add_job', builder: (_, __) => JobNotificationForm()),
 
+    GoRoute(path: '/manage_users', builder: (_, __) => UserManagementPage()),
+
+    GoRoute(path: '/college_interests', builder: (_, __) => InterestsPage()),
+
+    GoRoute(path: '/login-tracks', builder: (_, __) => LoginLogsPage()),
     GoRoute(
       path: '/course-details/:degree/:courseName/:status',
       builder: (context, state) {
@@ -93,6 +126,51 @@ final GoRouter appRouter = GoRouter(
           courseName: courseName,
           status: status,
         );
+      },
+    ),
+
+    GoRoute(
+      name: 'studentDetails',
+      path: '/student-details/:applicationId/:studentName/:degree/:courseName',
+      builder: (context, state) {
+        return AdminStudentDetailScreen(
+          applicationId:
+              int.tryParse(state.pathParameters['applicationId']!) ?? 0,
+          StudentName: Uri.decodeComponent(
+            state.pathParameters['studentName']!,
+          ),
+          degree: Uri.decodeComponent(state.pathParameters['degree']!),
+          courseName: Uri.decodeComponent(state.pathParameters['courseName']!),
+        );
+      },
+    ),
+
+    GoRoute(
+      name: 'editApplication',
+      path: '/edit-application',
+      builder: (context, state) {
+        final data = state.extra as Map<String, dynamic>?;
+
+        return EditApplicationForm(existingData: data);
+      },
+    ),
+
+    GoRoute(
+      name: 'adminEditForm',
+      path: '/doctor_profile/:userId',
+      builder: (context, state) {
+        final userId = state.pathParameters['userId']!;
+        return AdminEditForm(userId: userId);
+      },
+    ),
+    GoRoute(
+      name: 'pdfViewer',
+      path: '/pdf-viewer/:url',
+      builder: (context, state) {
+        final url = Uri.decodeComponent(state.pathParameters['url']!);
+        final color = state.extra as Color? ?? Colors.blue;
+
+        return PdfViewerPage(url: url, color: color);
       },
     ),
   ],

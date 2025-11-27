@@ -269,12 +269,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     icon: Icons.analytics,
                     subtitle: 'Add new student application',
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AdminApplicationForm(),
-                        ),
-                      );
+                      if (kIsWeb) {
+                        context.go('/create-student-form');
+                      } else {
+                        context.push('/create-student-form');
+                      }
                     },
                   ),
                   const SizedBox(height: 20),
@@ -284,10 +283,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     icon: Icons.search,
                     subtitle: 'Locate student information',
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => SearchPage()),
-                      );
+                      if (kIsWeb) {
+                        context.go('/search-doctors');
+                      } else {
+                        context.push('/search-doctors');
+                      }
                     },
                   ),
                   const SizedBox(height: 20),
@@ -311,12 +311,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     icon: Icons.analytics,
                     subtitle: 'Add here',
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => JobNotificationForm(),
-                        ),
-                      );
+                      if (kIsWeb) {
+                        context.go('/add_job');
+                      } else {
+                        context.push('/add_job');
+                      }
                     },
                   ),
 
@@ -327,12 +326,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     icon: Icons.analytics,
                     subtitle: 'Manage useres',
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => UserManagementPage(),
-                        ),
-                      );
+                      if (kIsWeb) {
+                        context.go('/manage_users');
+                      } else {
+                        context.push('/manage_users');
+                      }
                     },
                   ),
 
@@ -343,12 +341,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     icon: Icons.analytics,
                     subtitle: 'College Interests',
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => InterestsPage(),
-                        ),
-                      );
+                      if (kIsWeb) {
+                        context.go('/college_interests');
+                      } else {
+                        context.push('/college_interests');
+                      }
                     },
                   ),
                   const SizedBox(height: 30),
@@ -358,12 +355,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     icon: Icons.analytics,
                     subtitle: 'Manage logins',
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => LoginLogsPage(),
-                        ),
-                      );
+                      if (kIsWeb) {
+                        context.go('/login-tracks');
+                      } else {
+                        context.push('/login-tracks');
+                      }
                     },
                   ),
                   //               const SizedBox(height: 30),

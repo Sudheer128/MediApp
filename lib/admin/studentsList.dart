@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:medicalapp/admin/collegeStudentsform.dart';
@@ -89,18 +90,23 @@ class _CourseDetailsScreenState extends State<AdminCourseDetailsScreen> {
         final applicationId = student['application'];
         final studentName = student['name'] ?? '';
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (_) => AdminStudentDetailScreen(
-                  applicationId: applicationId,
-                  StudentName: studentName,
-                  courseName: widget.courseName,
-                  degree: widget.degree,
-                ),
-          ),
-        );
+        if (kIsWeb) {
+          context.go(
+            '/student-details/'
+            '${applicationId.toString()}/'
+            '${Uri.encodeComponent(studentName)}/'
+            '${Uri.encodeComponent(widget.degree)}/'
+            '${Uri.encodeComponent(widget.courseName)}',
+          );
+        } else {
+          context.push(
+            '/student-details/'
+            '${applicationId.toString()}/'
+            '${Uri.encodeComponent(studentName)}/'
+            '${Uri.encodeComponent(widget.degree)}/'
+            '${Uri.encodeComponent(widget.courseName)}',
+          );
+        }
       },
       child: StudentCard(student: student),
     );

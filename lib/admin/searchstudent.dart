@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/admin/Adminedit_form.dart';
 import 'package:medicalapp/pdf.dart';
@@ -722,6 +723,16 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
     );
   }
 
+  void openPdf(BuildContext context, String url, {Color color = Colors.blue}) {
+    final encodedUrl = Uri.encodeComponent(url);
+
+    if (kIsWeb) {
+      context.go('/pdf-viewer/$encodedUrl', extra: color);
+    } else {
+      context.push('/pdf-viewer/$encodedUrl', extra: color);
+    }
+  }
+
   // Resume/Documents Section
   Future<void> _launchURL(BuildContext context, String url) async {
     if (kIsWeb) {
@@ -734,12 +745,7 @@ class _StudentDetailScreenState extends State<AdminEditForm> {
         );
       }
     } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PdfViewerPage(url: url, color: Colors.blue),
-        ),
-      );
+      openPdf(context, url, color: Colors.blue);
     }
   }
 
