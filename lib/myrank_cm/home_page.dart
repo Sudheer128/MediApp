@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:medicalapp/admin/form_page.dart';
@@ -247,12 +248,17 @@ class _UserHomePageState extends State<CmHomePage> {
                     icon: Icons.analytics,
                     subtitle: 'Add new student application',
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AdminApplicationForm(),
-                        ),
-                      );
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) => AdminApplicationForm(),
+                      //   ),
+                      // );
+                      if (kIsWeb) {
+                        context.go('/create-student-form');
+                      } else {
+                        context.push('/create-student-form');
+                      }
                     },
                   ),
                   const SizedBox(height: 20),
@@ -262,10 +268,15 @@ class _UserHomePageState extends State<CmHomePage> {
                     icon: Icons.search,
                     subtitle: 'Locate student information',
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => CmSearchPage()),
-                      );
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(builder: (context) => CmSearchPage()),
+                      // );
+                      if (kIsWeb) {
+                        context.go('/search-doctors');
+                      } else {
+                        context.push('/search-doctors');
+                      }
                     },
                   ),
                   const SizedBox(height: 20),
@@ -275,12 +286,17 @@ class _UserHomePageState extends State<CmHomePage> {
                     icon: Icons.manage_accounts_outlined,
                     subtitle: 'Manage users assigned to you',
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CmManagementPage(),
-                        ),
-                      );
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) => CmManagementPage(),
+                      //   ),
+                      // );
+                      if (kIsWeb) {
+                        context.go('/cm_manageusers');
+                      } else {
+                        context.push('/cm_manageusers');
+                      }
                     },
                   ),
                   const SizedBox(height: 20),
@@ -290,12 +306,17 @@ class _UserHomePageState extends State<CmHomePage> {
                     icon: Icons.group,
                     subtitle: 'Colleges that are interested in doctors',
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CmInterestsPage(),
-                        ),
-                      );
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) => CmInterestsPage(),
+                      //   ),
+                      // );
+                      if (kIsWeb) {
+                        context.go('/cm_collegeinterspage');
+                      } else {
+                        context.push('/cm_collegeinterspage');
+                      }
                     },
                   ),
 
@@ -306,12 +327,17 @@ class _UserHomePageState extends State<CmHomePage> {
                     icon: Icons.medical_services_outlined,
                     subtitle: 'List of Doctors in Particular Courses',
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CmCollegeDegreesScreen(),
-                        ),
-                      );
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) => CmCollegeDegreesScreen(),
+                      //   ),
+                      // );
+                      if (kIsWeb) {
+                        context.go('/cm_collegedegreescreen');
+                      } else {
+                        context.push('/cm_collegedegreescreen');
+                      }
                     },
                   ),
                 ],
@@ -339,6 +365,7 @@ class MyRankCMHomePage extends StatelessWidget {
         // // CollegeDegreesScreen(), // Page 1
         // // AdminHomePage(),
         // // StudentListPage(),          // Page 3
+        CmCollegeDegreesScreen(),
         CMHospitalProfilePage(), // Page 4 (optional)
       ],
     );

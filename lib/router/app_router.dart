@@ -18,7 +18,14 @@ import 'package:medicalapp/edit_formAfterSave.dart';
 import 'package:medicalapp/extranew/jobdetails.dart';
 import 'package:medicalapp/extranew/jobnotification.dart';
 import 'package:medicalapp/index.dart';
+import 'package:medicalapp/myrankUser/UserCollegeDocList.dart';
+import 'package:medicalapp/myrankUser/UsersTable.dart';
 import 'package:medicalapp/myrankUser/homepage.dart';
+import 'package:medicalapp/myrankUser/search.dart';
+import 'package:medicalapp/myrankUser/userform_page.dart';
+import 'package:medicalapp/myrank_cm/CmusersTable.dart';
+import 'package:medicalapp/myrank_cm/cmCollegeDocList.dart';
+import 'package:medicalapp/myrank_cm/collegeInterests.dart';
 import 'package:medicalapp/myrank_cm/home_page.dart';
 import 'package:medicalapp/newUser.dart';
 import 'package:medicalapp/pdf.dart';
@@ -63,9 +70,30 @@ final Map<String, List<String>> roleAccess = {
 
   'doctor': ['/doctor', '/edit-form', '/edit-application', '/job-details/'],
 
-  'myrank_user': ['/user'],
+  'myrank_user': [
+    '/user',
+    '/user_adddoctor',
+    '/user_manageusers',
+    '/user_degreesdoctors',
+    '/user_searchstudents',
+    '/job-details/',
+    '/available-doctors',
+    '/student-details',
+    '/search-doctors',
+    '/doctor_profile',
+    '/create-student-form',
+  ],
 
-  'myrank_cm': ['/cm', '/available-doctors'],
+  'myrank_cm': [
+    '/cm',
+    '/available-doctors',
+    '/create-student-form',
+    '/search-doctors',
+    '/cm_manageusers',
+    '/cm_collegeinterspage',
+    '/cm_collegedegreescreen',
+    '/job-details/',
+  ],
 
   'guest': ['/'],
 };
@@ -122,10 +150,26 @@ final GoRouter appRouter = GoRouter(
 
     GoRoute(path: '/admin', builder: (_, __) => AdminDashboard()),
     GoRoute(path: '/college', builder: (_, __) => CollegeDashboard()),
-    GoRoute(path: '/user', builder: (_, __) => UserHomePage()),
+    GoRoute(path: '/user', builder: (_, __) => UserMainPage()),
     GoRoute(path: '/cm', builder: (_, __) => MyRankCMHomePage()),
     GoRoute(path: '/doctor', builder: (_, __) => DoctorDashboardApp()),
     GoRoute(path: '/approval', builder: (_, __) => ApprovalScreen()),
+    GoRoute(path: '/user_adddoctor', builder: (_, __) => UserApplicationForm()),
+    GoRoute(path: '/user_manageusers', builder: (_, __) => ManagementPage()),
+    GoRoute(path: '/cm_manageusers', builder: (_, __) => CmManagementPage()),
+    GoRoute(
+      path: '/cm_collegeinterspage',
+      builder: (_, __) => CmInterestsPage(),
+    ),
+    GoRoute(
+      path: '/cm_collegedegreescreen',
+      builder: (_, __) => CmCollegeDegreesScreen(),
+    ),
+    GoRoute(
+      path: '/user_degreesdoctors',
+      builder: (_, __) => UserCollegeDegreesScreen(),
+    ),
+    GoRoute(path: '/user_searchstudents', builder: (_, __) => UserSearchPage()),
 
     GoRoute(
       path: '/create-student-form',
