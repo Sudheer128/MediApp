@@ -50,30 +50,7 @@ class _MainLayoutState extends State<MainLayout> {
 
           const SizedBox(width: 20),
 
-          /// --------- SEARCH BAR ----------
-          if (widget.showSearchBar)
-            Expanded(
-              child: Container(
-                height: 36,
-                padding: const EdgeInsets.only(left: 10),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.search, color: Colors.grey),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        "Search...",
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          Expanded(child: Text('MyRank - MedConnect')),
 
           const SizedBox(width: 40),
 
