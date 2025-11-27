@@ -39,12 +39,13 @@ class _MainLayoutState extends State<MainLayout> {
         children: [
           /// --------- LOGO ----------
           Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: Colors.blue,
-              borderRadius: BorderRadius.circular(6),
+            padding: const EdgeInsets.all(1),
+
+            child: Image.asset(
+              'assets/logo.png', // Replace with the path to your asset image
+              width: 154, // Adjust size as needed
+              height: 154, // Adjust size as needed
             ),
-            child: const Icon(Icons.medical_services, color: Colors.white),
           ),
 
           const SizedBox(width: 20),
