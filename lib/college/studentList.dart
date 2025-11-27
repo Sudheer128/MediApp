@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:medicalapp/college/college_student_form.dart';
@@ -86,18 +87,18 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
         final applicationId = student['application'];
         final studentName = student['name'] ?? '';
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (_) => StudentDetailScreen(
-                  applicationId: applicationId,
-                  StudentName: studentName,
-                  courseName: widget.courseName,
-                  degree: widget.degree,
-                ),
-          ),
-        );
+        final url =
+            '/student_details/'
+            '${applicationId.toString()}/'
+            '${Uri.encodeComponent(studentName)}/'
+            '${Uri.encodeComponent(widget.degree)}/'
+            '${Uri.encodeComponent(widget.courseName)}';
+
+        if (kIsWeb) {
+          context.go(url); // Full URL change for Web
+        } else {
+          context.push(url); // Normal navigation for Mobile
+        }
       },
       child: StudentCard(student: student),
     );

@@ -11,7 +11,9 @@ import 'package:medicalapp/admin/search.dart';
 import 'package:medicalapp/admin/searchstudent.dart';
 import 'package:medicalapp/admin/studentsList.dart';
 import 'package:medicalapp/admin/userstable.dart';
+import 'package:medicalapp/college/college_student_form.dart';
 import 'package:medicalapp/college/collegedashboard.dart';
+import 'package:medicalapp/college/studentList.dart';
 import 'package:medicalapp/edit_formAfterSave.dart';
 import 'package:medicalapp/extranew/jobdetails.dart';
 import 'package:medicalapp/extranew/jobnotification.dart';
@@ -51,7 +53,12 @@ final Map<String, List<String>> roleAccess = {
     '/login-tracks',
   ],
 
-  'college': ['/college', '/available-doctors', '/doctor'],
+  'college': [
+    '/college',
+    '/available-doctors',
+    '/course-details',
+    '/student_details',
+  ],
 
   'doctor': ['/doctor', '/edit-form', '/edit-application', '/job-details/'],
 
@@ -121,7 +128,7 @@ final GoRouter appRouter = GoRouter(
 
     GoRoute(
       path: '/create-student-form',
-      builder: (_, __) => ApplicationForm(),
+      builder: (_, __) => AdminApplicationForm(),
     ),
 
     GoRoute(path: '/search-doctors', builder: (_, __) => SearchPage()),
@@ -195,6 +202,35 @@ final GoRouter appRouter = GoRouter(
         final color = state.extra as Color? ?? Colors.blue;
 
         return PdfViewerPage(url: url, color: color);
+      },
+    ),
+
+    ///////////////////////// COLLEGES
+    GoRoute(
+      path: '/course-details/:degree/:courseName',
+      builder: (context, state) {
+        final degree = Uri.decodeComponent(state.pathParameters['degree']!);
+        final courseName = Uri.decodeComponent(
+          state.pathParameters['courseName']!,
+        );
+
+        return CourseDetailsScreen(degree: degree, courseName: courseName);
+      },
+    ),
+
+    GoRoute(
+      name: 'studentDetailss',
+      path: '/student_details/:applicationId/:studentName/:degree/:courseName',
+      builder: (context, state) {
+        return StudentDetailScreen(
+          applicationId:
+              int.tryParse(state.pathParameters['applicationId']!) ?? 0,
+          StudentName: Uri.decodeComponent(
+            state.pathParameters['studentName']!,
+          ),
+          degree: Uri.decodeComponent(state.pathParameters['degree']!),
+          courseName: Uri.decodeComponent(state.pathParameters['courseName']!),
+        );
       },
     ),
   ],
