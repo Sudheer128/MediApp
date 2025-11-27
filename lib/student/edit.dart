@@ -290,6 +290,7 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
                 : int.tryParse(s['endorsements_count'].toString()) ?? 0;
         skill.softSkills = s['soft_skills'] ?? '';
         skill.interests = s['interests'] ?? '';
+        skill.loadData(); // <-- important
         skillsList.add(skill);
       }
     }
@@ -774,36 +775,31 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
 
             if (_isEditing) ...[
               TextFormField(
-                initialValue: skill.skillName,
+                controller: skill.skillNameController,
                 decoration: const InputDecoration(labelText: "Skill Name"),
-                onChanged: (v) => skill.skillName = v,
               ),
               const SizedBox(height: 12),
 
               TextFormField(
-                initialValue: skill.endorsementsCount.toString(),
+                controller: skill.endorsementController,
                 decoration: const InputDecoration(
                   labelText: "Endorsement Count",
                 ),
                 keyboardType: TextInputType.number,
-                onChanged:
-                    (v) => skill.endorsementsCount = int.tryParse(v) ?? 0,
               ),
               const SizedBox(height: 12),
 
               TextFormField(
-                initialValue: skill.softSkills,
+                controller: skill.softSkillController,
                 decoration: const InputDecoration(
                   labelText: "Soft Skills (comma separated)",
                 ),
-                onChanged: (v) => skill.softSkills = v,
               ),
               const SizedBox(height: 12),
 
               TextFormField(
-                initialValue: skill.interests,
+                controller: skill.interestsController,
                 decoration: const InputDecoration(labelText: "Interests"),
-                onChanged: (v) => skill.interests = v,
               ),
 
               Align(
@@ -2645,11 +2641,23 @@ class SkillModel {
   String softSkills = '';
   String interests = '';
 
+  final TextEditingController skillNameController = TextEditingController();
+  final TextEditingController endorsementController = TextEditingController();
+  final TextEditingController softSkillController = TextEditingController();
+  final TextEditingController interestsController = TextEditingController();
+
+  void loadData() {
+    skillNameController.text = skillName;
+    endorsementController.text = endorsementsCount.toString();
+    softSkillController.text = softSkills;
+    interestsController.text = interests;
+  }
+
   Map<String, dynamic> toJson() => {
-    'skill_name': skillName,
-    'endorsements_count': endorsementsCount,
-    'soft_skills': softSkills,
-    'interests': interests,
+    'skill_name': skillNameController.text,
+    'endorsements_count': int.tryParse(endorsementController.text) ?? 0,
+    'soft_skills': softSkillController.text,
+    'interests': interestsController.text,
   };
 }
 
