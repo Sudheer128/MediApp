@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
@@ -340,12 +341,11 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
               onPressed: () async {
                 final prefs = await SharedPreferences.getInstance();
                 final userId = prefs.getInt('userid') ?? 0;
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EditForm(applicationId: userId),
-                  ),
-                );
+                if (kIsWeb) {
+                  context.go('/edit-form/$userId');
+                } else {
+                  context.push('/edit-form/$userId');
+                }
               },
             ),
 
@@ -578,13 +578,11 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
                         () async {
                           final prefs = await SharedPreferences.getInstance();
                           final userId = prefs.getInt('userid') ?? 0;
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => EditForm(applicationId: userId),
-                            ),
-                          );
+                          if (kIsWeb) {
+                            context.go('/edit-form/$userId');
+                          } else {
+                            context.push('/edit-form/$userId');
+                          }
                         },
                       ),
                       Divider(height: 1),

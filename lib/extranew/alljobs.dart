@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/extranew/jobdetails.dart';
@@ -558,12 +560,11 @@ class JobCard extends StatelessWidget {
       ),
       child: InkWell(
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => JobDetailsPage(jobId: job['id']),
-            ),
-          );
+          if (kIsWeb) {
+            context.go('/job-details/${job['id']}');
+          } else {
+            context.push('/job-details/${job['id']}');
+          }
         },
         borderRadius: BorderRadius.circular(8),
         child: Padding(
@@ -726,13 +727,11 @@ class JobCard extends StatelessWidget {
                   ),
                   TextButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => JobDetailsPage(jobId: job['id']),
-                        ),
-                      );
+                      if (kIsWeb) {
+                        context.go('/job-details/${job['id']}');
+                      } else {
+                        context.push('/job-details/${job['id']}');
+                      }
                     },
                     style: TextButton.styleFrom(
                       foregroundColor: Color(0xFF0A66C2),

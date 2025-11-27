@@ -12,14 +12,23 @@ import 'package:medicalapp/admin/searchstudent.dart';
 import 'package:medicalapp/admin/studentsList.dart';
 import 'package:medicalapp/admin/userstable.dart';
 import 'package:medicalapp/college/collegedashboard.dart';
+<<<<<<< HEAD
 import 'package:medicalapp/extranew/jobnotification.dart';
+=======
+import 'package:medicalapp/edit_formAfterSave.dart';
+import 'package:medicalapp/extranew/jobdetails.dart';
+>>>>>>> 52235f6ff29e365ab6026d3a8a3d0169df949368
 import 'package:medicalapp/index.dart';
 import 'package:medicalapp/myrankUser/homepage.dart';
 import 'package:medicalapp/myrank_cm/home_page.dart';
 import 'package:medicalapp/newUser.dart';
+<<<<<<< HEAD
 import 'package:medicalapp/pdf.dart';
 import 'package:medicalapp/student/edit.dart';
 import 'package:medicalapp/student/form_page.dart';
+=======
+import 'package:medicalapp/student/edit.dart';
+>>>>>>> 52235f6ff29e365ab6026d3a8a3d0169df949368
 import 'package:medicalapp/student/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -51,7 +60,7 @@ final Map<String, List<String>> roleAccess = {
 
   'college': ['/college', '/available-doctors', '/doctor'],
 
-  'doctor': ['/doctor'],
+  'doctor': ['/doctor', '/edit-form', '/edit-application', '/job-details/'],
 
   'myrank_user': ['/user'],
 
@@ -86,6 +95,28 @@ final GoRouter appRouter = GoRouter(
   },
 
   routes: [
+    GoRoute(
+      path: '/edit-form/:id',
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id']!) ?? 0;
+        return EditForm(applicationId: id);
+      },
+    ),
+    GoRoute(
+      path: '/edit-application',
+      builder: (context, state) {
+        final data = state.extra as Map<String, dynamic>;
+        return EditApplicationForm(existingData: data);
+      },
+    ),
+    GoRoute(
+      path: '/job-details/:id',
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id']!) ?? 0;
+        return JobDetailsPage(jobId: id);
+      },
+    ),
+
     GoRoute(path: '/', builder: (_, __) => Index()),
 
     GoRoute(path: '/admin', builder: (_, __) => AdminDashboard()),

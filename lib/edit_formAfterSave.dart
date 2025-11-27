@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb, Uint8List;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -1138,12 +1139,11 @@ class _StudentDetailScreenState extends State<EditForm> {
   void _navigateToEdit() {
     print(data);
     if (data != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => EditApplicationForm(existingData: data),
-        ),
-      );
+      if (kIsWeb) {
+        context.go('/edit-application', extra: data);
+      } else {
+        context.push('/edit-application', extra: data);
+      }
     }
   }
 
