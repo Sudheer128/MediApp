@@ -353,6 +353,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
     final userId = prefs.getInt('userid') ?? 0;
 
     final payload = {
+      'userid': 0,
       'name': _nameController.text,
       'phone': int.tryParse(_phoneController.text) ?? 0,
       'email': _emailController.text,
