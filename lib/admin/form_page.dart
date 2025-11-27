@@ -350,10 +350,11 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
 
   Future<bool> _submitToBackend() async {
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt('userid') ?? 0;
-
+    final savedName = prefs.getString('name') ?? 'CM';
+    final user_type = prefs.getString("role") ?? 'CM';
     final payload = {
-      'userid': 0,
+      'role': user_type,
+      'cmname': savedName,
       'name': _nameController.text,
       'phone': int.tryParse(_phoneController.text) ?? 0,
       'email': _emailController.text,
