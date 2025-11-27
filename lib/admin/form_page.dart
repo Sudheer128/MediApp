@@ -61,6 +61,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
   // Separate lists for PG and SS details
   List<EducationDetail> pgDetails = [];
   List<EducationDetail> ssDetails = [];
+  List<SkillModel> skillsList = [SkillModel()];
 
   // Scroll & Keys for Drawer navigation
   final ScrollController _scrollController = ScrollController();
@@ -81,6 +82,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
   // Certificates Section
   List<CertificateModel> certificates = [CertificateModel()];
   bool _hasCertificates = false;
+  List<MembershipModel> memberships = [MembershipModel()];
 
   // Conference & CME Section
   List<ConferenceModel> conferences = [ConferenceModel()];
@@ -348,11 +350,9 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
 
   Future<bool> _submitToBackend() async {
     final prefs = await SharedPreferences.getInstance();
-    final savedName = prefs.getString('name') ?? 'CM';
-    final user_type = prefs.getString("role") ?? 'CM';
+    final userId = prefs.getInt('userid') ?? 0;
+
     final payload = {
-      'role': user_type,
-      'cmname': savedName,
       'name': _nameController.text,
       'phone': int.tryParse(_phoneController.text) ?? 0,
       'email': _emailController.text,
@@ -388,6 +388,8 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
           _hasConferences
               ? conferences.map((c) => c.toJson()).toList()
               : <dynamic>[],
+      'memberships': memberships.map((m) => m.toJson()).toList(),
+      'skills': skillsList.map((s) => s.toJson()).toList(),
     };
 
     print(payload);
@@ -595,6 +597,196 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
     }
   }
 
+  Widget _buildMembershipsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ...memberships.asMap().entries.map((entry) {
+          int index = entry.key;
+          MembershipModel m = entry.value;
+          return _buildMembershipItem(m, index);
+        }),
+
+        const SizedBox(height: 16),
+
+        if (_isEditing)
+          ElevatedButton.icon(
+            icon: const Icon(Icons.add),
+            label: const Text("Add Membership"),
+            onPressed: () {
+              setState(() => memberships.add(MembershipModel()));
+            },
+          ),
+      ],
+    );
+  }
+
+  Widget _buildMembershipItem(MembershipModel m, int index) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Membership ${index + 1}",
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+
+            if (_isEditing) ...[
+              TextFormField(
+                initialValue: m.associationName,
+                decoration: const InputDecoration(
+                  labelText: "Association Name",
+                ),
+                onChanged: (v) => m.associationName = v,
+                validator: (v) => (v == null || v.isEmpty) ? "Required" : null,
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                initialValue: m.role,
+                decoration: const InputDecoration(labelText: "Role"),
+                onChanged: (v) => m.role = v,
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                initialValue: m.membershipId,
+                decoration: const InputDecoration(labelText: "Membership ID"),
+                onChanged: (v) => m.membershipId = v,
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                initialValue: m.leadershipRoles,
+                decoration: const InputDecoration(labelText: "Leadership Role"),
+                onChanged: (v) => m.leadershipRoles = v,
+              ),
+            ] else ...[
+              _buildInfoRow("Association", m.associationName),
+              _buildInfoRow("Role", m.role),
+              _buildInfoRow("Membership ID", m.membershipId),
+              _buildInfoRow("Leadership Role", m.leadershipRoles),
+            ],
+
+            if (_isEditing)
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    setState(() => memberships.removeAt(index));
+                  },
+                  child: const Text("Remove"),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSkillsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ...skillsList.asMap().entries.map((entry) {
+          int index = entry.key;
+          SkillModel skill = entry.value;
+          return _buildSkillItem(skill, index);
+        }),
+
+        const SizedBox(height: 16),
+
+        if (_isEditing)
+          ElevatedButton.icon(
+            icon: const Icon(Icons.add),
+            label: const Text("Add Skill"),
+            onPressed: () {
+              setState(() => skillsList.add(SkillModel()));
+            },
+          ),
+      ],
+    );
+  }
+
+  Widget _buildSkillItem(SkillModel skill, int index) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Skill ${index + 1}",
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+
+            if (_isEditing) ...[
+              // Skill Name
+              TextFormField(
+                initialValue: skill.skillName,
+                decoration: const InputDecoration(labelText: "Skill Name"),
+                onChanged: (v) => skill.skillName = v,
+                validator: (v) => v == null || v.isEmpty ? "Required" : null,
+              ),
+              const SizedBox(height: 16),
+
+              // Endorsements Count
+              TextFormField(
+                initialValue: skill.endorsementsCount.toString(),
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: "Endorsements Count",
+                ),
+                onChanged:
+                    (v) => skill.endorsementsCount = int.tryParse(v) ?? 0,
+              ),
+              const SizedBox(height: 16),
+
+              // Soft Skills
+              TextFormField(
+                initialValue: skill.softSkills,
+                decoration: const InputDecoration(
+                  labelText: "Soft Skills (comma separated)",
+                ),
+                onChanged: (v) => skill.softSkills = v,
+              ),
+              const SizedBox(height: 16),
+
+              // Interests
+              TextFormField(
+                initialValue: skill.interests,
+                decoration: const InputDecoration(
+                  labelText: "Interests (Networking)",
+                ),
+                onChanged: (v) => skill.interests = v,
+              ),
+
+              // Remove button
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => setState(() => skillsList.removeAt(index)),
+                  child: const Text("Remove"),
+                ),
+              ),
+            ] else ...[
+              _buildInfoRow("Skill", skill.skillName),
+              _buildInfoRow("Endorsements", skill.endorsementsCount.toString()),
+              _buildInfoRow("Soft Skills", skill.softSkills),
+              _buildInfoRow("Interests", skill.interests),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -631,19 +823,19 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
                             const SizedBox(height: 20),
                             ElevatedButton(
                               onPressed: () async {
-                                // final prefs =
-                                //     await SharedPreferences.getInstance();
-                                // final userId = prefs.getInt('userid') ?? 0;
-                                // Navigator.pop(context); // close drawer
+                                final prefs =
+                                    await SharedPreferences.getInstance();
+                                final userId = prefs.getInt('userid') ?? 0;
+                                Navigator.pop(context); // close drawer
 
-                                // Navigator.push(
-                                //   context,
-                                //   MaterialPageRoute(
-                                //     builder:
-                                //         (context) =>
-                                //             EditForm(applicationId: userId),
-                                //   ),
-                                // );
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) =>
+                                            EditForm(applicationId: userId),
+                                  ),
+                                );
                               },
                               child: const Text('View Profile'),
                             ),
@@ -764,6 +956,17 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
                                   "conferences",
                                 ),
                                 _buildConferencesSection(),
+                                const SizedBox(height: 24),
+
+                                _buildSectionHeader(
+                                  "Memberships & Affiliations",
+                                  "memberships",
+                                ),
+                                _buildMembershipsSection(),
+
+                                const SizedBox(height: 24),
+                                _buildSectionHeader("Skills", "skills"),
+                                _buildSkillsSection(),
                                 const SizedBox(height: 24),
 
                                 // Resume Upload Section
@@ -2344,5 +2547,33 @@ class ConferenceModel {
     'organizer': organizer,
     'date': convertDateToBackendFormat(dateController.text),
     'uploadLink': uploadLink,
+  };
+}
+
+class MembershipModel {
+  String associationName = '';
+  String role = '';
+  String membershipId = '';
+  String leadershipRoles = '';
+
+  Map<String, dynamic> toJson() => {
+    'association_name': associationName,
+    'role': role,
+    'membership_id': membershipId,
+    'leadership_roles': leadershipRoles,
+  };
+}
+
+class SkillModel {
+  String skillName = '';
+  int endorsementsCount = 0;
+  String softSkills = '';
+  String interests = '';
+
+  Map<String, dynamic> toJson() => {
+    'skill_name': skillName,
+    'endorsements_count': endorsementsCount,
+    'soft_skills': softSkills,
+    'interests': interests,
   };
 }

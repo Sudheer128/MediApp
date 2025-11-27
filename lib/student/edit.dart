@@ -47,6 +47,9 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
   // Separate lists for PG and SS details
   List<EducationDetail> pgDetails = [];
   List<EducationDetail> ssDetails = [];
+  List<SkillModel> skillsList = [SkillModel()];
+  List<MembershipModel> memberships = [MembershipModel()];
+  bool _hasMemberships = false;
 
   // Scroll & Keys for Drawer navigation
   final ScrollController _scrollController = ScrollController();
@@ -268,6 +271,45 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
         conf.dateController.text = _formatDateForController(c['date']);
         conf.uploadLink = c['uploadLink'] ?? '';
         conferences.add(conf);
+      }
+    }
+
+    // ---------------- SKILLS ----------------
+    skillsList.clear();
+    List<dynamic>? skillsData = data['skills'];
+
+    if (skillsData == null || skillsData.isEmpty) {
+      skillsList.add(SkillModel()); // Add empty entry for UI
+    } else {
+      for (var s in skillsData) {
+        final skill = SkillModel();
+        skill.skillName = s['skill_name'] ?? '';
+        skill.endorsementsCount =
+            (s['endorsements_count'] ?? 0) is int
+                ? s['endorsements_count']
+                : int.tryParse(s['endorsements_count'].toString()) ?? 0;
+        skill.softSkills = s['soft_skills'] ?? '';
+        skill.interests = s['interests'] ?? '';
+        skillsList.add(skill);
+      }
+    }
+
+    // ---------------- MEMBERSHIPS ----------------
+    memberships.clear();
+    List<dynamic>? membershipData = data['memberships'];
+
+    if (membershipData == null || membershipData.isEmpty) {
+      _hasMemberships = false;
+      memberships.add(MembershipModel());
+    } else {
+      _hasMemberships = true;
+      for (var m in membershipData) {
+        final member = MembershipModel();
+        member.associationName = m['association_name'] ?? '';
+        member.role = m['role'] ?? '';
+        member.membershipId = m['membership_id'] ?? '';
+        member.leadershipRoles = m['leadership_roles'] ?? '';
+        memberships.add(member);
       }
     }
 
@@ -532,6 +574,10 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
 
       'conferences':
           _hasConferences ? conferences.map((c) => c.toJson()).toList() : [],
+      'skills': skillsList.map((s) => s.toJson()).toList(),
+
+      'memberships':
+          _hasMemberships ? memberships.map((m) => m.toJson()).toList() : [],
     };
 
     final uri = Uri.parse('$baseurl/application/update');
@@ -688,6 +734,215 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
     return course.duration;
   }
 
+  Widget _buildSkillsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ...skillsList.asMap().entries.map((entry) {
+          int index = entry.key;
+          SkillModel skill = entry.value;
+          return _buildSkillItem(skill, index);
+        }),
+
+        const SizedBox(height: 16),
+
+        if (_isEditing)
+          ElevatedButton.icon(
+            icon: const Icon(Icons.add),
+            label: const Text("Add Skill"),
+            onPressed: () {
+              setState(() => skillsList.add(SkillModel()));
+            },
+          ),
+      ],
+    );
+  }
+
+  Widget _buildSkillItem(SkillModel skill, int index) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Skill ${index + 1}",
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+
+            if (_isEditing) ...[
+              TextFormField(
+                initialValue: skill.skillName,
+                decoration: const InputDecoration(labelText: "Skill Name"),
+                onChanged: (v) => skill.skillName = v,
+              ),
+              const SizedBox(height: 12),
+
+              TextFormField(
+                initialValue: skill.endorsementsCount.toString(),
+                decoration: const InputDecoration(
+                  labelText: "Endorsement Count",
+                ),
+                keyboardType: TextInputType.number,
+                onChanged:
+                    (v) => skill.endorsementsCount = int.tryParse(v) ?? 0,
+              ),
+              const SizedBox(height: 12),
+
+              TextFormField(
+                initialValue: skill.softSkills,
+                decoration: const InputDecoration(
+                  labelText: "Soft Skills (comma separated)",
+                ),
+                onChanged: (v) => skill.softSkills = v,
+              ),
+              const SizedBox(height: 12),
+
+              TextFormField(
+                initialValue: skill.interests,
+                decoration: const InputDecoration(labelText: "Interests"),
+                onChanged: (v) => skill.interests = v,
+              ),
+
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => setState(() => skillsList.removeAt(index)),
+                  child: const Text("Remove"),
+                ),
+              ),
+            ] else ...[
+              _buildInfoRow("Skill", skill.skillName),
+              _buildInfoRow("Endorsements", skill.endorsementsCount.toString()),
+              _buildInfoRow("Soft Skills", skill.softSkills),
+              _buildInfoRow("Interests", skill.interests),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMembershipsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Do you have Memberships or Affiliations?"),
+
+        Row(
+          children: [
+            Expanded(
+              child: RadioListTile<bool>(
+                title: const Text("Yes"),
+                value: true,
+                groupValue: _hasMemberships,
+                onChanged: (v) => setState(() => _hasMemberships = v!),
+              ),
+            ),
+            Expanded(
+              child: RadioListTile<bool>(
+                title: const Text("No"),
+                value: false,
+                groupValue: _hasMemberships,
+                onChanged: (v) {
+                  setState(() {
+                    _hasMemberships = v!;
+                    if (!v) memberships.clear();
+                  });
+                },
+              ),
+            ),
+          ],
+        ),
+
+        if (_hasMemberships) ...[
+          ...memberships.asMap().entries.map(
+            (e) => _buildMembershipItem(e.value, e.key),
+          ),
+          if (_isEditing)
+            ElevatedButton.icon(
+              icon: const Icon(Icons.add),
+              label: const Text("Add Membership"),
+              onPressed:
+                  () => setState(() => memberships.add(MembershipModel())),
+            ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildMembershipItem(MembershipModel m, int index) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Membership ${index + 1}",
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+
+            if (_isEditing) ...[
+              TextFormField(
+                initialValue: m.associationName,
+                decoration: const InputDecoration(
+                  labelText: "Association Name (IMA, CSI, etc.)",
+                ),
+                onChanged: (v) => m.associationName = v,
+              ),
+              const SizedBox(height: 12),
+
+              TextFormField(
+                initialValue: m.role,
+                decoration: const InputDecoration(
+                  labelText: "Role (Member, Fellow, etc.)",
+                ),
+                onChanged: (v) => m.role = v,
+              ),
+              const SizedBox(height: 12),
+
+              TextFormField(
+                initialValue: m.membershipId,
+                decoration: const InputDecoration(
+                  labelText: "Membership ID (optional)",
+                ),
+                onChanged: (v) => m.membershipId = v,
+              ),
+              const SizedBox(height: 12),
+
+              TextFormField(
+                initialValue: m.leadershipRoles,
+                decoration: const InputDecoration(
+                  labelText:
+                      "Leadership Roles (President, Committee Member, etc.)",
+                ),
+                onChanged: (v) => m.leadershipRoles = v,
+              ),
+
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => setState(() => memberships.removeAt(index)),
+                  child: const Text("Remove"),
+                ),
+              ),
+            ] else ...[
+              _buildInfoRow("Association", m.associationName),
+              _buildInfoRow("Role", m.role),
+              _buildInfoRow("Membership ID", m.membershipId),
+              _buildInfoRow("Leadership", m.leadershipRoles),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -792,6 +1047,14 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
 
               _buildSectionHeader("Conferences / CME", "conferences"),
               _buildConferencesSection(),
+
+              const SizedBox(height: 24),
+              _buildSectionHeader("Skills", "skills"),
+              _buildSkillsSection(),
+              const SizedBox(height: 24),
+
+              _buildSectionHeader("Memberships & Affiliations", "memberships"),
+              _buildMembershipsSection(),
 
               // Resume Upload Section
               _buildSectionHeader('Resume Upload', 'resume'),
@@ -2373,5 +2636,33 @@ class ConferenceModel {
     'organizer': organizer,
     'date': convertDateToBackendFormat(dateController.text),
     'uploadLink': uploadLink,
+  };
+}
+
+class SkillModel {
+  String skillName = '';
+  int endorsementsCount = 0;
+  String softSkills = '';
+  String interests = '';
+
+  Map<String, dynamic> toJson() => {
+    'skill_name': skillName,
+    'endorsements_count': endorsementsCount,
+    'soft_skills': softSkills,
+    'interests': interests,
+  };
+}
+
+class MembershipModel {
+  String associationName = '';
+  String role = ''; // Member / Fellow / Committee Member
+  String membershipId = '';
+  String leadershipRoles = '';
+
+  Map<String, dynamic> toJson() => {
+    'association_name': associationName,
+    'role': role,
+    'membership_id': membershipId,
+    'leadership_roles': leadershipRoles,
   };
 }

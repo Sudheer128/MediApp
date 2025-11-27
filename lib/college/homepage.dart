@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:medicalapp/college/college_profile.dart';
 import 'package:medicalapp/college/collegeintrests.dart';
@@ -313,14 +315,14 @@ class _DegreesScreenState extends State<CollegeDegreesScreen> {
   Widget _buildCourseCard(String degree, String courseName, int studentCount) {
     return InkWell(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (context) =>
-                    CourseDetailsScreen(degree: degree, courseName: courseName),
-          ),
-        );
+        final path =
+            '/course-details/${Uri.encodeComponent(degree)}/${Uri.encodeComponent(courseName)}';
+
+        if (kIsWeb) {
+          context.go(path); // Replace full URL (web-style navigation)
+        } else {
+          context.push(path); // Stack navigation for mobile apps
+        }
       },
       borderRadius: BorderRadius.circular(8),
       child: Container(
