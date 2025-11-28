@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:medicalapp/googlesignin.dart';
 import 'package:medicalapp/index.dart';
 
@@ -20,12 +21,12 @@ class ApprovalScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 signOutGoogle();
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => Index()),
-                  (Route<dynamic> route) => false, // Remove all previous routes
-                );
-                // context.go('/login');
+                // Navigator.pushAndRemoveUntil(
+                //   context,
+                //   MaterialPageRoute(builder: (context) => Index()),
+                //   (Route<dynamic> route) => false, // Remove all previous routes
+                // );
+                context.go('/');
               },
               child: const Text('Logout'),
             ),

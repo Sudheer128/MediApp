@@ -329,149 +329,135 @@ class _UserManagementPageState extends State<ManagementPage> {
               ? const Center(child: CircularProgressIndicator())
               : Padding(
                 padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    TextField(
-                      decoration: const InputDecoration(
-                        hintText: 'Search users...',
-                        prefixIcon: Icon(Icons.search),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        decoration: const InputDecoration(
+                          hintText: 'Search users...',
+                          prefixIcon: Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                          ),
                         ),
+                        onChanged: _filterUsers,
                       ),
-                      onChanged: _filterUsers,
-                    ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: Scrollbar(
-                        thumbVisibility: true,
-                        controller: _scrollController,
+                      const SizedBox(height: 16),
+                      // Wrapping DataTable with SingleChildScrollView for horizontal scrolling
+                      Center(
                         child: SingleChildScrollView(
                           controller: _scrollController,
                           scrollDirection: Axis.horizontal,
-                          child: Column(
-                            children: [
-                              DataTable(
-                                sortColumnIndex: _sortColumnIndex,
-                                sortAscending: _sortAscending,
-                                columns: [
-                                  DataColumn(
-                                    label: const Text('User ID'),
-                                    numeric: true,
-                                    onSort:
-                                        (i, asc) =>
-                                            _sort<num>((u) => u.userId, i, asc),
-                                  ),
-                                  DataColumn(
-                                    label: const Text('Name'),
-                                    onSort:
-                                        (i, asc) => _sort<String>(
-                                          (u) => u.name,
-                                          i,
-                                          asc,
-                                        ),
-                                  ),
-                                  DataColumn(
-                                    label: const Text('Email'),
-                                    onSort:
-                                        (i, asc) => _sort<String>(
-                                          (u) => u.email,
-                                          i,
-                                          asc,
-                                        ),
-                                  ),
-                                  DataColumn(
-                                    label: const Text('Role'),
-                                    onSort:
-                                        (i, asc) => _sort<String>(
-                                          (u) => u.role,
-                                          i,
-                                          asc,
-                                        ),
-                                  ),
-                                  const DataColumn(label: Text('CM Name')),
-                                  DataColumn(
-                                    label: const Text('Created At'),
-                                    onSort:
-                                        (i, asc) => _sort<String>(
-                                          (u) => u.createdAt,
-                                          i,
-                                          asc,
-                                        ),
-                                  ),
-                                ],
-                                rows:
-                                    _currentPageItems.map((user) {
-                                      final roleDropdownValue =
-                                          _roles.contains(user.role)
-                                              ? user.role
-                                              : 'not_assigned';
-                                      final cmDropdownValue =
-                                          _cmNames.contains(user.cmName)
-                                              ? user.cmName
-                                              : 'not_assigned';
-
-                                      return DataRow(
-                                        cells: [
-                                          DataCell(
-                                            Text(user.userId.toString()),
-                                          ),
-                                          DataCell(Text(user.name)),
-                                          DataCell(Text(user.email)),
-                                          DataCell(Text(user.role)),
-                                          DataCell(Text(user.cmName)),
-                                          DataCell(Text(user.createdAt)),
-                                        ],
-                                      );
-                                    }).toList(),
+                          child: DataTable(
+                            sortColumnIndex: _sortColumnIndex,
+                            sortAscending: _sortAscending,
+                            columns: [
+                              DataColumn(
+                                label: const Text('User ID'),
+                                numeric: true,
+                                onSort:
+                                    (i, asc) =>
+                                        _sort<num>((u) => u.userId, i, asc),
+                              ),
+                              DataColumn(
+                                label: const Text('Name'),
+                                onSort:
+                                    (i, asc) =>
+                                        _sort<String>((u) => u.name, i, asc),
+                              ),
+                              DataColumn(
+                                label: const Text('Email'),
+                                onSort:
+                                    (i, asc) =>
+                                        _sort<String>((u) => u.email, i, asc),
+                              ),
+                              DataColumn(
+                                label: const Text('Role'),
+                                onSort:
+                                    (i, asc) =>
+                                        _sort<String>((u) => u.role, i, asc),
+                              ),
+                              const DataColumn(label: Text('CM Name')),
+                              DataColumn(
+                                label: const Text('Created At'),
+                                onSort:
+                                    (i, asc) => _sort<String>(
+                                      (u) => u.createdAt,
+                                      i,
+                                      asc,
+                                    ),
                               ),
                             ],
+                            rows:
+                                _currentPageItems.map((user) {
+                                  return DataRow(
+                                    cells: [
+                                      DataCell(Text(user.userId.toString())),
+                                      DataCell(Text(user.name)),
+                                      DataCell(Text(user.email)),
+                                      DataCell(Text(user.role)),
+                                      DataCell(Text(user.cmName)),
+                                      DataCell(Text(user.createdAt)),
+                                    ],
+                                  );
+                                }).toList(),
                           ),
                         ),
                       ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                          icon: const Text(
-                            '<|',
-                            style: TextStyle(fontSize: 18),
+                      // Pagination Controls
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            icon: const Text(
+                              '<|',
+                              style: TextStyle(fontSize: 18),
+                            ),
+                            onPressed:
+                                _currentPage == 0 ? null : _goToFirstPage,
                           ),
-                          onPressed: _currentPage == 0 ? null : _goToFirstPage,
-                        ),
-                        IconButton(
-                          icon: const Text('<', style: TextStyle(fontSize: 18)),
-                          onPressed:
-                              _currentPage == 0 ? null : _goToPreviousPage,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                          child: Text(
-                            'Page ${_currentPage + 1} of $_totalPages',
+                          IconButton(
+                            icon: const Text(
+                              '<',
+                              style: TextStyle(fontSize: 18),
+                            ),
+                            onPressed:
+                                _currentPage == 0 ? null : _goToPreviousPage,
                           ),
-                        ),
-                        IconButton(
-                          icon: const Text('>', style: TextStyle(fontSize: 18)),
-                          onPressed:
-                              _currentPage >= _totalPages - 1
-                                  ? null
-                                  : _goToNextPage,
-                        ),
-                        IconButton(
-                          icon: const Text(
-                            '>|',
-                            style: TextStyle(fontSize: 18),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                            ),
+                            child: Text(
+                              'Page ${_currentPage + 1} of $_totalPages',
+                            ),
                           ),
-                          onPressed:
-                              _currentPage >= _totalPages - 1
-                                  ? null
-                                  : _goToLastPage,
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 20),
-                  ],
+                          IconButton(
+                            icon: const Text(
+                              '>',
+                              style: TextStyle(fontSize: 18),
+                            ),
+                            onPressed:
+                                _currentPage >= _totalPages - 1
+                                    ? null
+                                    : _goToNextPage,
+                          ),
+                          IconButton(
+                            icon: const Text(
+                              '>|',
+                              style: TextStyle(fontSize: 18),
+                            ),
+                            onPressed:
+                                _currentPage >= _totalPages - 1
+                                    ? null
+                                    : _goToLastPage,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
                 ),
               ),
       floatingActionButton: FloatingActionButton(

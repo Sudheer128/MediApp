@@ -39,40 +39,18 @@ class _MainLayoutState extends State<MainLayout> {
         children: [
           /// --------- LOGO ----------
           Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: Colors.blue,
-              borderRadius: BorderRadius.circular(6),
+            padding: const EdgeInsets.all(1),
+
+            child: Image.asset(
+              'assets/logo.png', // Replace with the path to your asset image
+              width: 154, // Adjust size as needed
+              height: 154, // Adjust size as needed
             ),
-            child: const Icon(Icons.medical_services, color: Colors.white),
           ),
 
           const SizedBox(width: 20),
 
-          /// --------- SEARCH BAR ----------
-          if (widget.showSearchBar)
-            Expanded(
-              child: Container(
-                height: 36,
-                padding: const EdgeInsets.only(left: 10),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.search, color: Colors.grey),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        "Search...",
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          Expanded(child: Text('MyRank - MedConnect')),
 
           const SizedBox(width: 40),
 

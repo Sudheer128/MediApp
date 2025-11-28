@@ -404,23 +404,20 @@ class _DegreesScreenState extends State<CollegeDegreesScreen> {
   }
 }
 
-class CollegeDashboard extends StatelessWidget {
-  const CollegeDashboard({super.key});
+// class CollegeDashboard extends StatelessWidget {
+//   const CollegeDashboard({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return MainLayout(
-      title: "College Dashboard",
+//   @override
+//   Widget build(BuildContext context) {
+//     return MainLayout(
+//       title: "College Dashboard",
 
-      pages: [
-        CollegeDegreesScreen(), // Page 1
-        AllJobsPage(),
-        CollegeInterestsPage(), // Page 2
-        // CollegeDegreesScreen(), // Page 1
-        HospitalProfilePage(),
-        // StudentListPage(),          // Page 3
-        // CollegeProfilePage(),       // Page 4 (optional)
-      ],
-    );
-  }
-}
+//       pages: [
+//         // CollegeDegreesScreen(), // Page 1
+//         // AllJobsPage(),
+//         // CollegeInterestsPage(), // Page 2
+//         // HospitalProfilePage(),
+//       ],
+//     );
+//   }
+// }

@@ -547,183 +547,182 @@ class _ApplicationFormState extends State<UserApplicationForm> {
     return Stack(
       children: [
         Scaffold(
-          drawer: Drawer(
-            child: SafeArea(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  return Column(
-                    children: [
-                      Expanded(
-                        child: SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.blue,
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      UserHomePage.primaryBlue,
-                                      UserHomePage.primaryBlue,
-                                    ],
-                                  ),
-                                ),
-                                padding: EdgeInsets.only(
-                                  top: 40,
-                                  left: 16,
-                                  bottom: 16,
-                                ),
-                                alignment: Alignment.bottomLeft,
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    SizedBox(height: 2),
-                                    Text(
-                                      'Admin User',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    Text(
-                                      _username != null
-                                          ? '$_username'
-                                          : 'Admin User',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              ListTile(
-                                leading: Icon(
-                                  Icons.home_filled,
-                                  color: UserHomePage.primaryBlue,
-                                ),
-                                title: const Text('Home'),
-                                onTap: () {
-                                  Navigator.pop(context);
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder:
-                                          (context) => const UserHomePage(),
-                                    ),
-                                  );
-                                },
-                              ),
-                              ListTile(
-                                leading: Icon(
-                                  Icons.manage_accounts_outlined,
-                                  color: UserHomePage.primaryBlue,
-                                ),
-                                title: const Text('Manage Users'),
-                                onTap: () {
-                                  Navigator.pop(context);
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => ManagementPage(),
-                                    ),
-                                  );
-                                },
-                              ),
-                              ListTile(
-                                leading: Icon(
-                                  Icons.group,
-                                  color: UserHomePage.primaryBlue,
-                                ),
-                                title: const Text('College Interests'),
-                                onTap: () {
-                                  Navigator.pop(context);
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => InterestsPage(),
-                                    ),
-                                  );
-                                },
-                              ),
-                              ListTile(
-                                leading: Icon(
-                                  Icons.format_align_left_sharp,
-                                  color: UserHomePage.primaryBlue,
-                                ),
-                                title: const Text('New Student Form'),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder:
-                                          (context) => UserApplicationForm(),
-                                    ),
-                                  );
-                                },
-                              ),
-                              ListTile(
-                                leading: Icon(
-                                  Icons.person,
-                                  color: UserHomePage.primaryBlue,
-                                ),
-                                title: const Text('Search Student'),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => UserSearchPage(),
-                                    ),
-                                  );
-                                },
-                              ),
-                              ListTile(
-                                leading: Icon(
-                                  Icons.person_pin_sharp,
-                                  color: UserHomePage.primaryBlue,
-                                ),
-                                title: const Text('Available Doctors'),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder:
-                                          (context) =>
-                                              UserCollegeDegreesScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                              // Add some space at bottom so Logout is separated on small screens
-                              const SizedBox(height: 24),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.logout, color: Colors.red),
-                        title: const Text(
-                          'Logout',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                        onTap: () {
-                          Navigator.pop(context);
-                          _logout(context);
-                        },
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-          ),
-
+          // drawer: Drawer(
+          //   child: SafeArea(
+          //     child: LayoutBuilder(
+          //       builder: (context, constraints) {
+          //         return Column(
+          //           children: [
+          //             Expanded(
+          //               child: SingleChildScrollView(
+          //                 child: Column(
+          //                   crossAxisAlignment: CrossAxisAlignment.stretch,
+          //                   children: [
+          //                     Container(
+          //                       decoration: BoxDecoration(
+          //                         color: Colors.blue,
+          //                         gradient: LinearGradient(
+          //                           begin: Alignment.topLeft,
+          //                           end: Alignment.bottomRight,
+          //                           colors: [
+          //                             UserHomePage.primaryBlue,
+          //                             UserHomePage.primaryBlue,
+          //                           ],
+          //                         ),
+          //                       ),
+          //                       padding: EdgeInsets.only(
+          //                         top: 40,
+          //                         left: 16,
+          //                         bottom: 16,
+          //                       ),
+          //                       alignment: Alignment.bottomLeft,
+          //                       child: Column(
+          //                         mainAxisAlignment: MainAxisAlignment.end,
+          //                         crossAxisAlignment: CrossAxisAlignment.start,
+          //                         children: [
+          //                           SizedBox(height: 2),
+          //                           Text(
+          //                             'Admin User',
+          //                             style: TextStyle(
+          //                               color: Colors.white,
+          //                               fontSize: 20,
+          //                               fontWeight: FontWeight.bold,
+          //                             ),
+          //                           ),
+          //                           Text(
+          //                             _username != null
+          //                                 ? '$_username'
+          //                                 : 'Admin User',
+          //                             style: TextStyle(
+          //                               color: Colors.white,
+          //                               fontSize: 20,
+          //                               fontWeight: FontWeight.bold,
+          //                             ),
+          //                           ),
+          //                         ],
+          //                       ),
+          //                     ),
+          //                     ListTile(
+          //                       leading: Icon(
+          //                         Icons.home_filled,
+          //                         color: UserHomePage.primaryBlue,
+          //                       ),
+          //                       title: const Text('Home'),
+          //                       onTap: () {
+          //                         Navigator.pop(context);
+          //                         Navigator.push(
+          //                           context,
+          //                           MaterialPageRoute(
+          //                             builder:
+          //                                 (context) => const UserHomePage(),
+          //                           ),
+          //                         );
+          //                       },
+          //                     ),
+          //                     ListTile(
+          //                       leading: Icon(
+          //                         Icons.manage_accounts_outlined,
+          //                         color: UserHomePage.primaryBlue,
+          //                       ),
+          //                       title: const Text('Manage Users'),
+          //                       onTap: () {
+          //                         Navigator.pop(context);
+          //                         Navigator.push(
+          //                           context,
+          //                           MaterialPageRoute(
+          //                             builder: (context) => ManagementPage(),
+          //                           ),
+          //                         );
+          //                       },
+          //                     ),
+          //                     ListTile(
+          //                       leading: Icon(
+          //                         Icons.group,
+          //                         color: UserHomePage.primaryBlue,
+          //                       ),
+          //                       title: const Text('College Interests'),
+          //                       onTap: () {
+          //                         Navigator.pop(context);
+          //                         Navigator.push(
+          //                           context,
+          //                           MaterialPageRoute(
+          //                             builder: (context) => InterestsPage(),
+          //                           ),
+          //                         );
+          //                       },
+          //                     ),
+          //                     ListTile(
+          //                       leading: Icon(
+          //                         Icons.format_align_left_sharp,
+          //                         color: UserHomePage.primaryBlue,
+          //                       ),
+          //                       title: const Text('New Student Form'),
+          //                       onTap: () {
+          //                         Navigator.push(
+          //                           context,
+          //                           MaterialPageRoute(
+          //                             builder:
+          //                                 (context) => UserApplicationForm(),
+          //                           ),
+          //                         );
+          //                       },
+          //                     ),
+          //                     ListTile(
+          //                       leading: Icon(
+          //                         Icons.person,
+          //                         color: UserHomePage.primaryBlue,
+          //                       ),
+          //                       title: const Text('Search Student'),
+          //                       onTap: () {
+          //                         Navigator.push(
+          //                           context,
+          //                           MaterialPageRoute(
+          //                             builder: (context) => UserSearchPage(),
+          //                           ),
+          //                         );
+          //                       },
+          //                     ),
+          //                     ListTile(
+          //                       leading: Icon(
+          //                         Icons.person_pin_sharp,
+          //                         color: UserHomePage.primaryBlue,
+          //                       ),
+          //                       title: const Text('Available Doctors'),
+          //                       onTap: () {
+          //                         Navigator.push(
+          //                           context,
+          //                           MaterialPageRoute(
+          //                             builder:
+          //                                 (context) =>
+          //                                     UserCollegeDegreesScreen(),
+          //                           ),
+          //                         );
+          //                       },
+          //                     ),
+          //                     // Add some space at bottom so Logout is separated on small screens
+          //                     const SizedBox(height: 24),
+          //                   ],
+          //                 ),
+          //               ),
+          //             ),
+          //             const Divider(height: 1),
+          //             ListTile(
+          //               leading: const Icon(Icons.logout, color: Colors.red),
+          //               title: const Text(
+          //                 'Logout',
+          //                 style: TextStyle(color: Colors.red),
+          //               ),
+          //               onTap: () {
+          //                 Navigator.pop(context);
+          //                 _logout(context);
+          //               },
+          //             ),
+          //           ],
+          //         );
+          //       },
+          //     ),
+          //   ),
+          // ),
           appBar: AppBar(
             title: const Text('Medical Professional Application Form'),
             backgroundColor: primaryBlue,
