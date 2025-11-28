@@ -704,6 +704,279 @@ class _StudentDetailScreenState extends State<EditForm> {
     );
   }
 
+  // Memberships Section
+  Widget buildMembershipsSection(List<dynamic> memberships) {
+    return buildLinkedInSection(
+      title: 'Professional Memberships',
+      onEdit: () {
+        // Edit memberships
+      },
+      content: Column(
+        children:
+            memberships.asMap().entries.map((entry) {
+              final membership = entry.value;
+              final isLast = entry.key == memberships.length - 1;
+              return Column(
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Icon(
+                          Icons.groups,
+                          color: Colors.indigo.shade700,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              membership['association_name'] ?? '',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            if (membership['role'] != null &&
+                                membership['role'].toString().isNotEmpty)
+                              Text(
+                                membership['role'],
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey.shade700,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            const SizedBox(height: 4),
+                            if (membership['membership_id'] != null &&
+                                membership['membership_id']
+                                    .toString()
+                                    .isNotEmpty)
+                              Text(
+                                'Member ID: ${membership['membership_id']}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            if (membership['leadership_roles'] != null &&
+                                membership['leadership_roles']
+                                    .toString()
+                                    .isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                'Leadership: ${membership['leadership_roles']}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade800,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (!isLast) ...[
+                    const SizedBox(height: 20),
+                    Divider(color: Colors.grey.shade300),
+                    const SizedBox(height: 20),
+                  ],
+                ],
+              );
+            }).toList(),
+      ),
+    );
+  }
+
+  // Skills Section
+  Widget buildSkillsSection(List<dynamic> skills) {
+    return buildLinkedInSection(
+      title: 'Skills & Expertise',
+      onEdit: () {
+        // Edit skills
+      },
+      content: Column(
+        children:
+            skills.asMap().entries.map((entry) {
+              final skill = entry.value;
+              final isLast = entry.key == skills.length - 1;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Main Skill
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade50,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.blue.shade200),
+                        ),
+                        child: Text(
+                          skill['skill_name'] ?? '',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.blue.shade700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      if (skill['endorsements_count'] != null &&
+                          skill['endorsements_count'] > 0)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.thumb_up,
+                                size: 14,
+                                color: Colors.grey.shade700,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${skill['endorsements_count']}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade700,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+
+                  // Soft Skills
+                  if (skill['soft_skills'] != null &&
+                      skill['soft_skills'].toString().isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      'Soft Skills:',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children:
+                          (skill['soft_skills'] as String)
+                              .split(',')
+                              .map((s) => s.trim())
+                              .where((s) => s.isNotEmpty)
+                              .map(
+                                (softSkill) => Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.shade50,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: Colors.green.shade200,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    softSkill,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.green.shade700,
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                    ),
+                  ],
+
+                  // Interests
+                  if (skill['interests'] != null &&
+                      skill['interests'].toString().isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      'Interests:',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children:
+                          (skill['interests'] as String)
+                              .split(',')
+                              .map((s) => s.trim())
+                              .where((s) => s.isNotEmpty)
+                              .map(
+                                (interest) => Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.shade50,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: Colors.orange.shade200,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    interest,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.orange.shade700,
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                    ),
+                  ],
+
+                  if (!isLast) ...[
+                    const SizedBox(height: 20),
+                    Divider(color: Colors.grey.shade300),
+                    const SizedBox(height: 20),
+                  ],
+                ],
+              );
+            }).toList(),
+      ),
+    );
+  }
+
   // Experience Item
   Widget buildExperienceItem(Map<String, dynamic> work, bool isLast) {
     return Column(
@@ -1494,6 +1767,10 @@ class _StudentDetailScreenState extends State<EditForm> {
                   children: [
                     if (data != null) buildProfileHeader(data!),
                     buildAboutSection(),
+                    // Skills Section - Add early in profile
+                    if (data?['skills'] != null &&
+                        (data!['skills'] as List).isNotEmpty)
+                      buildSkillsSection(data!['skills']),
                     if (data?['workExperiences'] != null &&
                         (data!['workExperiences'] as List).isNotEmpty)
                       buildWorkExperienceSection(data!['workExperiences']),
@@ -1510,6 +1787,10 @@ class _StudentDetailScreenState extends State<EditForm> {
                     if (data?['conferences'] != null &&
                         (data!['conferences'] as List).isNotEmpty)
                       buildConferencesSection(data!['conferences']),
+                    // Memberships Section
+                    if (data?['memberships'] != null &&
+                        (data!['memberships'] as List).isNotEmpty)
+                      buildMembershipsSection(data!['memberships']),
                     if (data?['papers'] != null &&
                         (data!['papers'] as List).isNotEmpty)
                       buildPublicationsSection(data!['papers']),
