@@ -121,7 +121,6 @@ class _ApplicationFormState extends State<UserApplicationForm> {
     _validityToController.dispose();
     _registrationNumberController.dispose();
     _userIdController.dispose();
-
     super.dispose();
   }
 

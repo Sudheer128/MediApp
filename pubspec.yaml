@@ -51,13 +51,18 @@ dependencies:
   html: ^0.15.6
   image_editor_plus: ^1.0.8
   crop_your_image: ^2.0.0
-  go_router: ^17.0.0
-  go_router_builder: ^4.1.1
+  # go_router: ^17.0.0
+  # go_router_builder: ^4.1.1
   
- 
   source_gen: ^4.1.1
   analyzer: ^8.1.1
+
+
+
+  go_router: ^17.0.0
   
+
+
 
 dev_dependencies:
 
@@ -67,7 +72,6 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.3
   flutter_native_splash: ^2.4.6
 
-  build_runner: ^2.10.4
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -87,6 +91,10 @@ flutter_native_splash:
   image: assets/HI_RES_ICON-6091.png # Path to splash logo
   android: true
   ios: true
+
+
+
+
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

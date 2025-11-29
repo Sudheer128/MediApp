@@ -40,6 +40,8 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
 
   List<Course> pgCourses = [];
   List<Course> ssCourses = [];
+  List<Course> mbbsCourses =
+      []; // <-- Add this at top with pgCourses, ssCourses
 
   bool isLoadingCourses = false;
   String? coursesError;
@@ -507,12 +509,12 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
                 (item) =>
                     item is Map &&
                     item['course_name'] != null &&
-                    item['course_name'].toString().trim().isNotEmpty &&
                     item['duration'] != null,
               )
               .map<Course>(
                 (item) => Course(
-                  name: item['course_name'].toString(),
+                  id: item['course_id'], // 👈 ADD THIS
+                  name: item['course_name'],
                   duration: double.tryParse(item['duration'].toString()) ?? 0,
                 ),
               )
@@ -520,6 +522,7 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
         }
 
         setState(() {
+          mbbsCourses = extractCourses(data['mbbs'] ?? []); // <-- Add this
           pgCourses = extractCourses(data['pg'] ?? []);
           ssCourses = extractCourses(data['ss'] ?? []);
           isLoadingCourses = false;
@@ -580,6 +583,7 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
       'memberships':
           _hasMemberships ? memberships.map((m) => m.toJson()).toList() : [],
     };
+    print(payload); // Debug print
 
     final uri = Uri.parse('$baseurl/application/update');
     late http.Response response;
@@ -719,17 +723,17 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
     }
 
     List<Course> coursesList = [];
-    if (education.type == 'PG') {
+    if (education.type == 'MBBS') {
+      coursesList = mbbsCourses;
+    } else if (education.type == 'PG') {
       coursesList = pgCourses;
     } else if (education.type == 'SS') {
       coursesList = ssCourses;
-    } else {
-      return 0;
     }
 
     final course = coursesList.firstWhere(
       (c) => c.name == education.courseName,
-      orElse: () => Course(name: '', duration: 0),
+      orElse: () => Course(id: -1, name: '', duration: 0), // FIXED
     );
 
     return course.duration;
@@ -1710,24 +1714,46 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
             ),
             const SizedBox(height: 16),
             if (_isEditing) ...[
-              if (education.type != 'MBBS') ...[
+              if (education.type == 'MBBS' ||
+                  education.type == 'PG' ||
+                  education.type == 'SS') ...[
                 GestureDetector(
                   onTap: () async {
                     final courses =
-                        education.type == 'PG' ? pgCourses : ssCourses;
+                        education.type == 'MBBS'
+                            ? mbbsCourses
+                            : education.type == 'PG'
+                            ? pgCourses
+                            : ssCourses;
+
                     if (courses.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Courses not loaded yet')),
                       );
                       return;
                     }
+
                     final selected = await _showSearchableCourseDialog(
                       courses,
                       education.courseName,
                     );
+
                     if (selected != null) {
                       setState(() {
                         education.courseName = selected;
+
+                        final coursesList =
+                            education.type == 'MBBS'
+                                ? mbbsCourses
+                                : education.type == 'PG'
+                                ? pgCourses
+                                : ssCourses;
+
+                        final selectedCourse = coursesList.firstWhere(
+                          (c) => c.name == selected,
+                        );
+
+                        education.courseId = selectedCourse.id; // <-- REQUIRED
                       });
                     }
                   },
@@ -1875,41 +1901,41 @@ class _EditApplicationFormState extends State<EditApplicationForm> {
     );
   }
 
-  List<DropdownMenuItem<String>> _getCourseDropdownItems(String type) {
-    List<Course> coursesList;
-    switch (type) {
-      case 'MBBS':
-        // For MBBS you still have hardcoded strings, so map them into Course objects on the fly:
-        coursesList = [
-          Course(name: 'MBBS', duration: 5),
-          Course(name: 'BDS', duration: 5),
-          Course(name: 'BAMS', duration: 5),
-          Course(name: 'BHMS', duration: 5),
-          Course(name: 'BUMS', duration: 5),
-        ];
-        break;
-      case 'PG':
-        coursesList = pgCourses;
-        break;
-      case 'SS':
-        coursesList = ssCourses;
-        break;
-      default:
-        coursesList = [
-          Course(name: 'Certificate Course', duration: 1),
-          Course(name: 'Diploma', duration: 1),
-          Course(name: 'Other', duration: 1),
-        ];
-    }
-    return coursesList
-        .map(
-          (course) => DropdownMenuItem<String>(
-            value: course.name,
-            child: Text(course.name),
-          ),
-        )
-        .toList();
-  }
+  // List<DropdownMenuItem<String>> _getCourseDropdownItems(String type) {
+  //   List<Course> coursesList;
+  //   switch (type) {
+  //     case 'MBBS':
+  //       // For MBBS you still have hardcoded strings, so map them into Course objects on the fly:
+  //       coursesList = [
+  //         Course(name: 'MBBS', duration: 5),
+  //         Course(name: 'BDS', duration: 5),
+  //         Course(name: 'BAMS', duration: 5),
+  //         Course(name: 'BHMS', duration: 5),
+  //         Course(name: 'BUMS', duration: 5),
+  //       ];
+  //       break;
+  //     case 'PG':
+  //       coursesList = pgCourses;
+  //       break;
+  //     case 'SS':
+  //       coursesList = ssCourses;
+  //       break;
+  //     default:
+  //       coursesList = [
+  //         Course(name: 'Certificate Course', duration: 1),
+  //         Course(name: 'Diploma', duration: 1),
+  //         Course(name: 'Other', duration: 1),
+  //       ];
+  //   }
+  //   return coursesList
+  //       .map(
+  //         (course) => DropdownMenuItem<String>(
+  //           value: course.name,
+  //           child: Text(course.name),
+  //         ),
+  //       )
+  //       .toList();
+  // }
 
   Widget _buildFellowshipsSection() {
     return Container(
@@ -2526,6 +2552,7 @@ String convertDateToBackendFormat(String dateStr) {
 // Models
 class EducationDetail {
   String type;
+  int? courseId; // 👈 NEW VARIABLE
   String courseName = '';
   String collegeName = '';
   final TextEditingController fromDateController = TextEditingController();
@@ -2546,6 +2573,7 @@ class EducationDetail {
 
   Map<String, dynamic> toJson() => {
     'type': type,
+    'courseId': courseId, // 👈 NEW FIELD
     'courseName': courseName,
     'collegeName': collegeNameController.text,
     'fromDate': convertDateToBackendFormat(fromDateController.text),
@@ -2597,10 +2625,11 @@ class WorkExperience {
 }
 
 class Course {
+  final int id;
   final String name;
-  final double duration; // in years
+  final double duration;
 
-  Course({required this.name, required this.duration});
+  Course({required this.id, required this.name, required this.duration});
 }
 
 class CertificateModel {

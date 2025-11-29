@@ -72,6 +72,31 @@ class _AdminDegreesScreenState extends State<AdminCollegeDegreesScreen> {
       appBar: AppBar(title: Text("Degrees & Courses"), centerTitle: true),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 16, top: 12),
+            child: Row(
+              children: [
+                InkWell(
+                  onTap: () => context.pop(),
+                  child: Row(
+                    children: [
+                      Icon(Icons.arrow_back, color: Colors.blue, size: 20),
+                      SizedBox(width: 6),
+                      Text(
+                        "Back",
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
           _buildSearchAndFilterBar(),
 
           Expanded(

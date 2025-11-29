@@ -49,13 +49,19 @@ class _AllJobsPageState extends State<AllJobsPage> {
   Future<void> loadUserId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final id = prefs.getInt('userid') ?? 0;
+    final role = prefs.getString('role') ?? "";
     setState(() {
       userId = id;
     });
   }
 
   Future<void> fetchJobs() async {
-    final response = await http.get(Uri.parse("$baseurl/get-all-jobs"));
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final id = prefs.getInt('userid') ?? 0;
+    final role = prefs.getString('role') ?? "";
+    final response = await http.get(
+      Uri.parse("$baseurl/jobs/filtered?role=$role&user_id=$id"),
+    );
 
     if (response.statusCode == 200) {
       setState(() {

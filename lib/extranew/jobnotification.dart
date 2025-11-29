@@ -26,6 +26,7 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
   final TextEditingController _contactPhoneController = TextEditingController();
   final TextEditingController _applicationLinkController =
       TextEditingController();
+  final TextEditingController _categoryController = TextEditingController();
 
   String? _selectedCategory;
   String? _selectedJobType;
@@ -33,6 +34,33 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
   DateTime? _applicationDeadline;
   DateTime? _joiningDate;
   bool _isSubmitting = false;
+  // flatten course IDs + include MBBS string if selected
+  final List<dynamic> allSelectedCourseIds = [];
+  Map<String, dynamic> qualificationData = {};
+  List<String> mainQualificationKeys = [];
+
+  /// Stores selected courses per qualification key
+  Map<String, List<int>> selectedQualificationMapping = {};
+
+  List<dynamic> activeCourses = [];
+  @override
+  void initState() {
+    super.initState();
+    fetchQualifications();
+  }
+
+  Future<void> fetchQualifications() async {
+    final url = Uri.parse("$baseurl/courses/grouped");
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+      setState(() {
+        qualificationData = json['data'];
+        mainQualificationKeys = [...qualificationData.keys.toList()];
+      });
+    }
+  }
 
   final List<String> _categories = [
     'MBBS',
@@ -90,20 +118,31 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('userid') ?? 0;
 
+    // Add all other selected numeric course ids
+    allSelectedCourseIds.addAll(
+      selectedQualificationMapping.entries.expand((entry) => entry.value),
+    );
+    // remove duplicates
+    final courseIds =
+        allSelectedCourseIds
+            .map((e) => e.toString()) // convert everything to string
+            .toSet()
+            .toList(); // remove duplicates
+
     final body = {
       "userid": userId,
       "organization": _organizationController.text,
       "job_title": _jobTitleController.text,
       "description": _descriptionController.text,
       "location": _locationController.text,
-      "category": _selectedCategory,
+      "category": _categoryController.text,
       "department": _selectedDepartment,
       "job_type": _selectedJobType,
       "vacancies": int.parse(_vacanciesController.text),
       "experience": _experienceController.text,
       "salary_min": int.tryParse(_salaryMinController.text) ?? 0,
       "salary_max": int.tryParse(_salaryMaxController.text) ?? 0,
-      "qualifications": _selectedQualifications,
+      "qualifications": courseIds,
       "benefits": _selectedBenefits,
       "application_deadline":
           "${_applicationDeadline!.year}-${_applicationDeadline!.month}-${_applicationDeadline!.day}",
@@ -115,6 +154,7 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
       "contact_phone": _contactPhoneController.text,
       "application_link": _applicationLinkController.text,
     };
+    print(body);
 
     try {
       final response = await http.post(
@@ -183,6 +223,111 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
     );
   }
 
+  Widget _buildQualificationsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Required Qualifications",
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        ),
+        SizedBox(height: 10),
+
+        Wrap(
+          spacing: 8,
+          children:
+              mainQualificationKeys.map((key) {
+                bool isSelected = selectedQualificationMapping.containsKey(key);
+
+                return FilterChip(
+                  label: Text(key),
+                  selected: isSelected,
+                  onSelected: (value) {
+                    setState(() {
+                      if (value) {
+                        // Add key (empty list for MBBS)
+                        selectedQualificationMapping[key] = [];
+                      } else {
+                        // Remove key and its selections
+                        selectedQualificationMapping.remove(key);
+                      }
+                    });
+                  },
+                );
+              }).toList(),
+        ),
+
+        SizedBox(height: 20),
+
+        /// Build dropdown selectors for each selected qualification with courses
+        Column(
+          children:
+              selectedQualificationMapping.keys
+                  .map((key) => _buildCourseSelector(key))
+                  .toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCourseSelector(String key) {
+    List<dynamic> courses = qualificationData[key] ?? [];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Select courses for $key",
+          style: TextStyle(fontWeight: FontWeight.w500),
+        ),
+        SizedBox(height: 10),
+
+        DropdownButtonFormField(
+          isExpanded: true,
+          decoration: InputDecoration(border: OutlineInputBorder()),
+          items:
+              courses.map((course) {
+                return DropdownMenuItem(
+                  value: course["course_id"],
+                  child: Text(course["course_name"]),
+                );
+              }).toList(),
+          onChanged: (value) {
+            final int courseId = value as int;
+
+            if (!selectedQualificationMapping[key]!.contains(courseId)) {
+              setState(() {
+                selectedQualificationMapping[key]!.add(courseId);
+              });
+            }
+          },
+        ),
+
+        Wrap(
+          spacing: 6,
+          children:
+              selectedQualificationMapping[key]!.map((courseId) {
+                final name =
+                    courses.firstWhere(
+                      (c) => c["course_id"] == courseId,
+                    )["course_name"] ??
+                    "Course";
+                return Chip(
+                  label: Text(name, style: TextStyle(fontSize: 12)),
+                  onDeleted: () {
+                    setState(() {
+                      selectedQualificationMapping[key]!.remove(courseId);
+                    });
+                  },
+                );
+              }).toList(),
+        ),
+
+        SizedBox(height: 20),
+      ],
+    );
+  }
+
   Widget _buildMobileLayout() {
     return _buildFormContent();
   }
@@ -223,13 +368,13 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
               required: true,
             ),
             SizedBox(height: 16),
-            _buildDropdown(
-              value: _selectedCategory,
+            _buildTextField(
+              controller: _categoryController,
               label: 'Category',
-              items: _categories,
-              onChanged: (value) => setState(() => _selectedCategory = value),
+              hint: 'Enter category',
               required: true,
             ),
+
             SizedBox(height: 16),
             _buildDropdown(
               value: _selectedDepartment,
@@ -274,16 +419,9 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
               hint: 'e.g., 0-2 years, Freshers Welcome',
             ),
             SizedBox(height: 16),
-            Text(
-              'Required Qualifications',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
+
             SizedBox(height: 8),
-            _buildChipSelection(_categories, _selectedQualifications),
+            _buildQualificationsSection(),
           ],
         ),
         SizedBox(height: 16),

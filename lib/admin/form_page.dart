@@ -54,6 +54,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
 
   List<Course> pgCourses = [];
   List<Course> ssCourses = [];
+  List<Course> mbbsCourses = [];
 
   bool isLoadingCourses = false;
   String? coursesError;
@@ -322,6 +323,9 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
               )
               .map<Course>(
                 (item) => Course(
+                  id:
+                      int.tryParse(item['course_id'].toString()) ??
+                      0, // <-- map id
                   name: item['course_name'].toString(),
                   duration: double.tryParse(item['duration'].toString()) ?? 0,
                 ),
@@ -330,6 +334,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
         }
 
         setState(() {
+          mbbsCourses = extractCourses(data['mbbs'] ?? []); // <-- NEW
           pgCourses = extractCourses(data['pg'] ?? []);
           ssCourses = extractCourses(data['ss'] ?? []);
           isLoadingCourses = false;
@@ -462,20 +467,20 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
     }
   }
 
-  Future<String?> _showSearchableCourseDialog(
+  Future<Course?> _showSearchableCourseDialog(
     List<Course> courses,
-    String? selectedCourse,
+    Course? selectedCourse,
   ) async {
     TextEditingController searchController = TextEditingController();
     List<Course> filteredCourses = List.from(courses);
 
-    return showDialog<String>(
+    return showDialog<Course?>(
       context: context,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             void filterCourses(String query) {
-              final filtered =
+              filteredCourses =
                   courses
                       .where(
                         (course) => course.name.toLowerCase().contains(
@@ -483,9 +488,7 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
                         ),
                       )
                       .toList();
-              setStateDialog(() {
-                filteredCourses = filtered;
-              });
+              setStateDialog(() {});
             }
 
             return AlertDialog(
@@ -514,9 +517,8 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
                                 final course = filteredCourses[index];
                                 return ListTile(
                                   title: Text(course.name),
-                                  selected: course.name == selectedCourse,
-                                  onTap:
-                                      () => Navigator.pop(context, course.name),
+                                  selected: selectedCourse?.id == course.id,
+                                  onTap: () => Navigator.pop(context, course),
                                 );
                               },
                             ),
@@ -542,7 +544,10 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
     }
 
     List<Course> coursesList = [];
-    if (education.type == 'PG') {
+
+    if (education.type == 'MBBS') {
+      coursesList = mbbsCourses;
+    } else if (education.type == 'PG') {
       coursesList = pgCourses;
     } else if (education.type == 'SS') {
       coursesList = ssCourses;
@@ -551,8 +556,8 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
     }
 
     final course = coursesList.firstWhere(
-      (c) => c.name == education.courseName,
-      orElse: () => Course(name: '', duration: 0),
+      (c) => c.id == education.courseId, // <-- match by ID
+      orElse: () => Course(id: 0, name: '', duration: 0),
     );
 
     return course.duration;
@@ -1638,45 +1643,56 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
             ),
             const SizedBox(height: 16),
             if (_isEditing) ...[
-              if (education.type != 'MBBS') ...[
-                GestureDetector(
-                  onTap: () async {
-                    final courses =
-                        education.type == 'PG' ? pgCourses : ssCourses;
-                    if (courses.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Courses not loaded yet')),
-                      );
-                      return;
-                    }
-                    final selected = await _showSearchableCourseDialog(
-                      courses,
-                      education.courseName,
+              // Always show picker for all courses (including MBBS)
+              GestureDetector(
+                onTap: () async {
+                  final courses =
+                      education.type == 'MBBS'
+                          ? mbbsCourses
+                          : education.type == 'PG'
+                          ? pgCourses
+                          : ssCourses;
+
+                  if (courses.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Courses not loaded yet')),
                     );
-                    if (selected != null) {
-                      setState(() {
-                        education.courseName = selected;
-                      });
-                    }
-                  },
-                  child: AbsorbPointer(
-                    child: TextFormField(
-                      decoration: InputDecoration(
-                        labelText: 'Course Name',
-                        suffixIcon: const Icon(Icons.arrow_drop_down),
-                      ),
-                      controller: TextEditingController(
-                        text: education.courseName,
-                      ),
-                      validator:
-                          (value) =>
-                              (value == null || value.isEmpty)
-                                  ? 'Please select a course'
-                                  : null,
+                    return;
+                  }
+
+                  final selected = await _showSearchableCourseDialog(
+                    courses,
+                    courses.firstWhere(
+                      (c) => c.id == education.courseId,
+                      orElse: () => courses.first,
                     ),
+                  );
+
+                  if (selected != null) {
+                    setState(() {
+                      education.courseName = selected.name;
+                      education.courseId = selected.id;
+                    });
+                  }
+                },
+                child: AbsorbPointer(
+                  child: TextFormField(
+                    decoration: const InputDecoration(
+                      labelText: 'Course Name',
+                      suffixIcon: Icon(Icons.arrow_drop_down),
+                    ),
+                    controller: TextEditingController(
+                      text: education.courseName,
+                    ),
+                    validator:
+                        (value) =>
+                            (value == null || value.isEmpty)
+                                ? 'Please select a course'
+                                : null,
                   ),
                 ),
-              ],
+              ),
+
               const SizedBox(height: 16),
               TextFormField(
                 initialValue: education.collegeName,
@@ -1802,41 +1818,41 @@ class _ApplicationFormState extends State<AdminApplicationForm> {
     );
   }
 
-  List<DropdownMenuItem<String>> _getCourseDropdownItems(String type) {
-    List<Course> coursesList;
-    switch (type) {
-      case 'MBBS':
-        // For MBBS you still have hardcoded strings, so map them into Course objects on the fly:
-        coursesList = [
-          Course(name: 'MBBS', duration: 5),
-          Course(name: 'BDS', duration: 5),
-          Course(name: 'BAMS', duration: 5),
-          Course(name: 'BHMS', duration: 5),
-          Course(name: 'BUMS', duration: 5),
-        ];
-        break;
-      case 'PG':
-        coursesList = pgCourses;
-        break;
-      case 'SS':
-        coursesList = ssCourses;
-        break;
-      default:
-        coursesList = [
-          Course(name: 'Certificate Course', duration: 1),
-          Course(name: 'Diploma', duration: 1),
-          Course(name: 'Other', duration: 1),
-        ];
-    }
-    return coursesList
-        .map(
-          (course) => DropdownMenuItem<String>(
-            value: course.name,
-            child: Text(course.name),
-          ),
-        )
-        .toList();
-  }
+  // List<DropdownMenuItem<String>> _getCourseDropdownItems(String type) {
+  //   List<Course> coursesList;
+  //   switch (type) {
+  //     case 'MBBS':
+  //       // For MBBS you still have hardcoded strings, so map them into Course objects on the fly:
+  //       coursesList = [
+  //         Course(name: 'MBBS', duration: 5),
+  //         Course(name: 'BDS', duration: 5),
+  //         Course(name: 'BAMS', duration: 5),
+  //         Course(name: 'BHMS', duration: 5),
+  //         Course(name: 'BUMS', duration: 5),
+  //       ];
+  //       break;
+  //     case 'PG':
+  //       coursesList = pgCourses;
+  //       break;
+  //     case 'SS':
+  //       coursesList = ssCourses;
+  //       break;
+  //     default:
+  //       coursesList = [
+  //         Course(name: 'Certificate Course', duration: 1),
+  //         Course(name: 'Diploma', duration: 1),
+  //         Course(name: 'Other', duration: 1),
+  //       ];
+  //   }
+  //   return coursesList
+  //       .map(
+  //         (course) => DropdownMenuItem<String>(
+  //           value: course.name,
+  //           child: Text(course.name),
+  //         ),
+  //       )
+  //       .toList();
+  // }
 
   Widget _buildFellowshipsSection() {
     return Container(
@@ -2453,6 +2469,7 @@ String convertDateToBackendFormat(String dateStr) {
 // Models
 class EducationDetail {
   String type;
+  int? courseId; // <-- NEW
   String courseName = '';
   String collegeName = '';
   final TextEditingController fromDateController = TextEditingController();
@@ -2463,6 +2480,7 @@ class EducationDetail {
 
   Map<String, dynamic> toJson() => {
     'type': type,
+    'courseId': courseId, // <-- send to backend
     'courseName': courseName,
     'collegeName': collegeName,
     'fromDate': convertDateToBackendFormat(fromDateController.text),
@@ -2514,10 +2532,11 @@ class WorkExperience {
 }
 
 class Course {
+  final int id; // <-- NEW
   final String name;
-  final double duration; // in years
+  final double duration;
 
-  Course({required this.name, required this.duration});
+  Course({required this.id, required this.name, required this.duration});
 }
 
 class CertificateModel {

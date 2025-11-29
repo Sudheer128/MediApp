@@ -77,7 +77,7 @@ class _SignInScreenState extends State<SignInScreen> {
             context.go('/myrank_cm');
             break;
           default:
-            context.go('/approval');
+            context.go('/doctor');
         }
       } else {
         setState(() => _isLoading = false);

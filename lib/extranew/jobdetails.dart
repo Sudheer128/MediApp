@@ -19,11 +19,13 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
   bool isSaved = false;
   bool isApplied = false;
   String Roleee = "";
+  int appliedCount = 0;
 
   @override
   void initState() {
     super.initState();
     fetchJobDetails();
+    loadRole();
   }
 
   Future<void> loadRole() async {
@@ -87,30 +89,54 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
     if (response.statusCode == 200) {
       final body = jsonDecode(response.body);
 
-      final data = body["data"]; // job details
-      final applied = body["applied"]; // 0 or 1
-
-      print("Applied Status = $applied");
-
       setState(() {
-        job = data;
-        isApplied = applied == 1; // <-- USE THIS (correct)
+        job = body["data"];
+        isApplied = body["applied"] == 1;
+        isSaved = body["saved"] == 1; // <-- NEW
+        appliedCount = body["applied_count"] ?? 0;
         loading = false;
       });
+
+      print("Saved Status = ${body["saved"]}");
     }
   }
 
-  void _toggleSave() {
-    setState(() {
-      isSaved = !isSaved;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(isSaved ? 'Job saved' : 'Job unsaved'),
-        duration: Duration(seconds: 1),
-        behavior: SnackBarBehavior.floating,
-      ),
+  Future<void> _toggleSave() async {
+    final userId = await getUserId();
+    final jobId = widget.jobId;
+
+    if (userId == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("User not logged in")));
+      return;
+    }
+
+    final response = await http.post(
+      Uri.parse("$baseurl/saveJob"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"user_id": userId, "job_id": jobId}),
     );
+
+    if (response.statusCode == 200) {
+      final result = jsonDecode(response.body);
+
+      setState(() {
+        isSaved = result["saved"] == 1; // backend returns updated state
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isSaved ? "Job Saved" : "Job Unsaved"),
+          duration: Duration(seconds: 1),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error saving job")));
+    }
   }
 
   @override
@@ -173,7 +199,7 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
             isSaved ? Icons.bookmark : Icons.bookmark_border,
             color: Color(0xFF0A66C2),
           ),
-          onPressed: _toggleSave,
+          onPressed: isSaved ? null : _toggleSave,
         ),
         IconButton(
           icon: Icon(Icons.more_vert, color: Colors.black87),
@@ -726,50 +752,93 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
   }
 
   Widget _buildApplyCard({required bool isBottomBar}) {
+    // ---------- ADMIN VIEW ----------
+    if (Roleee != "doctor") {
+      return InkWell(
+        onTap: () {
+          // Navigator.push(
+          //   context,
+          //   MaterialPageRoute(
+          //     builder: (context) => AppliesPage(jobId: widget.jobId), // <-- your page
+          //   ),
+          // );
+        },
+        child: Container(
+          alignment: Alignment.center,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border:
+                isBottomBar
+                    ? const Border(top: BorderSide(color: Color(0xFFE0E0E0)))
+                    : Border.all(color: Color(0xFFE0E0E0)),
+            borderRadius: isBottomBar ? null : BorderRadius.circular(8),
+          ),
+          child: Text(
+            "$appliedCount Applied",
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF0A66C2),
+              decoration: TextDecoration.underline,
+            ),
+          ),
+        ),
+      );
+    }
+
+    // ---------- NORMAL USER (BOTTOM BAR) ----------
     if (isBottomBar) {
       return Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          border: Border(top: BorderSide(color: Color(0xFFE0E0E0))),
+          border: const Border(top: BorderSide(color: Color(0xFFE0E0E0))),
         ),
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: SafeArea(
           child: Row(
             children: [
               OutlinedButton(
-                onPressed: _toggleSave,
+                onPressed: isSaved ? null : _toggleSave, // <-- FIXED
                 style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: Color(0xFF0A66C2)),
+                  side: const BorderSide(color: Color(0xFF0A66C2)),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(24),
                   ),
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                 ),
                 child: Icon(
                   isSaved ? Icons.bookmark : Icons.bookmark_border,
-                  color: Color(0xFF0A66C2),
+                  color: const Color(0xFF0A66C2),
                   size: 20,
                 ),
               ),
-              SizedBox(width: 12),
 
-              /// APPLY BUTTON (BOTTOM BAR)
+              const SizedBox(width: 12),
+
+              /// APPLY BUTTON
               Expanded(
                 child: ElevatedButton(
                   onPressed: isApplied ? null : applyJob,
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
-                        isApplied ? Colors.green : Color(0xFF0A66C2),
+                        isApplied ? Colors.green : const Color(0xFF0A66C2),
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(24),
                     ),
-                    padding: EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   child: Text(
                     isApplied ? 'Applied' : 'Apply',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
@@ -779,56 +848,59 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
       );
     }
 
-    // ---------- WEB SIDEBAR CARD ----------
+    // ---------- NORMAL USER (WEB) ----------
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFE0E0E0)),
+        border: Border.all(color: const Color(0xFFE0E0E0)),
       ),
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          /// APPLY BUTTON (WEB)
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: isApplied ? null : applyJob,
               style: ElevatedButton.styleFrom(
-                backgroundColor: isApplied ? Colors.green : Color(0xFF0A66C2),
+                backgroundColor:
+                    isApplied ? Colors.green : const Color(0xFF0A66C2),
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                 ),
-                padding: EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 12),
               ),
               child: Text(
                 isApplied ? 'Applied' : 'Apply',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
 
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
 
           /// SAVE BUTTON
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: _toggleSave,
+              onPressed: isSaved ? null : _toggleSave, // <-- FIXED
               icon: Icon(
                 isSaved ? Icons.bookmark : Icons.bookmark_border,
                 size: 20,
               ),
               label: Text(isSaved ? 'Saved' : 'Save'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: Color(0xFF0A66C2),
-                side: BorderSide(color: Color(0xFF0A66C2)),
+                foregroundColor: const Color(0xFF0A66C2),
+                side: const BorderSide(color: Color(0xFF0A66C2)),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                 ),
-                padding: EdgeInsets.symmetric(vertical: 10),
+                padding: const EdgeInsets.symmetric(vertical: 10),
               ),
             ),
           ),

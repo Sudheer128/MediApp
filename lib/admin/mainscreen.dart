@@ -13,6 +13,7 @@ import 'package:medicalapp/admin/userstable.dart';
 import 'package:medicalapp/college/college_profile.dart';
 import 'package:medicalapp/college/collegeintrests.dart';
 import 'package:medicalapp/extranew/alljobs.dart';
+import 'package:medicalapp/extranew/job_applies.dart';
 import 'package:medicalapp/extranew/jobdetails.dart';
 import 'package:medicalapp/extranew/jobnotification.dart';
 import 'package:medicalapp/extranew/mainlayout.dart';
@@ -362,21 +363,20 @@ class _AdminHomePageState extends State<AdminHomePage> {
                       }
                     },
                   ),
-                  //               const SizedBox(height: 30),
-                  // _buildCard(
-                  //   context,
-                  //   title: 'User Management',
-                  //   icon: Icons.analytics,
-                  //   subtitle: 'Manage useres',
-                  //   onTap: () {
-                  //     Navigator.push(
-                  //       context,
-                  //       MaterialPageRoute(
-                  //         builder: (context) => InterestsPage(),
-                  //       ),
-                  //     );
-                  //   },
-                  // ),
+
+                  const SizedBox(height: 30),
+                  _buildCard(
+                    context,
+                    title: 'Applied Jobs',
+                    icon: Icons.analytics,
+                    subtitle: 'Details of applied jobs',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => JobApplies()),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
