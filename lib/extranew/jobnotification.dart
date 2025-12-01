@@ -27,6 +27,7 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
   final TextEditingController _applicationLinkController =
       TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
+  final TextEditingController _requirementsController = TextEditingController();
 
   String? _selectedCategory;
   String? _selectedJobType;
@@ -110,7 +111,6 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
     'Conference Sponsorship',
     'Research Opportunities',
   ];
-
   Future<void> submitJobNotification() async {
     setState(() => _isSubmitting = true);
 
@@ -118,16 +118,13 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('userid') ?? 0;
 
-    // Add all other selected numeric course ids
+    // Add all selected course ids
     allSelectedCourseIds.addAll(
       selectedQualificationMapping.entries.expand((entry) => entry.value),
     );
-    // remove duplicates
+
     final courseIds =
-        allSelectedCourseIds
-            .map((e) => e.toString()) // convert everything to string
-            .toSet()
-            .toList(); // remove duplicates
+        allSelectedCourseIds.map((e) => e.toString()).toSet().toList();
 
     final body = {
       "userid": userId,
@@ -136,25 +133,30 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
       "description": _descriptionController.text,
       "location": _locationController.text,
       "category": _categoryController.text,
-      "department": _selectedDepartment,
-      "job_type": _selectedJobType,
-      "vacancies": int.parse(_vacanciesController.text),
+      "department": _selectedDepartment ?? "",
+      "job_type": _selectedJobType ?? "",
+      "vacancies": int.tryParse(_vacanciesController.text) ?? 0,
       "experience": _experienceController.text,
       "salary_min": int.tryParse(_salaryMinController.text) ?? 0,
       "salary_max": int.tryParse(_salaryMaxController.text) ?? 0,
       "qualifications": courseIds,
       "benefits": _selectedBenefits,
       "application_deadline":
-          "${_applicationDeadline!.year}-${_applicationDeadline!.month}-${_applicationDeadline!.day}",
+          _applicationDeadline == null
+              ? ""
+              : "${_applicationDeadline!.year}-${_applicationDeadline!.month}-${_applicationDeadline!.day}",
       "joining_date":
           _joiningDate == null
-              ? null
+              ? ""
               : "${_joiningDate!.year}-${_joiningDate!.month}-${_joiningDate!.day}",
       "contact_email": _contactEmailController.text,
       "contact_phone": _contactPhoneController.text,
       "application_link": _applicationLinkController.text,
+      "requirements": _requirementsController.text,
     };
-    print(body);
+
+    print("Submitting job notification body:");
+    print(jsonEncode(body));
 
     try {
       final response = await http.post(
@@ -413,6 +415,13 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
           title: 'Requirements',
           icon: Icons.checklist,
           children: [
+            _buildTextField(
+              controller: _requirementsController,
+              label: 'Requirements',
+              hint: 'Enter key job requirements or skills needed',
+              maxLines: 3,
+            ),
+            SizedBox(height: 16),
             _buildTextField(
               controller: _experienceController,
               label: 'Experience Required',
@@ -804,19 +813,7 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
   }
 
   void _handleSubmit() async {
-    if (_formKey.currentState!.validate()) {
-      if (_applicationDeadline == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Please select application deadline'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-        return;
-      }
-      await submitJobNotification();
-    }
+    await submitJobNotification();
   }
 
   void _showSubmissionDialog() {
@@ -871,6 +868,8 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
     _contactEmailController.dispose();
     _contactPhoneController.dispose();
     _applicationLinkController.dispose();
+    _requirementsController.dispose();
+
     super.dispose();
   }
 }
