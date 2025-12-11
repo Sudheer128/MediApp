@@ -82,6 +82,7 @@ final Map<String, List<String>> roleAccess = {
     '/search-doctors',
     '/doctor_profile',
     '/create-student-form',
+    '/edit-application',
   ],
 
   'myrank_cm': [
@@ -93,6 +94,10 @@ final Map<String, List<String>> roleAccess = {
     '/cm_collegeinterspage',
     '/cm_collegedegreescreen',
     '/job-details/',
+    '/edit-application',
+    '/student-details',
+    '/doctor_profile',
+    '/edit-application',
   ],
 
   'guest': ['/'],

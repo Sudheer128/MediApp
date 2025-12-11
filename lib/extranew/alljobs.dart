@@ -59,16 +59,24 @@ class _AllJobsPageState extends State<AllJobsPage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final id = prefs.getInt('userid') ?? 0;
     final role = prefs.getString('role') ?? "";
-    final response = await http.get(
-      Uri.parse("$baseurl/jobs/filtered?role=$role&user_id=$id"),
-    );
 
-    if (response.statusCode == 200) {
-      setState(() {
-        jobs = json.decode(response.body)['jobs'];
-        loading = false;
-      });
-    } else {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseurl/jobs/filtered?role=$role&user_id=$id"),
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = json.decode(response.body);
+
+        setState(() {
+          jobs = decoded['jobs'] is List ? decoded['jobs'] : [];
+          loading = false;
+        });
+      } else {
+        setState(() => loading = false);
+      }
+    } catch (e) {
+      print("JOB API ERROR: $e");
       setState(() => loading = false);
     }
   }
@@ -116,7 +124,7 @@ class _AllJobsPageState extends State<AllJobsPage> {
 
     try {
       final response = await http.get(
-        Uri.parse("$baseurl/student/savedJobs?user_id=$userId"),
+        Uri.parse("$baseurl/jobs/saved?user_id=$userId"),
       );
 
       if (response.statusCode == 200) {
@@ -210,6 +218,51 @@ class _AllJobsPageState extends State<AllJobsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ADD THIS: Action buttons for doctors
+          if (Roleee == 'doctor') ...[
+            ElevatedButton(
+              onPressed: fetchAppliedJobs,
+              style: ElevatedButton.styleFrom(
+                foregroundColor:
+                    activeView == 'applied' ? Colors.white : Color(0xFF0A66C2),
+                backgroundColor:
+                    activeView == 'applied' ? Color(0xFF0A66C2) : Colors.white,
+                side: BorderSide(color: Color(0xFF0A66C2)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                minimumSize: Size(double.infinity, 44),
+              ),
+              child: Text(
+                'Applied Jobs',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            SizedBox(height: 12),
+            ElevatedButton(
+              onPressed: fetchSavedJobs,
+              style: ElevatedButton.styleFrom(
+                foregroundColor:
+                    activeView == 'saved' ? Colors.white : Color(0xFF0A66C2),
+                backgroundColor:
+                    activeView == 'saved' ? Color(0xFF0A66C2) : Colors.white,
+                side: BorderSide(color: Color(0xFF0A66C2)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                minimumSize: Size(double.infinity, 44),
+              ),
+              child: Text(
+                'Saved Jobs',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            SizedBox(height: 20),
+            Divider(height: 1),
+            SizedBox(height: 20),
+          ],
+
+          // END ADD
           Text(
             'Filters',
             style: TextStyle(
@@ -405,34 +458,34 @@ class _AllJobsPageState extends State<AllJobsPage> {
                     ),
                   ),
                 ),
-                // SizedBox(width: 8),
-                // Expanded(
-                //   child: OutlinedButton(
-                //     onPressed: fetchSavedJobs,
-                //     style: OutlinedButton.styleFrom(
-                //       foregroundColor:
-                //           activeView == 'saved'
-                //               ? Colors.white
-                //               : Color(0xFF0A66C2),
-                //       backgroundColor:
-                //           activeView == 'saved'
-                //               ? Color(0xFF0A66C2)
-                //               : Colors.white,
-                //       side: BorderSide(color: Color(0xFF0A66C2)),
-                //       shape: RoundedRectangleBorder(
-                //         borderRadius: BorderRadius.circular(4),
-                //       ),
-                //       padding: EdgeInsets.symmetric(vertical: 12),
-                //     ),
-                //     child: Text(
-                //       'Saved Jobs',
-                //       style: TextStyle(
-                //         fontSize: 13,
-                //         fontWeight: FontWeight.w600,
-                //       ),
-                //     ),
-                //   ),
-                // ),
+                SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: fetchSavedJobs,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor:
+                          activeView == 'saved'
+                              ? Colors.white
+                              : Color(0xFF0A66C2),
+                      backgroundColor:
+                          activeView == 'saved'
+                              ? Color(0xFF0A66C2)
+                              : Colors.white,
+                      side: BorderSide(color: Color(0xFF0A66C2)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: Text(
+                      'Saved Jobs',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ],
           ),
@@ -728,9 +781,10 @@ class JobCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Posted 2 days ago',
+                    'Posted ${_timeAgo(job['created_at'])}',
                     style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
+
                   TextButton(
                     onPressed: () {
                       if (kIsWeb) {
@@ -799,5 +853,41 @@ class JobCard extends StatelessWidget {
     }
 
     return '₹${salaryMin} - ₹${salaryMax}';
+  }
+
+  String _timeAgo(String? dateString) {
+    if (dateString == null || dateString.isEmpty) return "Unknown";
+
+    DateTime created;
+
+    try {
+      // Handles: "2025-02-10", "2025-02-10 12:34:21", or ISO formats
+      created = DateTime.tryParse(dateString) ?? DateTime.now();
+    } catch (_) {
+      return "Unknown";
+    }
+
+    final now = DateTime.now();
+    final diff = now.difference(created);
+
+    if (diff.inSeconds < 60) return "Just now";
+    if (diff.inMinutes < 60) return "${diff.inMinutes} min ago";
+    if (diff.inHours < 24)
+      return "${diff.inHours} hour${diff.inHours > 1 ? 's' : ''} ago";
+    if (diff.inDays < 7)
+      return "${diff.inDays} day${diff.inDays > 1 ? 's' : ''} ago";
+
+    if (diff.inDays < 30) {
+      int weeks = (diff.inDays / 7).floor();
+      return "$weeks week${weeks > 1 ? 's' : ''} ago";
+    }
+
+    if (diff.inDays < 365) {
+      int months = (diff.inDays / 30).floor();
+      return "$months month${months > 1 ? 's' : ''} ago";
+    }
+
+    int years = (diff.inDays / 365).floor();
+    return "$years year${years > 1 ? 's' : ''} ago";
   }
 }

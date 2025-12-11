@@ -6,7 +6,8 @@ import 'package:medicalapp/url.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class JobNotificationForm extends StatefulWidget {
-  const JobNotificationForm({Key? key}) : super(key: key);
+  final int? jobId;
+  const JobNotificationForm({super.key, this.jobId});
 
   @override
   State<JobNotificationForm> createState() => _JobNotificationFormState();
@@ -39,6 +40,8 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
   final List<dynamic> allSelectedCourseIds = [];
   Map<String, dynamic> qualificationData = {};
   List<String> mainQualificationKeys = [];
+  bool isEditMode = false;
+  Map<String, dynamic>? loadedJob;
 
   /// Stores selected courses per qualification key
   Map<String, List<int>> selectedQualificationMapping = {};
@@ -48,6 +51,97 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
   void initState() {
     super.initState();
     fetchQualifications();
+    if (widget.jobId != null) {
+      isEditMode = true;
+      fetchJobForEdit(widget.jobId!); // Load job details if editing
+    }
+  }
+
+  void prefillQualifications(List courseIds) {
+    selectedQualificationMapping.clear();
+
+    qualificationData.forEach((key, courseList) {
+      List<int> matching = [];
+
+      for (var c in courseList) {
+        if (courseIds.contains(c["course_id"])) {
+          matching.add(c["course_id"]);
+        }
+      }
+
+      if (matching.isNotEmpty) {
+        selectedQualificationMapping[key] = matching;
+      }
+    });
+  }
+
+  Future<int?> getUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('userid');
+  }
+
+  Future<void> fetchJobForEdit(int jobId) async {
+    final userId = await getUserId();
+    final response = await http.get(
+      Uri.parse("$baseurl/getJobDetails?id=$jobId&user_id=$userId"),
+    );
+
+    if (response.statusCode != 200) return;
+
+    final body = jsonDecode(response.body);
+    final data = body["data"]; // <-- CORRECT
+
+    setState(() {
+      loadedJob = data; // <-- FIXED
+
+      _organizationController.text = data["organization"] ?? "";
+      _jobTitleController.text = data["job_title"] ?? "";
+      _descriptionController.text = data["description"] ?? "";
+      _locationController.text = data["location"] ?? "";
+      _categoryController.text = data["category"] ?? "";
+      _selectedDepartment = data["department"];
+      _selectedJobType = data["job_type"];
+
+      _vacanciesController.text = data["vacancies"].toString();
+      _experienceController.text = data["experience_required"] ?? "";
+      _salaryMinController.text = data["salary_min"].toString();
+      _salaryMaxController.text = data["salary_max"].toString();
+
+      _contactEmailController.text = data["contact_email"] ?? "";
+      _contactPhoneController.text = data["contact_phone"] ?? "";
+      _applicationLinkController.text = data["application_link"] ?? "";
+      _requirementsController.text = data["requirements"] ?? "";
+
+      // DATES
+      if (data["application_deadline"] != null &&
+          data["application_deadline"] != "") {
+        _applicationDeadline = DateTime.parse(data["application_deadline"]);
+      }
+
+      if (data["joining_date"] != null && data["joining_date"] != "") {
+        _joiningDate = DateTime.parse(data["joining_date"]);
+      }
+
+      // BENEFITS
+      if (data["benefits"] != null && data["benefits"].toString().isNotEmpty) {
+        _selectedBenefits.clear();
+        _selectedBenefits.addAll(
+          List<String>.from(jsonDecode(data["benefits"])),
+        );
+      }
+
+      // QUALIFICATIONS → best source is course_ids
+      if (body["course_ids"] != null) {
+        List<String> ids = List<String>.from(body["course_ids"]);
+        List<int> intIds = ids.map((e) => int.tryParse(e) ?? 0).toList();
+        prefillQualifications(intIds);
+      }
+    });
+
+    // course_labels mapping (degree + course_name)
+    if (body["course_labels"] != null) {
+      applyPreviousSelections(body);
+    }
   }
 
   Future<void> fetchQualifications() async {
@@ -60,17 +154,14 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
         qualificationData = json['data'];
         mainQualificationKeys = [...qualificationData.keys.toList()];
       });
+
+      // PERFECT SPOT — Both job data + qualification data are loaded ✔
+      if (loadedJob != null) {
+        applyPreviousSelections(loadedJob!);
+      }
     }
   }
 
-  final List<String> _categories = [
-    'MBBS',
-    'MD/MS',
-    'DM/MCh',
-    'DNB',
-    'Diploma',
-    'Super Speciality',
-  ];
   final List<String> _jobTypes = [
     'Full Time',
     'Part Time',
@@ -87,6 +178,7 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
     'Orthopedics',
     'Cardiology',
     'Neurology',
+    'Pulmonology',
     'Radiology',
     'Anesthesiology',
     'Pathology',
@@ -95,6 +187,7 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
     'Dermatology',
     'ENT',
     'Ophthalmology',
+    'Physiology ',
     'Other',
   ];
 
@@ -105,83 +198,76 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
     'Health Insurance',
     'Accommodation',
     'Food Allowance',
-    'Transportation',
+    'Accommodation',
     'Professional Development',
     'CME Credits',
     'Conference Sponsorship',
     'Research Opportunities',
   ];
-  Future<void> submitJobNotification() async {
+  Future<void> _handleSubmit() async {
+    if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isSubmitting = true);
 
-    final url = Uri.parse("$baseurl/add-job-notification");
+    final url =
+        isEditMode
+            ? Uri.parse("$baseurl/update-job-notification")
+            : Uri.parse("$baseurl/add-job-notification");
+
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt('userid') ?? 0;
+    final userId = prefs.getInt("userid") ?? 0;
 
-    // Add all selected course ids
-    allSelectedCourseIds.addAll(
-      selectedQualificationMapping.entries.expand((entry) => entry.value),
-    );
+    // Ensure qualifications list is clean
+    final qualifications =
+        selectedQualificationMapping.values
+            .expand((e) => e)
+            .map((id) => id.toString())
+            .toSet()
+            .toList();
 
-    final courseIds =
-        allSelectedCourseIds.map((e) => e.toString()).toSet().toList();
+    // Ensure benefits is List<String> ONLY
+    final benefits = _selectedBenefits.map((e) => e.toString()).toList();
 
     final body = {
+      if (isEditMode) "job_id": widget.jobId, // only when editing
       "userid": userId,
-      "organization": _organizationController.text,
-      "job_title": _jobTitleController.text,
-      "description": _descriptionController.text,
-      "location": _locationController.text,
-      "category": _categoryController.text,
+      "organization": _organizationController.text.trim(),
+      "job_title": _jobTitleController.text.trim(),
+      "description": _descriptionController.text.trim(),
+      "location": _locationController.text.trim(),
+      "category": _categoryController.text.trim(),
       "department": _selectedDepartment ?? "",
       "job_type": _selectedJobType ?? "",
       "vacancies": int.tryParse(_vacanciesController.text) ?? 0,
-      "experience": _experienceController.text,
+      "experience": _experienceController.text.trim(),
       "salary_min": int.tryParse(_salaryMinController.text) ?? 0,
       "salary_max": int.tryParse(_salaryMaxController.text) ?? 0,
-      "qualifications": courseIds,
-      "benefits": _selectedBenefits,
-      "application_deadline":
-          _applicationDeadline == null
-              ? ""
-              : "${_applicationDeadline!.year}-${_applicationDeadline!.month}-${_applicationDeadline!.day}",
-      "joining_date":
-          _joiningDate == null
-              ? ""
-              : "${_joiningDate!.year}-${_joiningDate!.month}-${_joiningDate!.day}",
-      "contact_email": _contactEmailController.text,
-      "contact_phone": _contactPhoneController.text,
-      "application_link": _applicationLinkController.text,
-      "requirements": _requirementsController.text,
+      "qualifications": qualifications, // VALID - only one field
+      "benefits": benefits,
+      "application_deadline": _applicationDeadline?.toIso8601String() ?? "",
+      "joining_date": _joiningDate?.toIso8601String() ?? "",
+      "contact_email": _contactEmailController.text.trim(),
+      "contact_phone": _contactPhoneController.text.trim(),
+      "application_link": _applicationLinkController.text.trim(),
+      "requirements": _requirementsController.text.trim(),
     };
 
-    print("Submitting job notification body:");
     print(jsonEncode(body));
 
-    try {
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode(body),
-      );
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(body),
+    );
 
-      setState(() => _isSubmitting = false);
+    setState(() => _isSubmitting = false);
 
-      if (response.statusCode == 200) {
-        _showSubmissionDialog();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Error: ${response.body}"),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      setState(() => _isSubmitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
-      );
+    if (response.statusCode == 200) {
+      _showSubmissionDialog();
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: ${response.body}")));
     }
   }
 
@@ -213,6 +299,38 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
         child: isWeb ? _buildWebLayout() : _buildMobileLayout(),
       ),
     );
+  }
+
+  void applyPreviousSelections(Map job) {
+    selectedQualificationMapping.clear();
+
+    List<String> courseLabels = [];
+    try {
+      courseLabels = List<String>.from(job["course_labels"]);
+    } catch (_) {}
+
+    for (String label in courseLabels) {
+      if (!label.contains("(") || !label.contains(")")) continue;
+
+      final courseName = label.split("(")[0].trim();
+      final degree = label.split("(")[1].replaceAll(")", "").trim();
+
+      // Auto-select degree
+      selectedQualificationMapping.putIfAbsent(degree, () => []);
+
+      final courses = qualificationData[degree] ?? [];
+
+      final match = courses.firstWhere(
+        (c) => c["course_name"] == courseName,
+        orElse: () => null,
+      );
+
+      if (match != null) {
+        selectedQualificationMapping[degree]!.add(match["course_id"]);
+      }
+    }
+
+    setState(() {});
   }
 
   Widget _buildWebLayout() {
@@ -272,61 +390,294 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
     );
   }
 
+  // Replace the _openCourseSelectionDialog method with this enhanced version
+
+  void _openCourseSelectionDialog(String key, List<dynamic> courses) {
+    TextEditingController searchCtrl = TextEditingController();
+    FocusNode searchFocusNode = FocusNode();
+
+    List<dynamic> filtered = List.from(courses);
+
+    void sortList() {
+      filtered.sort((a, b) {
+        bool aSel = selectedQualificationMapping[key]!.contains(a["course_id"]);
+        bool bSel = selectedQualificationMapping[key]!.contains(b["course_id"]);
+        if (aSel && !bSel) return -1;
+        if (!aSel && bSel) return 1;
+        return a["course_name"].compareTo(b["course_name"]);
+      });
+    }
+
+    sortList();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            /// Auto-focus works again
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!searchFocusNode.hasFocus) searchFocusNode.requestFocus();
+            });
+
+            return AlertDialog(
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Select Course"),
+
+                  /// 🔥 Always visible Select All button
+                  TextButton(
+                    onPressed: () {
+                      setStateDialog(() {
+                        for (var item in filtered) {
+                          int id = item["course_id"];
+                          if (!selectedQualificationMapping[key]!.contains(
+                            id,
+                          )) {
+                            selectedQualificationMapping[key]!.add(id);
+                          }
+                        }
+                        sortList();
+                      });
+
+                      setState(() {}); // update chips outside
+                    },
+                    child: Text(
+                      "Select All",
+                      style: TextStyle(color: Colors.blue),
+                    ),
+                  ),
+
+                  /// Show Clear All only if something selected
+                  if (selectedQualificationMapping[key]!.isNotEmpty)
+                    TextButton(
+                      onPressed: () {
+                        setStateDialog(() {
+                          selectedQualificationMapping[key]!.clear();
+                          sortList();
+                        });
+                        setState(() {});
+                      },
+                      child: Text(
+                        "Clear All",
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                ],
+              ),
+
+              content: SizedBox(
+                width: double.maxFinite,
+                height: 500,
+                child: Column(
+                  children: [
+                    /// Search box
+                    TextField(
+                      controller: searchCtrl,
+                      focusNode: searchFocusNode,
+                      decoration: InputDecoration(
+                        hintText: "Search course...",
+                        prefixIcon: Icon(Icons.search),
+                        suffixIcon:
+                            searchCtrl.text.isNotEmpty
+                                ? IconButton(
+                                  icon: Icon(Icons.clear),
+                                  onPressed: () {
+                                    setStateDialog(() {
+                                      searchCtrl.clear();
+                                      filtered = List.from(courses);
+                                      sortList();
+                                    });
+                                  },
+                                )
+                                : null,
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (value) {
+                        setStateDialog(() {
+                          filtered =
+                              value.isEmpty
+                                  ? List.from(courses)
+                                  : courses
+                                      .where(
+                                        (c) => c["course_name"]
+                                            .toLowerCase()
+                                            .contains(value.toLowerCase()),
+                                      )
+                                      .toList();
+                          sortList();
+                        });
+                      },
+                    ),
+
+                    SizedBox(height: 12),
+
+                    if (searchCtrl.text.isNotEmpty)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "${filtered.length} result${filtered.length == 1 ? '' : 's'} found",
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                      ),
+
+                    SizedBox(height: 6),
+
+                    Expanded(
+                      child:
+                          filtered.isEmpty
+                              ? Center(child: Text("No courses found"))
+                              : ListView.builder(
+                                itemCount: filtered.length,
+                                itemBuilder: (context, index) {
+                                  final item = filtered[index];
+                                  final int id = item["course_id"];
+                                  final bool selected =
+                                      selectedQualificationMapping[key]!
+                                          .contains(id);
+
+                                  return CheckboxListTile(
+                                    value: selected,
+                                    title: Text(item["course_name"]),
+                                    onChanged: (checked) {
+                                      setStateDialog(() {
+                                        if (checked == true) {
+                                          selectedQualificationMapping[key]!
+                                              .add(id);
+                                        } else {
+                                          selectedQualificationMapping[key]!
+                                              .remove(id);
+                                        }
+                                        sortList();
+                                      });
+
+                                      setState(() {});
+                                    },
+                                  );
+                                },
+                              ),
+                    ),
+                  ],
+                ),
+              ),
+
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text("Close"),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text("Done"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    ).then((_) => searchFocusNode.dispose());
+  }
+
   Widget _buildCourseSelector(String key) {
     List<dynamic> courses = qualificationData[key] ?? [];
+    bool isExpanded = false; // Local UI state toggle
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Select courses for $key",
-          style: TextStyle(fontWeight: FontWeight.w500),
-        ),
-        SizedBox(height: 10),
+    return StatefulBuilder(
+      builder: (context, setStateLocal) {
+        List<int> selectedIds = selectedQualificationMapping[key] ?? [];
+        List<int> visibleItems =
+            isExpanded ? selectedIds : selectedIds.take(4).toList();
 
-        DropdownButtonFormField(
-          isExpanded: true,
-          decoration: InputDecoration(border: OutlineInputBorder()),
-          items:
-              courses.map((course) {
-                return DropdownMenuItem(
-                  value: course["course_id"],
-                  child: Text(course["course_name"]),
-                );
-              }).toList(),
-          onChanged: (value) {
-            final int courseId = value as int;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Select courses for $key",
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            SizedBox(height: 10),
 
-            if (!selectedQualificationMapping[key]!.contains(courseId)) {
-              setState(() {
-                selectedQualificationMapping[key]!.add(courseId);
-              });
-            }
-          },
-        ),
+            /// Open search dialog button
+            InkWell(
+              onTap: () => _openCourseSelectionDialog(key, courses),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      "Search & Select Course",
+                      style: TextStyle(color: Colors.grey[700]),
+                    ),
+                    Spacer(),
+                    Icon(Icons.arrow_drop_down),
+                  ],
+                ),
+              ),
+            ),
 
-        Wrap(
-          spacing: 6,
-          children:
-              selectedQualificationMapping[key]!.map((courseId) {
-                final name =
-                    courses.firstWhere(
+            SizedBox(height: 10),
+
+            /// Selected items UI
+            if (selectedIds.isNotEmpty)
+              Wrap(
+                spacing: 6,
+                children: [
+                  ...visibleItems.map((courseId) {
+                    final course = courses.firstWhere(
                       (c) => c["course_id"] == courseId,
-                    )["course_name"] ??
-                    "Course";
-                return Chip(
-                  label: Text(name, style: TextStyle(fontSize: 12)),
-                  onDeleted: () {
-                    setState(() {
-                      selectedQualificationMapping[key]!.remove(courseId);
-                    });
-                  },
-                );
-              }).toList(),
-        ),
+                    );
 
-        SizedBox(height: 20),
-      ],
+                    return Chip(
+                      label: Text(
+                        course["course_name"],
+                        style: TextStyle(fontSize: 12),
+                      ),
+                      onDeleted: () {
+                        setState(() {
+                          selectedQualificationMapping[key]!.remove(courseId);
+                        });
+                        setStateLocal(() {});
+                      },
+                    );
+                  }),
+
+                  /// If collapsed and more exist → show "+ More"
+                  if (!isExpanded && selectedIds.length > 4)
+                    InkWell(
+                      onTap: () => setStateLocal(() => isExpanded = true),
+                      child: Chip(
+                        label: Text(
+                          "+${selectedIds.length - 4} more ▼",
+                          style: TextStyle(fontSize: 12, color: Colors.blue),
+                        ),
+                        backgroundColor: Colors.blue.withOpacity(0.1),
+                      ),
+                    ),
+
+                  /// If expanded → show "Show less"
+                  if (isExpanded && selectedIds.length > 4)
+                    InkWell(
+                      onTap: () => setStateLocal(() => isExpanded = false),
+                      child: Chip(
+                        label: Text(
+                          "Show less ▲",
+                          style: TextStyle(fontSize: 12, color: Colors.blue),
+                        ),
+                        backgroundColor: Colors.blue.withOpacity(0.1),
+                      ),
+                    ),
+                ],
+              ),
+
+            SizedBox(height: 20),
+          ],
+        );
+      },
     );
   }
 
@@ -554,7 +905,7 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: _isSubmitting ? null : _handleSubmit,
+            onPressed: _isSubmitting ? null : _handleSubmits,
             style: ElevatedButton.styleFrom(
               backgroundColor: Color(0xFF0A66C2),
               foregroundColor: Colors.white,
@@ -574,13 +925,7 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                    : Text(
-                      'Post Job',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    : Text(isEditMode ? "Update Job" : "Post Job"),
           ),
         ),
         SizedBox(height: 24),
@@ -812,8 +1157,8 @@ class _JobNotificationFormState extends State<JobNotificationForm> {
     );
   }
 
-  void _handleSubmit() async {
-    await submitJobNotification();
+  void _handleSubmits() async {
+    await _handleSubmit();
   }
 
   void _showSubmissionDialog() {

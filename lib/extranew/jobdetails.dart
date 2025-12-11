@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:medicalapp/extranew/jobnotification.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:medicalapp/url.dart';
@@ -279,6 +281,26 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
     );
   }
 
+  String timeAgo(String createdAt) {
+    final createdDate = DateTime.parse(
+      createdAt,
+    ); // Parse the created_at string to DateTime
+    final currentDate = DateTime.now(); // Get the current date and time
+    final difference = currentDate.difference(
+      createdDate,
+    ); // Calculate the difference
+
+    if (difference.inDays > 0) {
+      return 'Posted ${difference.inDays} days ago'; // If more than 1 day, show "X days ago"
+    } else if (difference.inHours > 0) {
+      return 'Posted ${difference.inHours} hours ago'; // If more than 1 hour, show "X hours ago"
+    } else if (difference.inMinutes > 0) {
+      return 'Posted ${difference.inMinutes} minutes ago'; // If more than 1 minute, show "X minutes ago"
+    } else {
+      return 'Posted just now'; // If less than a minute ago, show "just now"
+    }
+  }
+
   Widget _buildMainJobCard() {
     return Container(
       decoration: BoxDecoration(
@@ -294,6 +316,22 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (Roleee != "doctor")
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: IconButton(
+                      icon: Icon(Icons.edit, color: Colors.blue),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (_) => JobNotificationForm(jobId: widget.jobId),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -359,10 +397,10 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
                           ),
                           SizedBox(height: 4),
                           Text(
-                            'Posted 2 days ago • ${job!["vacancies"]} applicants',
+                            timeAgo(job?['created_at']),
                             style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
                             ),
                           ),
                         ],
@@ -475,6 +513,50 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
     );
   }
 
+  Widget _buildRequirements(dynamic raw) {
+    List<String> requirements = [];
+    try {
+      requirements = List<String>.from(jsonDecode(raw));
+    } catch (_) {
+      requirements = raw.toString().split(",");
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children:
+          requirements.map((req) {
+            return Padding(
+              padding: EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    margin: EdgeInsets.only(top: 4),
+                    width: 4,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.black87,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      req.trim(),
+                      style: TextStyle(
+                        fontSize: 14,
+                        height: 1.5,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+    );
+  }
+
   Widget _buildDescriptionCard() {
     return Container(
       decoration: BoxDecoration(
@@ -500,7 +582,27 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
             style: TextStyle(fontSize: 14, height: 1.6, color: Colors.black87),
           ),
           SizedBox(height: 24),
+
+          // ---- NEW REQUIREMENTS SECTION ----
+          if (job!["requirements"] != null &&
+              job!["requirements"].toString().isNotEmpty) ...[
+            SizedBox(height: 24),
+            Divider(height: 1, color: Colors.grey[300]),
+            SizedBox(height: 24),
+            Text(
+              'Requirements',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+            SizedBox(height: 12),
+            _buildRequirements(job!["requirements"]),
+          ],
           Divider(height: 1, color: Colors.grey[300]),
+
+          // -----------------------------------
           SizedBox(height: 24),
           Text(
             'Qualifications',

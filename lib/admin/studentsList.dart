@@ -40,7 +40,7 @@ class _CourseDetailsScreenState extends State<AdminCourseDetailsScreen> {
     final url = Uri.parse('$baseurl/students-by-course').replace(
       queryParameters: {
         'degree': widget.degree,
-        'course': widget.courseName == 'MBBS' ? ' ' : widget.courseName,
+        'course': widget.courseName == 'MBBS' ? 'MBBS' : widget.courseName,
         'status': widget.status.toString(),
       },
     );

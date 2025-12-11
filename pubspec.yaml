@@ -61,8 +61,6 @@ dependencies:
 
   go_router: ^17.0.0
   html_editor_enhanced: ^2.7.1
-  flutter_quill: ^11.5.0
-  flutter_quill_extensions: ^11.0.0
   
 
 
@@ -112,7 +110,6 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - packages/html_editor_enhanced/assets/
     - assets/
   #   - images/a_dot_ham.jpeg
 
